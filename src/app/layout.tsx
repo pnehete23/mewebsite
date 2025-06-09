@@ -4,6 +4,7 @@ import { Inter, Roboto_Mono } from 'next/font/google';
 import Navbar from './components/Navbar';
 import FluidCanvas from './components/FluidCanvas';
 
+
 // Load Inter as the primary font
 const inter = Inter({
   variable: '--font-inter',
