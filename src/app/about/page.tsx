@@ -1,28 +1,50 @@
 "use client";
-
 import { motion } from "framer-motion";
 
 const skills = [
   { name: "React/Next.js", level: 95 },
   { name: "TypeScript", level: 90 },
   { name: "Node.js", level: 85 },
+  { name: "Java", level: 92 },
   { name: "Python", level: 80 },
+  { name: "C++", level: 88 },
+  { name: "AWS (S3, Athena, EC2)", level: 85 },
   { name: "Tailwind CSS", level: 92 },
   { name: "Three.js", level: 75 },
 ];
 
 const experiences = [
   {
-    title: "Full-Stack Developer",
-    company: "Tech Company",
-    period: "2023 - Present",
-    description: "Building scalable web applications with React, Node.js, and cloud technologies."
+    title: "Electro-Active Technologies Intern",
+    company: "Knoxville, TN",
+    period: "May 2024 - Jan 2025",
+    description: "Designed distributed data processing system in C++ reducing query response time by 40% while ensuring fault-tolerance. Built object-oriented solutions improving system reliability by 25% and reducing costs."
+  },
+  
+  {
+    title: "Security Systems Engineer",
+    company: "Arizona State University, Gammage, Tempe, AZ",
+    period: "Aug 2024 - May 2025",
+    description: "Developed scalable security database with object-oriented design, optimizing staff allocation by 25%."
   },
   {
-    title: "Frontend Developer",
-    company: "Startup Inc",
-    period: "2022 - 2023", 
-    description: "Created responsive user interfaces and interactive experiences."
+    title: "Software Development Engineer",
+    company: "YYC Beeswax LTD, Alberta, Canada",
+    period: "Aug 2024 - Mar 2025",
+    description: "Implemented a fully functional E-commerce website for YYC-Beeswax fault-tolerant payment processing system reducing transaction failures by 35%."
+  },
+
+  {
+    title: "Software Development Engineer Intern",
+    company: "Yashodhan Hospital, Pune, India",
+    period: "May 2023 - Aug 2023",
+    description: "Implemented distributed database solution reducing query response time by 40% and maintaining 99.9% system availability using Java."
+  },
+  {
+    title: "IT Support Engineering Intern",
+    company: "Tech Mahindra, Pune, India",
+    period: "May 2023 - Aug 2023",
+    description: "Designed distributed monitoring system in Java, reducing troubleshooting time by 40% while maintaining 99.9% uptime."
   },
 ];
 
@@ -41,7 +63,7 @@ export default function About() {
               About Me
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              I'm a passionate developer who loves creating beautiful, functional, and user-friendly applications.
+              I'm Prathamesh Nehete, a passionate developer with over 5 years of experience in building modern, scalable web and distributed systems. I thrive on clean code, innovative solutions, and continuous learning.
             </p>
           </div>
 
@@ -54,13 +76,10 @@ export default function About() {
             >
               <h2 className="text-3xl font-bold text-white">My Story</h2>
               <p className="text-gray-300 leading-relaxed">
-                With over 3 years of experience in web development, I specialize in creating modern, 
-                responsive applications using cutting-edge technologies. I'm passionate about clean code, 
-                user experience, and continuous learning.
+                Currently pursuing a B.S. in Computer Science with a Business Minor at Arizona State University (GPA: 3.93, expected May 2025), I specialize in creating responsive applications and distributed systems using Java, C++, and AWS. My journey includes internships at Tech Mahindra, Yashodhan Hospital, and Electro-Active Technologies.
               </p>
               <p className="text-gray-300 leading-relaxed">
-                When I'm not coding, you can find me exploring new technologies, contributing to open-source 
-                projects, or enjoying the great outdoors.
+                Outside of coding, I enjoy exploring new technologies, contributing to open-source, and spending time outdoors.
               </p>
             </motion.div>
 

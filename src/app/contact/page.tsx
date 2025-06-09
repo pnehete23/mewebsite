@@ -10,10 +10,28 @@ export default function Contact() {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Form submitted:', formData);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(data.message);
+        setFormData({ name: '', email: '', message: '' }); // Reset form
+      } else {
+        alert(data.error || 'Submission failed');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('An error occurred. Please try again.');
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -63,7 +81,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">Email</h3>
-                    <p className="text-gray-400">prathamesh@example.com</p>
+                    <p className="text-gray-400">pnehete2003@gmail.com</p>
                   </div>
                 </div>
 
@@ -73,7 +91,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">LinkedIn</h3>
-                    <p className="text-gray-400">linkedin.com/in/prathamesh</p>
+                    <p className="text-gray-400">linkedin.com/in/nehete23</p>
                   </div>
                 </div>
 
@@ -83,7 +101,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-white font-semibold">Phone</h3>
-                    <p className="text-gray-400">+1 (555) 123-4567</p>
+                    <p className="text-gray-400">+1 (4808730791)</p>
                   </div>
                 </div>
               </div>

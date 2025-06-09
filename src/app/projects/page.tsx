@@ -9,40 +9,40 @@ const projects = [
     id: 1,
     title: "E-Commerce Platform",
     description: "A full-stack e-commerce solution with React, Node.js, and Stripe integration.",
-    image: "/project1.jpg", // Add your project images to public folder
+    image: "/image1.png", // Ensure this file exists in the public folder
     technologies: ["React", "Node.js", "MongoDB", "Stripe"],
     liveUrl: "https://example.com",
-    githubUrl: "https://github.com/username/project",
+    githubUrl: "https://staging2.abelocollection.com/",
     featured: true
   },
   {
     id: 2,
-    title: "Task Management App",
-    description: "A collaborative task management application with real-time updates.",
-    image: "/project2.jpg",
-    technologies: ["Next.js", "TypeScript", "Prisma", "Socket.io"],
+    title: "Wellness-Center Locator",
+    description: "The Wellness Center Locator is a web-based application designed to help users find nearby wellness centers based on their health and fitness needs. ",
+    image: "/image2.jpg",
+    technologies: ["html" , "css", "flask", "python"],
     liveUrl: "https://example.com",
-    githubUrl: "https://github.com/username/project",
+    githubUrl: "https://github.com/pnehete23/Wellness-Center",
     featured: true
   },
   {
     id: 3,
     title: "Portfolio Website",
     description: "A responsive portfolio website with 3D animations and smooth interactions.",
-    image: "/project3.jpg",
+    image: "/image3.png",
     technologies: ["Next.js", "Three.js", "Framer Motion", "Tailwind"],
     liveUrl: "https://example.com",
-    githubUrl: "https://github.com/username/project",
+    githubUrl: "https://github.com/pnehete23/mewebsite",
     featured: false
   },
   {
     id: 4,
-    title: "Weather Dashboard",
-    description: "A beautiful weather application with location-based forecasts and charts.",
-    image: "/project4.jpg",
-    technologies: ["React", "Chart.js", "Weather API", "CSS3"],
+    title: "Tiny-URL",
+    description: "Conviniently shortens the long annoying URLs!.",
+    image: "/image.jpg",
+    technologies: ["python", "html"],
     liveUrl: "https://example.com",
-    githubUrl: "https://github.com/username/project",
+    githubUrl: "https://github.com/pnehete23/Tiny-URL-main",
     featured: false
   },
 ];
@@ -79,18 +79,22 @@ export default function Projects() {
               >
                 <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all duration-300 hover:scale-[1.02]">
                   <div className="relative h-64 md:h-80 overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center">
-                      <span className="text-white/50">Project Image</span>
-                    </div>
+                    <Image
+                      src={project.image}
+                      alt={project.title}
+                      layout="fill" // Use layout="fill" to cover the container
+                      objectFit="cover" // Ensure the image covers the area
+                      className="absolute inset-0"
+                    />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div className="flex gap-4">
-                        <Link 
+                        <Link
                           href={project.liveUrl}
                           className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                         >
                           Live Demo
-                        </Link>
-                        <Link 
+                        </Link> 
+                        <Link
                           href={project.githubUrl}
                           className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                         >
@@ -99,7 +103,7 @@ export default function Projects() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="p-6 space-y-4">
                     <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
                       {project.title}
@@ -107,7 +111,7 @@ export default function Projects() {
                     <p className="text-gray-300">{project.description}</p>
                     <div className="flex flex-wrap gap-2">
                       {project.technologies.map((tech) => (
-                        <span 
+                        <span
                           key={tech}
                           className="px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full"
                         >
