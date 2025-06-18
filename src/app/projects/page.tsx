@@ -5,8 +5,19 @@ import Image from "next/image";
 import Link from "next/link";
 
 const projects = [
-  {
+   {
     id: 1,
+    title: "Medicure,Ai HOME Doctor",
+    description: "An intelligent medical assistant powered by RAG (Retrieval-Augmented Generation) technology, combining Google's Gemini 2.0 Flash with Pinecone vector search to provide accurate medical information.",
+    image: "/image0.png", // Ensure this file exists in the public folder
+    technologies: ["Streamlit", "Google Gemini 2.0 Flash", "Vector Database: Pinecone", "Embeddings: HuggingFace Sentence Transformers", "Framework: LangChain", "Language: Python 3.10+"],
+    liveUrl: "https://example.com",
+    githubUrl: "https://github.com/pnehete23/medicure-Medical-AI-Chatbot",
+    featured: true
+  },
+
+  {
+    id: 2,
     title: "E-Commerce Platform",
     description: "A full-stack e-commerce solution with React, Node.js, and Stripe integration.",
     image: "/image1.png", // Ensure this file exists in the public folder
@@ -16,17 +27,17 @@ const projects = [
     featured: true
   },
   {
-    id: 2,
+    id: 3,
     title: "Wellness-Center Locator",
     description: "The Wellness Center Locator is a web-based application designed to help users find nearby wellness centers based on their health and fitness needs. ",
-    image: "/image2.jpg",
+    image: "/image2.jpeg",
     technologies: ["html" , "css", "flask", "python"],
     liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Wellness-Center",
     featured: true
   },
   {
-    id: 3,
+    id: 4,
     title: "Portfolio Website",
     description: "A responsive portfolio website with 3D animations and smooth interactions.",
     image: "/image3.png",
@@ -36,10 +47,10 @@ const projects = [
     featured: false
   },
   {
-    id: 4,
+    id: 5,
     title: "Tiny-URL",
     description: "Conviniently shortens the long annoying URLs!.",
-    image: "/image.jpg",
+    image: "/image5.jpeg",
     technologies: ["python", "html"],
     liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Tiny-URL-main",

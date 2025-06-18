@@ -25,7 +25,6 @@ export const metadata: Metadata = {
   keywords: 'Prathamesh Nehete, Portfolio, Web Developer, Full Stack Developer, React, Next.js, TypeScript',
   authors: [{ name: 'Prathamesh Nehete' }],
   creator: 'Prathamesh Nehete',
-  viewport: 'width=device-width, initial-scale=1',
   robots: 'index, follow',
   openGraph: {
     title: 'Prathamesh Nehete - Portfolio',

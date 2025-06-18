@@ -1074,7 +1074,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
           width: '8px',
           height: '8px',
           borderRadius: '50%',
-          backgroundColor: 'rgba(0, 255, 255, 0.8)',
+          backgroundColor: 'rgba(207, 28, 148, 0.8)',
           mixBlendMode: 'difference',
           pointerEvents: 'none',
           transform: 'translate(-50%, -50%)',
