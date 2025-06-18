@@ -43,7 +43,6 @@ interface DoubleFramebuffer {
 interface Config {
   SIM_RESOLUTION: number;
   DYE_RESOLUTION: number;
-  CAPTURE_RESOLUTION: number;
   DENSITY_DISSIPATION: number;
   VELOCITY_DISSIPATION: number;
   PRESSURE: number;
@@ -53,9 +52,6 @@ interface Config {
   SPLAT_FORCE: number;
   SHADING: boolean;
   COLOR_UPDATE_SPEED: number;
-  PAUSED: boolean;
-  BACK_COLOR: { r: number; g: number; b: number };
-  Neon_cycle: boolean;
 }
 
 const FluidCanvas: React.FC<FluidCanvasProps> = ({
@@ -80,25 +76,23 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       color: { r: 0, g: 0, b: 0 },
     },
   ]);
-  const lastUpdateRef = useRef<number>(0); // For manual delay
-
   const config = {
-    SIM_RESOLUTION: 256, // Reduced for mobile
-    DYE_RESOLUTION: 512, // Reduced for mobile
-    CAPTURE_RESOLUTION: 256,
-    DENSITY_DISSIPATION: 0.5,
-    VELOCITY_DISSIPATION: 2,
-    PRESSURE: 0.8,
-    PRESSURE_ITERATIONS: 20,
-    CURL: 3,
-    SPLAT_RADIUS: 0.15, // Reduced for mobile
-    SPLAT_FORCE: 3000, // Reduced for mobile
-    SHADING: true,
-    COLOR_UPDATE_SPEED: 0.5,
-    PAUSED: false,
-    BACK_COLOR: { r: 0, g: 0, b: 0 },
-    Neon_cycle: true,
-  };
+  SIM_RESOLUTION: 512, // Increased from 128 for more detail
+  DYE_RESOLUTION: 1024, // Increased from 512 for finer fluid texture
+  CAPTURE_RESOLUTION: 512,
+  DENSITY_DISSIPATION: 0.5, // Slightly higher to retain density longer
+  VELOCITY_DISSIPATION: 2, // Slightly higher for smoother velocity
+  PRESSURE: 0.8, // Adjust pressure for more fluid interaction
+  PRESSURE_ITERATIONS: 20, // Increased iterations for better pressure solving
+  CURL: 3, // Increased curl for more swirling effect
+  SPLAT_RADIUS: 0.25, // Smaller radius for more precise splats
+  SPLAT_FORCE: 6000, // Increased force for more responsive splats
+  SHADING: true, // Ensure shading is enabled for depth
+  COLOR_UPDATE_SPEED: 0.5, // Faster color updates for vibrancy
+  PAUSED: false,
+  BACK_COLOR: { r: 0, g: 0, b: 0 }, // Black background to match the image
+  Neon_cycle: true, // Enable neon cycle for dynamic color changes
+};
 
   const baseVertexShader = `
     precision highp float;
@@ -335,46 +329,46 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   `;
 
   const initGL = (canvas: HTMLCanvasElement) => {
-    const context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (!context) {
-      throw new Error('WebGL not supported');
-    }
+  const context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  if (!context) {
+    throw new Error('WebGL not supported');
+  }
 
-    const gl = context as WebGLRenderingContext;
-    let supportLinearFiltering = false;
-    let halfFloatTexType: number = 0;
-    let formatRGBA = null;
-    let formatRG = null;
-    let formatR = null;
+  const gl = context as WebGLRenderingContext;
+  let supportLinearFiltering = false;
+  let halfFloatTexType: number = 0;
+  let formatRGBA = null;
+  let formatRG = null;
+  let formatR = null;
 
-    gl.clearColor(0, 0, 0, 1);
-    const halfFloat = gl.getExtension('OES_texture_half_float');
-    supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
+  gl.clearColor(0, 0, 0, 1);
+  const halfFloat = gl.getExtension('OES_texture_half_float');
+  supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
 
-    if (!halfFloat) {
-      throw new Error('OES_texture_half_float extension not supported');
-    }
+  if (!halfFloat) {
+    throw new Error('OES_texture_half_float extension not supported');
+  }
 
-    halfFloatTexType = halfFloat.HALF_FLOAT_OES;
-    formatRGBA = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-    formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
-    formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
+  halfFloatTexType = halfFloat.HALF_FLOAT_OES;
+  formatRGBA = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
+  formatRG = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
+  formatR = getSupportedFormat(gl, gl.RGBA, gl.RGBA, halfFloatTexType);
 
-    if (!formatRGBA || !formatRG || !formatR) {
-      throw new Error('Required WebGL texture formats not supported');
-    }
+  if (!formatRGBA || !formatRG || !formatR) {
+    throw new Error('Required WebGL texture formats not supported');
+  }
 
-    return {
-      gl,
-      ext: {
-        formatRGBA,
-        formatRG,
-        formatR,
-        halfFloatTexType,
-        supportLinearFiltering,
-      },
-    };
+  return {
+    gl,
+    ext: {
+      formatRGBA,
+      formatRG,
+      formatR,
+      halfFloatTexType,
+      supportLinearFiltering,
+    },
   };
+};
 
   const getSupportedFormat = (
     gl: WebGLRenderingContext,
@@ -597,32 +591,58 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   };
 
   const generateWarmColor = () => {
-    const hue = 0.5 + Math.random() * 0.1; // Hue range 0.5-0.6 for cyan-blue
-    const saturation = 1;
-    const value = 1;
-    let r = 0, g = 0, b = 0;
+  const hue = 0.5 + Math.random() * 0.1 ; // Hue range 0.5-0.6 for cyan-blue
+  const saturation = 1;
+  const value = 1;
+  let r = 0,
+    g = 0,
+    b = 0;
 
-    const i = Math.floor(hue * 6);
-    const f = hue * 6 - i;
-    const p = value * (1 - saturation);
-    const q = value * (1 - f * saturation);
-    const t = value * (1 - (1 - f) * saturation);
+  const i = Math.floor(hue * 6);
+  const f = hue * 6 - i;
+  const p = value * (1 - saturation);
+  const q = value * (1 - f * saturation);
+  const t = value * (1 - (1 - f) * saturation);
 
-    switch (i % 6) {
-      case 0: r = value; g = t; b = p; break;
-      case 1: r = q; g = value; b = p; break;
-      case 2: r = p; g = value; b = t; break;
-      case 3: r = p; g = q; b = value; break;
-      case 4: r = t; g = p; b = value; break;
-      case 5: r = value; g = p; b = q; break;
-    }
+  switch (i % 6) {
+    case 0:
+      r = value;
+      g = t;
+      b = p;
+      break;
+    case 1:
+      r = q;
+      g = value;
+      b = p;
+      break;
+    case 2:
+      r = p;
+      g = value;
+      b = t;
+      break;
+    case 3:
+      r = p;
+      g = q;
+      b = value;
+      break;
+    case 4:
+      r = t;
+      g = p;
+      b = value;
+      break;
+    case 5:
+      r = value;
+      g = p;
+      b = q;
+      break;
+  }
 
-    return { r: r * 0.15, g: g * 0.15, b: b * 0.15 };
-  };
+  return { r: r * 0.15, g: g * 0.15, b: b * 0.15 };
+};
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect || !canvasRef.current) return;
+    if (!rect) return;
 
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
@@ -630,25 +650,25 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     setCursorPos({ x: e.clientX, y: e.clientY });
 
     const pointer = pointersRef.current[0];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
     pointer.prevTexcoordX = pointer.texcoordX;
     pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.texcoordX = x / canvasRef.current.width;
-    pointer.texcoordY = 1 - y / canvasRef.current.height;
+    pointer.texcoordX = x / canvas.width;
+    pointer.texcoordY = 1 - y / canvas.height;
 
-    const aspectRatio = canvasRef.current.width / canvasRef.current.height;
-    pointer.deltaX = correctRadius(pointer.texcoordX - pointer.prevTexcoordX, aspectRatio < 1 ? aspectRatio : 1);
-    pointer.deltaY = correctRadius(pointer.texcoordY - pointer.prevTexcoordY, aspectRatio > 1 ? 1 / aspectRatio : 1);
+    const aspectRatio = canvas.width / canvas.height;
+    pointer.deltaX = correctRadius(
+      pointer.texcoordX - pointer.prevTexcoordX,
+      aspectRatio < 1 ? aspectRatio : 1
+    );
+    pointer.deltaY = correctRadius(
+      pointer.texcoordY - pointer.prevTexcoordY,
+      aspectRatio > 1 ? 1 / aspectRatio : 1
+    );
     pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
     pointer.color = generateWarmColor();
-
-    // Manual delay to limit update frequency
-    const now = Date.now();
-    if (now - lastUpdateRef.current > 16) { // ~60fps
-      if (pointer.moved && pointer.down) {
-        splat(pointer.texcoordX, pointer.texcoordY, pointer.deltaX * config.SPLAT_FORCE, pointer.deltaY * config.SPLAT_FORCE, pointer.color);
-      }
-      lastUpdateRef.current = now;
-    }
   }, []);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
@@ -684,74 +704,6 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     pointer.down = false;
   }, []);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    e.preventDefault(); // Prevent scrolling
-    const touch = e.touches[0];
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect || !canvasRef.current) return;
-
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    setCursorPos({ x: touch.clientX, y: touch.clientY });
-
-    const pointer = pointersRef.current[0];
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.texcoordX = x / canvasRef.current.width;
-    pointer.texcoordY = 1 - y / canvasRef.current.height;
-
-    const aspectRatio = canvasRef.current.width / canvasRef.current.height;
-    pointer.deltaX = correctRadius(pointer.texcoordX - pointer.prevTexcoordX, aspectRatio < 1 ? aspectRatio : 1);
-    pointer.deltaY = correctRadius(pointer.texcoordY - pointer.prevTexcoordY, aspectRatio > 1 ? 1 / aspectRatio : 1);
-    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    pointer.color = generateWarmColor();
-
-    // Manual delay to limit update frequency
-    const now = Date.now();
-    if (now - lastUpdateRef.current > 16) { // ~60fps
-      if (pointer.moved && pointer.down) {
-        splat(pointer.texcoordX, pointer.texcoordY, pointer.deltaX * config.SPLAT_FORCE, pointer.deltaY * config.SPLAT_FORCE, pointer.color);
-      }
-      lastUpdateRef.current = now;
-    }
-  }, []);
-
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    e.preventDefault(); // Prevent scrolling
-    const touch = e.touches[0];
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect || !canvasRef.current) return;
-
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    const pointer = pointersRef.current[0];
-    pointer.id = -1;
-    pointer.down = true;
-    pointer.moved = false;
-    pointer.texcoordX = x / canvasRef.current.width;
-    pointer.texcoordY = 1 - y / canvasRef.current.height;
-    pointer.prevTexcoordX = pointer.texcoordX;
-    pointer.prevTexcoordY = pointer.texcoordY;
-    pointer.deltaX = 0;
-    pointer.deltaY = 0;
-    pointer.color = generateWarmColor();
-
-    const color = { ...pointer.color };
-    color.r *= 10;
-    color.g *= 10;
-    color.b *= 10;
-    const dx = 10 * (Math.random() - 0.5);
-    const dy = 30 * (Math.random() - 0.5);
-    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
-  }, []);
-
-  const handleTouchEnd = useCallback(() => {
-    const pointer = pointersRef.current[0];
-    pointer.down = false;
-  }, []);
-
   let density: DoubleFramebuffer | null = null;
   let velocity: DoubleFramebuffer | null = null;
   let divergence: Framebuffer | null = null;
@@ -769,24 +721,24 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   let blit: ((target: Framebuffer | null, clear?: boolean) => void) | null = null;
 
   const splat = (x: number, y: number, dx: number, dy: number, color: { r: number; g: number; b: number }) => {
-    const gl = glRef.current;
-    const canvas = canvasRef.current;
-    if (!gl || !splatProgram || !velocity || !density || !canvas || !blit) return;
+  const gl = glRef.current;
+  const canvas = canvasRef.current;
+  if (!gl || !splatProgram || !velocity || !density || !canvas || !blit) return;
 
-    splatProgram.bind();
-    splatProgram.uniforms.uTarget && gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
-    splatProgram.uniforms.aspectRatio && gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
-    splatProgram.uniforms.point && gl.uniform2f(splatProgram.uniforms.point, x, y);
-    splatProgram.uniforms.color && gl.uniform3f(splatProgram.uniforms.color, dx * config.SPLAT_FORCE, dy * config.SPLAT_FORCE, 0);
-    splatProgram.uniforms.radius && gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100, canvas.width / canvas.height));
-    blit(velocity.write);
-    velocity.swap();
+  splatProgram.bind();
+  splatProgram.uniforms.uTarget && gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
+  splatProgram.uniforms.aspectRatio && gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
+  splatProgram.uniforms.point && gl.uniform2f(splatProgram.uniforms.point, x, y);
+  splatProgram.uniforms.color && gl.uniform3f(splatProgram.uniforms.color, dx * config.SPLAT_FORCE, dy * config.SPLAT_FORCE, 0);
+  splatProgram.uniforms.radius && gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100, canvas.width / canvas.height));
+  blit(velocity.write);
+  velocity.swap();
 
-    splatProgram.uniforms.uTarget && gl.uniform1i(splatProgram.uniforms.uTarget, density.read.attach(0));
-    splatProgram.uniforms.color && gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
-    blit(density.write);
-    density.swap();
-  };
+  splatProgram.uniforms.uTarget && gl.uniform1i(splatProgram.uniforms.uTarget, density.read.attach(0));
+  splatProgram.uniforms.color && gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
+  blit(density.write);
+  density.swap();
+};
 
   const update = (dt: number) => {
   const gl = glRef.current;
@@ -815,7 +767,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   blit(curl);
 
   vorticityProgram.bind();
-  vorticityProgram.uniforms.texelSize && gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity.texelSizeY, velocity.texelSizeY); // Fixed typo: texelSizeY instead of texelSize
+  vorticityProgram.uniforms.texelSize && gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
   vorticityProgram.uniforms.uVelocity && gl.uniform1i(vorticityProgram.uniforms.uVelocity, velocity.read.attach(0));
   vorticityProgram.uniforms.uCurl && gl.uniform1i(vorticityProgram.uniforms.uCurl, curl.attach(1));
   vorticityProgram.uniforms.curl && gl.uniform1f(vorticityProgram.uniforms.curl, config.CURL);
@@ -849,7 +801,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   const velocityId = velocity.read.attach(0);
   advectionProgram.uniforms.uVelocity && gl.uniform1i(advectionProgram.uniforms.uVelocity, velocityId);
   advectionProgram.uniforms.uSource && gl.uniform1i(advectionProgram.uniforms.uSource, velocityId);
-  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.8);
+  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.8); // Slightly slower advection for stability
   advectionProgram.uniforms.dissipation && gl.uniform1f(advectionProgram.uniforms.dissipation, config.VELOCITY_DISSIPATION);
   blit(velocity.write);
   velocity.swap();
@@ -981,11 +933,14 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
 
       if (!rgba || !rg || !r) return;
 
-      density = density || createDoubleFramebuffer(gl, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, type, filtering);
-      velocity = velocity || createDoubleFramebuffer(gl, simRes.width, simRes.height, rg.internalFormat, rg.format, type, filtering);
+      density =
+        density || createDoubleFramebuffer(gl, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, type, filtering);
+      velocity =
+        velocity || createDoubleFramebuffer(gl, simRes.width, simRes.height, rg.internalFormat, rg.format, type, filtering);
       divergence = divergence || createFramebuffer(gl, simRes.width, simRes.height, r.internalFormat, r.format, type, gl.NEAREST);
       curl = curl || createFramebuffer(gl, simRes.width, simRes.height, r.internalFormat, r.format, type, gl.NEAREST);
-      pressure = pressure || createDoubleFramebuffer(gl, simRes.width, simRes.height, r.internalFormat, r.format, type, gl.NEAREST);
+      pressure =
+        pressure || createDoubleFramebuffer(gl, simRes.width, simRes.height, r.internalFormat, r.format, type, gl.NEAREST);
     };
 
     let lastUpdateTime = Date.now();
@@ -1010,6 +965,13 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
           p.color = generateWarmColor();
         });
       }
+
+      pointersRef.current.forEach((p) => {
+        if (p.moved) {
+          p.moved = false;
+          splat(p.texcoordX, p.texcoordY, p.deltaX * config.SPLAT_FORCE, p.deltaY * config.SPLAT_FORCE, p.color);
+        }
+      });
 
       update(dt);
       render(null);
@@ -1041,19 +1003,13 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchstart', handleTouchStart, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleTouchMove, handleTouchStart, handleTouchEnd]);
+  }, [handleMouseMove, handleMouseDown, handleMouseUp]);
 
   return (
     <>
@@ -1066,63 +1022,69 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
         }}
       />
       <div
-        className="cursor"
-        style={{
-          left: cursorPos.x,
-          top: cursorPos.y,
-          position: 'fixed',
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
-          backgroundColor: 'rgba(207, 28, 148, 0.8)',
-          mixBlendMode: 'difference',
-          pointerEvents: 'none',
-          transform: 'translate(-50%, -50%)',
-          transition: 'width 0.3s, height 0.3s, background-color 0.3s',
-          animation: 'glow 0.8s infinite alternate',
-          zIndex: 9999,
-        }}
-      />
-      <style jsx>{`
-        @keyframes glow {
-          0% {
-            box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.8),
-                       0 0 10px 5px rgba(0, 255, 255, 0.6),
-                       0 0 20px 10px rgba(0, 255, 255, 0.4);
-          }
-          100% {
-            box-shadow: 0 0 10px 5px rgba(0, 255, 255, 1),
-                       0 0 20px 10px rgba(0, 255, 255, 0.8),
-                       0 0 30px 15px rgba(0, 255, 255, 0.6);
-          }
-        }
+  className="cursor"
+  style={{
+    left: cursorPos.x,
+    top: cursorPos.y,
+    position: 'fixed',
+    width: '8px', // Smaller size
+    height: '8px', // Smaller size
+    borderRadius: '50%',
+    backgroundColor: 'rgba(0, 255, 255, 0.8)', // Neon cyan
+    mixBlendMode: 'difference',
+    pointerEvents: 'none',
+    transform: 'translate(-50%, -50%)',
+    transition: 'width 0.3s, height 0.3s, background-color 0.3s',
+    animation: 'glow 0.8s infinite alternate', // Faster glow for intensity
+    zIndex: 9999,
+  }}
+/>
+<style jsx>{`
+  @keyframes glow {
+    0% {
+      box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.8), // Neon cyan glow
+                 0 0 10px 5px rgba(0, 255, 255, 0.6),
+                 0 0 20px 10px rgba(0, 255, 255, 0.4);
+    }
+    100% {
+      box-shadow: 0 0 10px 5px rgba(0, 255, 255, 1), // Brighter neon cyan
+                 0 0 20px 10px rgba(0, 255, 255, 0.8),
+                 0 0 30px 15px rgba(0, 255, 255, 0.6);
+    }
+  }
 
-        body {
-          margin: 0;
-          height: 100vh;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background-color: #000;
-          cursor: none;
-        }
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    cursor: none;
+  }
 
-        body h1 {
-          color: #fff;
-          font-family: 'Arial', sans-serif;
-          font-size: 3rem;
-          text-align: center;
-          text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
-          zIndex: 10;
-          pointerEvents: none;
-          animation: fadeIn 2s ease-in-out;
-        }
+  body h1 {
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    font-size: 3rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); // Match neon cyan
+    zIndex: 10;
+    pointerEvents: none;
+    animation: fadeIn 2s ease-in-out;
+  }
 
-        @keyframes fadeIn {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`}</style>
     </>
   );
 };
