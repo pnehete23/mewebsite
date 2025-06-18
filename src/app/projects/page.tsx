@@ -49,7 +49,7 @@ const projects = [
   {
     id: 5,
     title: "Tiny-URL",
-    description: "Conviniently shortens the long annoying URLs!.",
+    description: "Conviniently shorteSns the long annoying URLs!.",
     image: "/image5.jpeg",
     technologies: ["python", "html"],
     liveUrl: "https://example.com",
