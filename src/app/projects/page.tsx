@@ -18,6 +18,17 @@ const projects = [
 
   {
     id: 2,
+    title: "Ai-Helper data science Assistant with text to voice",
+    description: "The Data Science Mentor AI Assistant is a comprehensive learning companion designed to bridge the gap between theoretical knowledge and practical application in data science. Whether you're debugging pandas operations, understanding machine learning algorithms, or exploring statistical concepts, this AI mentor provides interactive, personalized guidance with real-time code execution and voice explanations.",
+    image: "/imageb.png",
+    technologies: ["python", "Gradio 4.0+", "AI Models: OpenAI GPT-Series", "Anthropic Claude series", "Data Science Libraries:pandas, numpy, matplotlib, seaborn, scikit-learn", "Voice Synthesis:OpenAI TTS API"],
+    liveUrl: "https://example.com",
+    githubUrl: "https://github.com/pnehete23/Aihelper",
+    featured: true
+  },
+
+  {
+    id: 3,
     title: "E-Commerce Platform",
     description: "A full-stack e-commerce solution with React, Node.js, and Stripe integration.",
     image: "/image1.png", // Ensure this file exists in the public folder
@@ -27,17 +38,17 @@ const projects = [
     featured: true
   },
   {
-    id: 3,
+    id: 4,
     title: "Wellness-Center Locator",
     description: "The Wellness Center Locator is a web-based application designed to help users find nearby wellness centers based on their health and fitness needs. ",
     image: "/image2.jpeg",
     technologies: ["html" , "css", "flask", "python"],
     liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Wellness-Center",
-    featured: true
+    featured: false
   },
   {
-    id: 4,
+    id: 5,
     title: "Portfolio Website",
     description: "A responsive portfolio website with 3D animations and smooth interactions.",
     image: "/image3.png",
@@ -47,7 +58,7 @@ const projects = [
     featured: false
   },
   {
-    id: 5,
+    id: 6,
     title: "Tiny-URL",
     description: "Conviniently shorteSns the long annoying URLs!.",
     image: "/image5.jpeg",
