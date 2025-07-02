@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import Navbar from './components/Navbar';
 import FluidCanvas from './components/FluidCanvas';
+import { Analytics } from "@vercel/analytics/next"
 
 
 // Load Inter as the primary font
