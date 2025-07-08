@@ -80,15 +80,15 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   SIM_RESOLUTION: 512, // Increased from 128 for more detail
   DYE_RESOLUTION: 1024, // Increased from 512 for finer fluid texture
   CAPTURE_RESOLUTION: 512,
-  DENSITY_DISSIPATION: 0.5, // Slightly higher to retain density longer
-  VELOCITY_DISSIPATION: 2, // Slightly higher for smoother velocity
-  PRESSURE: 0.8, // Adjust pressure for more fluid interaction
+  DENSITY_DISSIPATION: 0.8, // Slightly higher to retain density longer
+  VELOCITY_DISSIPATION: 0.8, // Slightly higher for smoother velocity
+  PRESSURE: 0.5, // Adjust pressure for more fluid interaction
   PRESSURE_ITERATIONS: 20, // Increased iterations for better pressure solving
-  CURL: 3, // Increased curl for more swirling effect
+  CURL: 0.5, // Increased curl for more swirling effect
   SPLAT_RADIUS: 0.1, // Smaller radius for more precise splats
-  SPLAT_FORCE: 6000, // Increased force for more responsive splats
+  SPLAT_FORCE: 5000, // Increased force for more responsive splats
   SHADING: true, // Ensure shading is enabled for depth
-  COLOR_UPDATE_SPEED: 1.0, // Faster color updates for vibrancy
+  COLOR_UPDATE_SPEED: 0.5, // Faster color updates for vibrancy
   PAUSED: false,
   BACK_COLOR: { r: 0, g: 0, b: 0 }, // Black background to match the image
   Neon_cycle: true, // Enable neon cycle for dynamic color changes
