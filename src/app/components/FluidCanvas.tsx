@@ -85,10 +85,10 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   PRESSURE: 0.8, // Adjust pressure for more fluid interaction
   PRESSURE_ITERATIONS: 20, // Increased iterations for better pressure solving
   CURL: 3, // Increased curl for more swirling effect
-  SPLAT_RADIUS: 0.25, // Smaller radius for more precise splats
+  SPLAT_RADIUS: 0.1, // Smaller radius for more precise splats
   SPLAT_FORCE: 6000, // Increased force for more responsive splats
   SHADING: true, // Ensure shading is enabled for depth
-  COLOR_UPDATE_SPEED: 0.5, // Faster color updates for vibrancy
+  COLOR_UPDATE_SPEED: 1.0, // Faster color updates for vibrancy
   PAUSED: false,
   BACK_COLOR: { r: 0, g: 0, b: 0 }, // Black background to match the image
   Neon_cycle: true, // Enable neon cycle for dynamic color changes
@@ -591,7 +591,11 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   };
 
   const generateWarmColor = () => {
-  const hue = 0.5 + Math.random() * 0.1 ; // Hue range 0.5-0.6 for cyan-blue
+  // Neon color cycle: cycle through hues in the neon range (pink, purple, blue, cyan, green)
+  // Example: [0.83 (magenta), 0.72 (purple), 0.58 (blue), 0.48 (cyan), 0.39 (green)]
+  // Animate or randomize within this range for vibrant neon
+  const neonHues = [0.83, 0.72, 0.58, 0.48, 0.39];
+  const hue = neonHues[Math.floor(Math.random() * neonHues.length)];
   const saturation = 1;
   const value = 1;
   let r = 0,
@@ -1027,10 +1031,10 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     left: cursorPos.x,
     top: cursorPos.y,
     position: 'fixed',
-    width: '8px', // Smaller size
-    height: '8px', // Smaller size
+    width: '5px', // Smaller size
+    height: '5px', // Smaller size
     borderRadius: '50%',
-    backgroundColor: 'rgba(0, 255, 255, 0.8)', // Neon cyan
+    backgroundColor: 'rgba(226, 26, 149, 0.8)', // Neon cyan
     mixBlendMode: 'difference',
     pointerEvents: 'none',
     transform: 'translate(-50%, -50%)',
@@ -1043,8 +1047,8 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   @keyframes glow {
     0% {
       box-shadow: 0 0 5px 2px rgba(0, 255, 255, 0.8), // Neon cyan glow
-                 0 0 10px 5px rgba(0, 255, 255, 0.6),
-                 0 0 20px 10px rgba(0, 255, 255, 0.4);
+                 0 0 10px 5px rgba(247, 51, 2, 0.6),
+                 0 0 20px 10px rgba(144, 21, 226, 0.4);
     }
     100% {
       box-shadow: 0 0 10px 5px rgba(0, 255, 255, 1), // Brighter neon cyan
