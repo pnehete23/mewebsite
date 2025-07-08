@@ -28,6 +28,16 @@ export default function Home() {
     open: { opacity: 1, y: 0 },
   };
 
+  const handleResumeToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResumeOpen(!isResumeOpen);
+  };
+
+  const handleResumeClose = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResumeOpen(false);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 animated-bg">
       <div className="w-full max-w-5xl mx-auto text-center bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-2xl">
@@ -97,7 +107,7 @@ export default function Home() {
                   // For demo purposes, show an alert. In your actual app, use Next.js router
                   alert('This would navigate to /projects in your actual Next.js app');
                 }}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center justify-center h-12 text-sm sm:text-base touch-manipulation"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center justify-center h-12 text-sm sm:text-base touch-manipulation cursor-pointer select-none"
               >
                 View My Work
               </button>
@@ -109,8 +119,8 @@ export default function Home() {
               className="w-full sm:w-auto"
             >
               <button
-                onClick={() => setIsResumeOpen(!isResumeOpen)}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-white font-medium hover:shadow-lg hover:scale-105 transition-all duration-300 h-12 flex items-center justify-center group text-sm sm:text-base"
+                onClick={handleResumeToggle}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-white font-medium hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 h-12 flex items-center justify-center group text-sm sm:text-base touch-manipulation cursor-pointer select-none relative"
               >
                 <span className="flex items-center justify-center">
                   {isResumeOpen ? "Close Resume" : "View Resume"}
@@ -133,31 +143,6 @@ export default function Home() {
               </button>
             </motion.div>
           </motion.div>
-
-          {/* Social Media Icons */}
-          <motion.div
-            className="flex justify-center gap-6 mt-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20, delay: 1.4 }}
-          >
-            <a
-              href="https://www.linkedin.com/in/nehete23/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transform hover:scale-125 transition-transform duration-300"
-            >
-              <FaLinkedin className="text-xl sm:text-2xl text-gray-400 hover:text-white" />
-            </a>
-            <a
-              href="https://github.com/pnehete23"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block transform hover:scale-125 transition-transform duration-300"
-            >
-              <FaGithub className="text-xl sm:text-2xl text-gray-400 hover:text-white" />
-            </a>
-          </motion.div>
         </motion.div>
 
         {/* Resume Dropdown */}
@@ -171,12 +156,13 @@ export default function Home() {
               exit="closed"
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gray-800/80 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg max-h-[70vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg sm:text-xl font-semibold text-white">Resume</h2>
                 <button
-                  onClick={() => setIsResumeOpen(false)}
-                  className="text-gray-400 hover:text-white text-2xl p-1"
+                  onClick={handleResumeClose}
+                  className="text-gray-400 hover:text-white text-2xl p-1 cursor-pointer select-none"
                 >
                   ×
                 </button>
@@ -402,16 +388,46 @@ export default function Home() {
                 </section>
               </div>
               <p className="mt-4 sm:mt-6 text-gray-400 text-xs sm:text-sm">Last Updated: July 02, 2025</p>
-              <a
-                href="/pnehete2025.pdf"
-                className="inline-block mt-4 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 transition-transform duration-300 text-sm sm:text-base w-full sm:w-auto text-center"
+              <button
+                onClick={() => {
+                  // For demo purposes, show an alert. In your actual app, use a proper download handler
+                  alert('This would download the resume PDF: /pnehete2025.pdf');
+                }}
+                className="inline-block mt-4 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 active:scale-95 transition-transform duration-300 text-sm sm:text-base w-full sm:w-auto text-center touch-manipulation"
               >
                 Download Resume
-              </a>
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+      
+      {/* Social Media Icons - Outside the main canvas */}
+      <motion.div
+        className="flex justify-center gap-6 mt-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20, delay: 1.6 }}
+      >
+        <button
+          onClick={() => {
+            // For demo purposes, show an alert. In your actual app, use window.open
+            alert('This would open LinkedIn profile: https://www.linkedin.com/in/nehete23/');
+          }}
+          className="transform hover:scale-125 active:scale-110 transition-transform duration-300 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/40 touch-manipulation cursor-pointer select-none"
+        >
+          <FaLinkedin className="text-xl sm:text-2xl text-gray-300 hover:text-white" />
+        </button>
+        <button
+          onClick={() => {
+            // For demo purposes, show an alert. In your actual app, use window.open
+            alert('This would open GitHub profile: https://github.com/pnehete23');
+          }}
+          className="transform hover:scale-125 active:scale-110 transition-transform duration-300 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 hover:border-white/40 touch-manipulation cursor-pointer select-none"
+        >
+          <FaGithub className="text-xl sm:text-2xl text-gray-300 hover:text-white" />
+        </button>
+      </motion.div>
     </div>
   );
 }
