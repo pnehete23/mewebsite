@@ -92,12 +92,15 @@ export default function Home() {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="w-full sm:w-auto"
             >
-              <Link
-                href="/projects"
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 hover:shadow-lg transition-all duration-300 flex items-center justify-center h-12 text-sm sm:text-base"
+              <button
+                onClick={() => {
+                  // For demo purposes, show an alert. In your actual app, use Next.js router
+                  alert('This would navigate to /projects in your actual Next.js app');
+                }}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 hover:shadow-lg active:scale-95 transition-all duration-300 flex items-center justify-center h-12 text-sm sm:text-base touch-manipulation"
               >
                 View My Work
-              </Link>
+              </button>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 20 }}

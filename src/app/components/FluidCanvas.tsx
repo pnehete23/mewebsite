@@ -675,6 +675,8 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     pointer.color = generateWarmColor();
   }, []);
 
+  
+
   const handleMouseDown = useCallback((e: MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect || !canvasRef.current) return;
