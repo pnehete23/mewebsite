@@ -2,16 +2,25 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 
 const projects = [
+
+  {
+    id: 0,
+    title: "CareerCraft AI",
+    description: "MVP soon to be released live.Craft your tailored new resume with AI enhancement tailored to any Job Decription with just one click and under 15 secs. Interview coach to record and practice interview questions based on users job decription and resume.",
+    image: "/imagez.png",
+    githubUrl: "https://github.com/pnehete23/-CareerCraft-Ai",
+    technologies: ["RestAPIs", "React", "Node.js", "Supabase", "Razorpay", "Claude API", ],
+    featured: true
+  },
+
    {
     id: 1,
     title: "Medicure,Ai HOME Doctor",
     description: "An intelligent medical assistant powered by RAG (Retrieval-Augmented Generation) technology, combining Google's Gemini 2.0 Flash with Pinecone vector search to provide accurate medical information.",
     image: "/image0.png", // Ensure this file exists in the public folder
     technologies: ["Streamlit", "Google Gemini 2.0 Flash", "Vector Database: Pinecone", "Embeddings: HuggingFace Sentence Transformers", "Framework: LangChain", "Language: Python 3.10+"],
-    liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/medicure-Medical-AI-Chatbot",
     featured: true
   },
@@ -22,7 +31,7 @@ const projects = [
     description: "The Data Science Mentor AI Assistant is a comprehensive learning companion designed to bridge the gap between theoretical knowledge and practical application in data science. Whether you're debugging pandas operations, understanding machine learning algorithms, or exploring statistical concepts, this AI mentor provides interactive, personalized guidance with real-time code execution and voice explanations.",
     image: "/imageb.png",
     technologies: ["python", "Gradio 4.0+", "AI Models: OpenAI GPT-Series", "Anthropic Claude series", "Data Science Libraries:pandas, numpy, matplotlib, seaborn, scikit-learn", "Voice Synthesis:OpenAI TTS API"],
-    liveUrl: "https://example.com",
+    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Aihelper",
     featured: true
   },
@@ -33,7 +42,7 @@ const projects = [
     description: "A full-stack e-commerce solution with React, Node.js, and Stripe integration.",
     image: "/image1.png", // Ensure this file exists in the public folder
     technologies: ["React", "Node.js", "MongoDB", "Stripe"],
-    liveUrl: "https://example.com",
+    //liveUrl: "https://example.com",
     githubUrl: "https://staging2.abelocollection.com/",
     featured: true
   },
@@ -43,7 +52,7 @@ const projects = [
     description: "The Wellness Center Locator is a web-based application designed to help users find nearby wellness centers based on their health and fitness needs. ",
     image: "/image2.jpeg",
     technologies: ["html" , "css", "flask", "python"],
-    liveUrl: "https://example.com",
+    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Wellness-Center",
     featured: false
   },
@@ -53,7 +62,7 @@ const projects = [
     description: "A responsive portfolio website with 3D animations and smooth interactions.",
     image: "/image3.png",
     technologies: ["Next.js", "Three.js", "Framer Motion", "Tailwind"],
-    liveUrl: "https://example.com",
+    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/mewebsite",
     featured: false
   },
@@ -63,7 +72,7 @@ const projects = [
     description: "Conviniently shorteSns the long annoying URLs!.",
     image: "/image5.jpeg",
     technologies: ["python", "html"],
-    liveUrl: "https://example.com",
+    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Tiny-URL-main",
     featured: false
   },
@@ -104,24 +113,32 @@ export default function Projects() {
                     <Image
                       src={project.image}
                       alt={project.title}
-                      layout="fill" // Use layout="fill" to cover the container
-                      objectFit="cover" // Ensure the image covers the area
-                      className="absolute inset-0"
+                      fill
+                      className="absolute inset-0 object-cover"
+                      sizes="(min-width: 768px) 50vw, 100vw"
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div className="flex gap-4">
-                        <Link
-                          href={project.liveUrl}
-                          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                        >
-                          Live Demo
-                        </Link> 
-                        <Link
-                          href={project.githubUrl}
-                          className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                          GitHub
-                        </Link>
+                        {project.liveUrl && (
+                          <a
+                            href={project.liveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            Live Demo
+                          </a>
+                        )}
+                        {project.githubUrl && (
+                          <a
+                            href={project.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                          >
+                            GitHub
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>

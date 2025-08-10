@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
-import { FaLinkedin, FaGithub } from "react-icons/fa";
+import { FaLinkedin, FaGithub, FaPhone, FaEnvelope, FaGlobe } from "react-icons/fa";
 
 // Add this to your globals.css
 /*
@@ -159,92 +159,91 @@ export default function Home() {
                   ×
                 </button>
               </div>
-              <div className="space-y-6 text-left text-gray-300 text-sm md:text-base">
-                {/* Education */}
+              <div className="space-y-8 text-left text-gray-300 text-sm md:text-base">
+                {/* Contact */}
                 <section>
-                  <h3 className="text-lg font-semibold text-white mb-2">Education</h3>
-                  <div>
-                    <span className="font-semibold">Arizona State University</span>
-                    <br />
-                    B.S. in Computer Science, Business Minor
-                    <br />
-                    <span className="text-gray-400 text-sm">Aug 2021 - May 2025</span>
-                  </div>
-                  <div className="text-gray-400 text-sm mt-1">
-                    Actively seeking Internship and Full-Time opportunities.
+                  <div className="flex flex-wrap gap-3">
+                    <a href="tel:+14808730791" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition">
+                      <FaPhone /> <span className="text-white">480-873-0791</span>
+                    </a>
+                    <a href="mailto:prathameshnehete2026@u.northwestern.edu" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition">
+                      <FaEnvelope /> <span className="text-white">prathameshnehete2026@u.northwestern.edu</span>
+                    </a>
+                    <a href="https://linkedin.com/in/nehete23" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition">
+                      <FaLinkedin /> <span className="text-white">linkedin.com/in/nehete23</span>
+                    </a>
+                    <a href="https://github.com/pnehete23" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition">
+                      <FaGithub /> <span className="text-white">github.com/pnehete23</span>
+                    </a>
+                    <Link href="/projects" className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition">
+                      <FaGlobe /> <span className="text-white">Portfolio</span>
+                    </Link>
                   </div>
                 </section>
 
-                {/* Experience */}
+                {/* Objective */}
                 <section>
-                  <h3 className="text-lg font-semibold text-white mb-2">Experience</h3>
-                  <div className="space-y-4">
+                  <div className="rounded-lg border border-blue-400/30 bg-blue-500/10 text-blue-200 px-4 py-3">
+                    Seeking full-time/intern opportunities starting September 2025
+                  </div>
+                </section>
+
+                {/* Education */}
+                <section>
+                  <h3 className="text-lg font-semibold text-white mb-2">Education</h3>
+                  <div className="space-y-3">
                     <div>
-                      <span className="font-semibold text-blue-300">Electroactive Technologies</span>
-                      <span className="text-gray-400"> (Remote, Knoxville, TN)</span>
+                      <span className="font-semibold">Northwestern University</span>
                       <br />
-                      <span className="italic text-gray-300">Software Development Engineering Intern</span>
-                      <span className="text-gray-400"> | May 2024 – Jan 2025</span>
+                      M.S. in Data Science
+                      <br />
+                      <span className="text-gray-400 text-sm">September 2025 – November 2026</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold">Arizona State University</span>
+                      <br />
+                      B.S. in Computer Science; Business Minor
+                      <br />
+                      <span className="text-gray-400 text-sm">August 2021 - May 2025</span>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Work Experience */}
+                <section>
+                  <h3 className="text-lg font-semibold text-white mb-2">Work Experience</h3>
+                  <div className="space-y-5">
+                    <div>
+                      <div className="font-semibold text-blue-300">Electroactive Technologies</div>
+                      <div className="text-gray-400">Software Development Engineering Intern • May 2024 – Jan 2025 • Remote/Knoxville, TN</div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
-                        <li>Designed a distributed data processing system in C++, reducing query response time by 40%.</li>
-                        <li>Collaborated with teams to build reliable object-oriented solutions, improving system reliability by 25%.</li>
-                        <li>Enhanced reporting by solving data integrity challenges, increasing capabilities by 30%.</li>
-                        <li>Developed automated testing pipelines to ensure code quality.</li>
-                        <li>Integrated monitoring tools to resolve system bottlenecks proactively.</li>
+                        <li>Engineered distributed data processing pipeline in C++ with multithreading, reducing latency by 40%.</li>
+                        <li>Built fault-tolerant microservices handling 2M daily requests; collaborated with a 5-person cross-functional team.</li>
+                        <li>Implemented Redis caching and load balancing, improving API response from 800ms to 200ms.</li>
+                        <li>Applied ML algorithms for predictive auto-scaling in AWS, cutting costs by 25%.</li>
+                        <li>Skills: C++, Distributed Systems, OOD, Redis, ML Algorithms</li>
                       </ul>
                     </div>
                     <div>
-                      <span className="font-semibold text-blue-300">YYC Beeswax LTD (ASU Capstone)</span>
-                      <span className="text-gray-400"> (Alberta, Canada)</span>
-                      <br />
-                      <span className="italic text-gray-300">Software Development Engineer Intern</span>
-                      <span className="text-gray-400"> | Aug 2024 – Mar 2025</span>
+                      <div className="font-semibold text-blue-300">YYC Beeswax LTD (ASU Capstone)</div>
+                      <div className="text-gray-400">Software Development Engineer Intern • Aug 2024 – Mar 2025 • Alberta, Canada</div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
-                        <li>Reduced transaction failures by 35% while supporting 3x more users.</li>
-                        <li>Developed a caching architecture in C#, improving query response times by 45%.</li>
-                        <li>Created scalable system architecture, enhancing cloud scalability by 40%.</li>
-                        <li>Implemented CI/CD pipelines to streamline deployment.</li>
-                        <li>Delivered user-centric features with stakeholder collaboration.</li>
+                        <li>Built WordPress plugin with React + TypeScript, processing 3000+ transactions monthly.</li>
+                        <li>Developed Node.js REST APIs with JWT; integrated Stripe with MySQL securely.</li>
+                        <li>Reduced checkout abandonment by 35% through performance and UX improvements.</li>
+                        <li>Implemented recommendation engine (collaborative filtering, matrix factorization) increasing sales by 20%.</li>
+                        <li>Skills: React, Node.js, REST APIs, MySQL, Recommendation Systems</li>
                       </ul>
                     </div>
                     <div>
-                      <span className="font-semibold text-blue-300">Arizona State University, Gammage</span>
-                      <span className="text-gray-400"> (Tempe, AZ)</span>
-                      <br />
-                      <span className="italic text-gray-300">Security Systems Engineer</span>
-                      <span className="text-gray-400"> | Aug 2023 – Mar 2025</span>
+                      <div className="font-semibold text-blue-300">Tech Mahindra</div>
+                      <div className="text-gray-400">IT Support Engineering Lead • May 2023 – Aug 2023 • Pune, India</div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
-                        <li>Designed a monitoring system using Java and C++, improving response time by 35%.</li>
-                        <li>Developed a scalable security database, optimizing staff allocation by 25%.</li>
-                        <li>Built fault-tolerant algorithms, reducing breaches by 40%.</li>
-                        <li>Optimized operations with data-driven analysis.</li>
-                        <li>Integrated real-time alerting for threat detection.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-blue-300">Yashodhan Hospital</span>
-                      <span className="text-gray-400"> (Pune, India)</span>
-                      <br />
-                      <span className="italic text-gray-300">Software Development Engineer Intern</span>
-                      <span className="text-gray-400"> | May 2023 – Aug 2023</span>
-                      <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
-                        <li>Implemented a database solution, reducing query response time by 40%.</li>
-                        <li>Built scalable web apps, increasing scheduling efficiency by 20%.</li>
-                        <li>Optimized architecture, improving user satisfaction by 35%.</li>
-                        <li>Automated patient record management to reduce errors.</li>
-                      </ul>
-                    </div>
-                    <div>
-                      <span className="font-semibold text-blue-300">Tech Mahindra</span>
-                      <span className="text-gray-400"> (Pune, India)</span>
-                      <br />
-                      <span className="italic text-gray-300">IT Support Engineering Lead</span>
-                      <span className="text-gray-400"> | May 2023 – Aug 2023</span>
-                      <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
-                        <li>Designed a monitoring system using Java, reducing troubleshooting time by 40%.</li>
-                        <li>Optimized database queries, improving scalability by 40%.</li>
-                        <li>Led a team of 5 engineers to deliver IT support.</li>
-                        <li>Documented best practices for junior engineers.</li>
+                        <li>Designed Java-based monitoring with Kafka, tracking 500+ servers with 99.9% uptime.</li>
+                        <li>Optimized SQL with indexing, reducing DB load by 40% across production systems.</li>
+                        <li>Led 8 engineers implementing PagerDuty alerts, preventing 200+ critical incidents monthly.</li>
+                        <li>Built anomaly detection with Python (scikit-learn, pandas) identifying issues 3x faster.</li>
+                        <li>Skills: Java, SQL, Python, ML, System Monitoring</li>
                       </ul>
                     </div>
                   </div>
@@ -252,77 +251,52 @@ export default function Home() {
 
                 {/* Projects */}
                 <section>
-                  <h3 className="text-lg font-semibold text-white mb-2">Projects</h3>
+                  <h3 className="text-lg font-semibold text-white mb-2">Project Experience</h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
                       {
-                        id: 1,
-                        title: "OpenTitan",
-                        description:
-                          "Simulated and verified UART smoke test using Verilator/Bazel; analyzed waveform output and explored CPU integration for CVA6 (RISC-V).",
-                        details: [
-                          "Contributed to secure silicon design with lowRISC and Google.",
-                          "Developed testbenches for regression testing.",
-                          "Documented results for continuous improvement.",
+                        title: "ResumeCraft: AI-Powered Resume Builder",
+                        stack: "Next.js, React, TypeScript, JavaScript, Python, Tailwind CSS",
+                        bullets: [
+                          "AI-powered builder with GPT integration; LaTeX generation optimized for ATS.",
+                          "Performant UI with webpack tuning and Framer Motion animations.",
+                          "Distributed storage handling 10K+ daily requests with failover.",
+                          "NLP models (NLTK, spaCy) for keyword extraction and semantic matching.",
                         ],
                       },
                       {
-                        id: 2,
-                        title: "AI Data-Science Mentor",
-                        description:
-                          "Built an AI mentor using OpenAI GPT, Claude AI, and real-time TTS for conversational learning.",
-                        details: [
-                          "Integrated voice interaction and adaptive feedback.",
-                          "Implemented analytics for dynamic learning paths.",
-                          "Deployed as a secure web app.",
+                        title: "AI Data-Science Mentor with Voice Enabled",
+                        stack: "OpenAI GPT, Claude AI, JavaScript, TypeScript, React",
+                        bullets: [
+                          "Conversational mentor with voice recognition and GPT integration.",
+                          "Designed for growth with agile, iterative development.",
+                          "Advanced query handling algorithms for ambiguous problems.",
+                          "Trained BERT sentiment model achieving 92% accuracy.",
                         ],
                       },
                       {
-                        id: 3,
-                        title: "Medi Cure AI Doctor",
-                        description:
-                          "Developed a medical assistant using Gemini 2.0 Flash, Pinecone, and Hugging Face for real-time health insights.",
-                        details: [
-                          "Enabled instant symptom analysis and recommendations.",
-                          "Integrated with EHR systems for personalized advice.",
-                          "Ensured HIPAA compliance.",
+                        title: "Medicure AI Doctor",
+                        stack: "Google Gemini, Pinecone, Hugging Face, Python, JavaScript, React",
+                        bullets: [
+                          "RAG architecture for real-time queries with HIPAA focus.",
+                          "Sub-200ms responses with 98% accuracy using efficient data structures.",
+                          "Tableau dashboards with linear programming optimization for patient flow.",
+                          "TensorFlow/Keras classification with 95% precision/recall.",
                         ],
                       },
-                      {
-                        id: 4,
-                        title: "Tiny URLs",
-                        description:
-                          "Designed a distributed URL shortener with Flask, achieving 99.9% uptime.",
-                        details: [
-                          "Implemented analytics dashboard and robust API.",
-                          "Utilized Redis for caching.",
-                          "Added user authentication and custom URLs.",
-                        ],
-                      },
-                      {
-                        id: 5,
-                        title: "Wellness Center Locator",
-                        description:
-                          "Built a locator using Java/C++, reducing search time by 40%.",
-                        details: [
-                          "Integrated geospatial algorithms for accuracy.",
-                          "Developed RESTful APIs for mobile/web clients.",
-                          "Implemented real-time location tracking.",
-                        ],
-                      },
-                    ].map((project, index) => (
+                    ].map((p, idx) => (
                       <motion.div
-                        key={project.id}
+                        key={p.title}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                        transition={{ duration: 0.6, delay: idx * 0.1 }}
                         className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 hover:border-white/20 hover:shadow-md transition-all duration-300"
                       >
-                        <h4 className="font-semibold text-blue-300">{project.title}</h4>
-                        <p className="text-gray-400 text-sm mt-1">{project.description}</p>
+                        <h4 className="font-semibold text-blue-300">{p.title}</h4>
+                        <p className="text-gray-400 text-xs mt-1">{p.stack}</p>
                         <ul className="list-disc ml-5 text-gray-400 text-sm mt-2 space-y-1">
-                          {project.details.map((detail, i) => (
-                            <li key={i}>{detail}</li>
+                          {p.bullets.map((b) => (
+                            <li key={b}>{b}</li>
                           ))}
                         </ul>
                       </motion.div>
@@ -333,53 +307,39 @@ export default function Home() {
                 {/* Skills */}
                 <section>
                   <h3 className="text-lg font-semibold text-white mb-2">Skills</h3>
-                  <ul className="grid grid-cols-2 gap-2 text-gray-300 text-sm">
-                    {[
-                      "HTML, Tailwind CSS, Framer Motion",
-                      "Java, Python, C#, C++, Rust",
-                      "Typescript, JavaScript, Node.js",
-                      "SQL, NoSQL, Distributed storage",
-                      "Data Structures & Algorithms",
-                      "Power-BI",
-                      "Pinecone, Hugging Face Embeddings",
-                      "GPT/Claude APIs",
-                      "Distributed systems",
-                      "Advanced GIT skills",
-                      "Streamlit, API development",
-                      "Object-oriented design",
-                      "Embedded Programming",
-                      "System Verilog",
-                    ].map((skill, index) => (
-                      <li key={index} className="list-disc ml-5">
-                        {skill}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="font-semibold text-white mb-1">Languages</div>
+                      <ul className="list-disc ml-5 space-y-1">
+                        <li>R, Python, C++, C#, JavaScript, GoLang, React.js</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white mb-1">Core CS</div>
+                      <ul className="list-disc ml-5 space-y-1">
+                        <li>System Design, OOP, APIs/REST APIs, Multi-tiered Systems, Data Structures</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white mb-1">AI/ML & Data</div>
+                      <ul className="list-disc ml-5 space-y-1">
+                        <li>Machine Learning, NLP, TensorFlow, scikit-learn, SQL, Data Modeling, Tableau</li>
+                      </ul>
+                    </div>
+                  </div>
                 </section>
 
                 {/* Certifications */}
                 <section>
                   <h3 className="text-lg font-semibold text-white mb-2">Certifications</h3>
                   <ul className="list-disc ml-5 text-gray-300 text-sm space-y-2">
-                    <li>
-                      <span className="font-semibold">Infosys Spring Boot Certified Software Engineering</span>
-                      <br />
-                      Built RESTful APIs, CRUD operations, and microservices.
-                    </li>
-                    <li>
-                      <span className="font-semibold">Infosys Spring Boot Certified Cloud Computing</span>
-                      <br />
-                      Deployed apps on AWS/PCF, Docker, and Kubernetes.
-                    </li>
-                    <li>
-                      <span className="font-semibold">Infosys Spring Boot Certified Intro to AI</span>
-                      <br />
-                      Learned AI/ML basics and integration with Spring Boot.
-                    </li>
+                    <li>Infosys Springboard: Software Engineering</li>
+                    <li>Infosys Springboard: Cloud Computing (AWS, Docker, Kubernetes)</li>
+                    <li>Infosys Springboard: Intro to AI</li>
                   </ul>
                 </section>
               </div>
-              <p className="mt-6 text-gray-400 text-sm">Last Updated: July 02, 2025</p>
+              <p className="mt-6 text-gray-400 text-sm">Last Updated: August 10, 2025</p>
               <a
                 href="/pnehete2025.pdf"
                 className="inline-block mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full text-white font-medium hover:scale-105 transition-transform duration-300"

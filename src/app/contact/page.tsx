@@ -2,35 +2,67 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import {
+  FaLinkedin,
+  FaGithub,
+  FaEnvelope,
+  FaPhone,
+  FaCopy,
+  FaCheck,
+  FaPaperPlane,
+} from "react-icons/fa";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    message: ''
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{ type: "success" | "error" | null; message: string }>({
+    type: null,
+    message: "",
+  });
+  const [copied, setCopied] = useState<{ email: boolean; phone: boolean }>({
+    email: false,
+    phone: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setStatus({ type: null, message: "" });
     try {
-      const response = await fetch('/api/contact', {
-        method: 'POST',
+      const response = await fetch("/api/contact", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
-        setFormData({ name: '', email: '', message: '' }); // Reset form
+        setStatus({ type: "success", message: data.message || "Message sent successfully." });
+        setFormData({ name: "", email: "", message: "" });
       } else {
-        alert(data.error || 'Submission failed');
+        setStatus({ type: "error", message: data.error || "Submission failed. Please try again." });
       }
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('An error occurred. Please try again.');
+      console.error("Error submitting form:", error);
+      setStatus({ type: "error", message: "An unexpected error occurred. Please try again later." });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string, key: "email" | "phone") => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied((prev) => ({ ...prev, [key]: true }));
+      setTimeout(() => setCopied((prev) => ({ ...prev, [key]: false })), 1500);
+    } catch {
+      // no-op
     }
   };
 
@@ -55,7 +87,7 @@ export default function Contact() {
               Get In Touch
             </h1>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Let's work together to bring your ideas to life. I'm always excited to take on new challenges.
+              Let’s work together to bring your ideas to life. I typically respond within 24 hours.
             </p>
           </div>
 
@@ -69,40 +101,88 @@ export default function Contact() {
               <div>
                 <h2 className="text-3xl font-bold text-white mb-6">Let's Connect</h2>
                 <p className="text-gray-300 leading-relaxed">
-                  I'm always open to discussing new opportunities, creative projects, 
-                  or just having a chat about technology and development.
+                  I’m open to roles and collaborations in SWE, Data, and AI/ML. Reach out directly using the options below or the form.
                 </p>
+                <div className="mt-4 rounded-md border border-blue-400/30 bg-blue-500/10 text-blue-200 px-4 py-3">
+                  Seeking intern/full-time opportunities in SWE, Data, and AI/ML.
+                </div>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-blue-400">📧</span>
+                {/* Email */}
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <FaEnvelope className="text-blue-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">Email</h3>
+                      <a href="mailto:prathameshnehete2026@u.northwestern.edu" className="text-gray-300 hover:text-white transition-colors">
+                        prathameshnehete2026@u.northwestern.edu
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-white font-semibold">Email</h3>
-                    <p className="text-gray-400">pnehete2003@gmail.com</p>
+                  <button
+                    type="button"
+                    aria-label="Copy email"
+                    onClick={() => copyToClipboard("prathameshnehete2026@u.northwestern.edu", "email")}
+                    className="shrink-0 px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white transition-colors"
+                  >
+                    {copied.email ? <FaCheck className="text-green-400" /> : <FaCopy />}
+                  </button>
+                </div>
+
+                {/* LinkedIn */}
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <FaLinkedin className="text-purple-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">LinkedIn</h3>
+                      <a href="https://linkedin.com/in/nehete23" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                        linkedin.com/in/nehete23
+                      </a>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-purple-400">🔗</span>
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold">LinkedIn</h3>
-                    <p className="text-gray-400">linkedin.com/in/nehete23</p>
+                {/* GitHub */}
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                      <FaGithub className="text-gray-300" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">GitHub</h3>
+                      <a href="https://github.com/pnehete23" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors">
+                        github.com/pnehete23
+                      </a>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-green-400">📱</span>
+                {/* Phone */}
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <FaPhone className="text-green-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold">Phone</h3>
+                      <a href="tel:+14808730791" className="text-gray-300 hover:text-white transition-colors">
+                        (480) 873-0791
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-white font-semibold">Phone</h3>
-                    <p className="text-gray-400">+1 (4808730791)</p>
-                  </div>
+                  <button
+                    type="button"
+                    aria-label="Copy phone"
+                    onClick={() => copyToClipboard("+14808730791", "phone")}
+                    className="shrink-0 px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white transition-colors"
+                  >
+                    {copied.phone ? <FaCheck className="text-green-400" /> : <FaCopy />}
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -163,10 +243,32 @@ export default function Contact() {
 
                 <button
                   type="submit"
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:scale-[1.02] transition-transform"
+                  disabled={isSubmitting}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-lg hover:scale-[1.02] transition-transform disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Send Message
+                  {isSubmitting ? (
+                    <>
+                      <FaPaperPlane className="animate-pulse" /> Sending...
+                    </>
+                  ) : (
+                    <>
+                      <FaPaperPlane /> Send Message
+                    </>
+                  )}
                 </button>
+
+                {status.type && (
+                  <div
+                    role="status"
+                    className={`mt-2 rounded-md px-4 py-3 border ${
+                      status.type === "success"
+                        ? "border-green-400/40 bg-green-500/10 text-green-200"
+                        : "border-red-400/40 bg-red-500/10 text-red-200"
+                    }`}
+                  >
+                    {status.message}
+                  </div>
+                )}
               </form>
             </motion.div>
           </div>
