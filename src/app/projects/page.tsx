@@ -3,7 +3,18 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 
-const projects = [
+type Project = {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  technologies: string[];
+  liveUrl?: string;
+  githubUrl?: string;
+  featured?: boolean;
+};
+
+const projects: Project[] = [
 
   {
     id: 0,
