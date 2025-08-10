@@ -191,20 +191,20 @@ export default function Home() {
                 {/* Education */}
                 <section>
                   <h3 className="text-lg font-semibold text-white mb-2">Education</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="font-semibold">Northwestern University</span>
-                      <br />
-                      M.S. in Data Science
-                      <br />
-                      <span className="text-gray-400 text-sm">September 2025 – November 2026</span>
+                  <div className="space-y-4">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <div>
+                        <div className="font-semibold">Northwestern University</div>
+                        <div className="text-gray-300">M.S. in Data Science</div>
+                      </div>
+                      <div className="text-gray-400 text-sm whitespace-nowrap">September 2025 – November 2026</div>
                     </div>
-                    <div>
-                      <span className="font-semibold">Arizona State University</span>
-                      <br />
-                      B.S. in Computer Science; Business Minor
-                      <br />
-                      <span className="text-gray-400 text-sm">August 2021 - May 2025</span>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <div>
+                        <div className="font-semibold">Arizona State University</div>
+                        <div className="text-gray-300">B.S. in Computer Science; Business Minor</div>
+                      </div>
+                      <div className="text-gray-400 text-sm whitespace-nowrap">August 2021 – May 2025</div>
                     </div>
                   </div>
                 </section>
@@ -215,7 +215,13 @@ export default function Home() {
                   <div className="space-y-5">
                     <div>
                       <div className="font-semibold text-blue-300">Electroactive Technologies</div>
-                      <div className="text-gray-400">Software Development Engineering Intern • May 2024 – Jan 2025 • Remote/Knoxville, TN</div>
+                      <div className="flex items-baseline justify-between gap-4 flex-wrap text-gray-400">
+                        <div>
+                          <span className="italic text-gray-300">Software Development Engineering Intern</span>
+                          <span className="text-gray-400"> • Remote/Knoxville, TN</span>
+                        </div>
+                        <div className="text-sm whitespace-nowrap">May 2024 – Jan 2025</div>
+                      </div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
                         <li>Engineered distributed data processing pipeline in C++ with multithreading, reducing latency by 40%.</li>
                         <li>Built fault-tolerant microservices handling 2M daily requests; collaborated with a 5-person cross-functional team.</li>
@@ -226,7 +232,13 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-semibold text-blue-300">YYC Beeswax LTD (ASU Capstone)</div>
-                      <div className="text-gray-400">Software Development Engineer Intern • Aug 2024 – Mar 2025 • Alberta, Canada</div>
+                      <div className="flex items-baseline justify-between gap-4 flex-wrap text-gray-400">
+                        <div>
+                          <span className="italic text-gray-300">Software Development Engineer Intern</span>
+                          <span className="text-gray-400"> • Alberta, Canada</span>
+                        </div>
+                        <div className="text-sm whitespace-nowrap">Aug 2024 – Mar 2025</div>
+                      </div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
                         <li>Built WordPress plugin with React + TypeScript, processing 3000+ transactions monthly.</li>
                         <li>Developed Node.js REST APIs with JWT; integrated Stripe with MySQL securely.</li>
@@ -237,7 +249,13 @@ export default function Home() {
                     </div>
                     <div>
                       <div className="font-semibold text-blue-300">Tech Mahindra</div>
-                      <div className="text-gray-400">IT Support Engineering Lead • May 2023 – Aug 2023 • Pune, India</div>
+                      <div className="flex items-baseline justify-between gap-4 flex-wrap text-gray-400">
+                        <div>
+                          <span className="italic text-gray-300">IT Support Engineering Lead</span>
+                          <span className="text-gray-400"> • Pune, India</span>
+                        </div>
+                        <div className="text-sm whitespace-nowrap">May 2023 – Aug 2023</div>
+                      </div>
                       <ul className="list-disc ml-5 text-gray-400 mt-2 space-y-1">
                         <li>Designed Java-based monitoring with Kafka, tracking 500+ servers with 99.9% uptime.</li>
                         <li>Optimized SQL with indexing, reducing DB load by 40% across production systems.</li>
