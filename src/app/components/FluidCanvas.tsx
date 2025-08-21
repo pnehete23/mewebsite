@@ -76,6 +76,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       color: { r: 0, g: 0, b: 0 },
     },
   ]);
+  const lastScrollRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const config = {
   SIM_RESOLUTION: 512, // Increased from 128 for more detail
   DYE_RESOLUTION: 1024, // Increased from 512 for finer fluid texture
@@ -710,6 +711,91 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     pointer.down = false;
   }, []);
 
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!touch || !rect) return;
+
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    setCursorPos({ x: touch.clientX, y: touch.clientY });
+
+    const pointer = pointersRef.current[0];
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    pointer.prevTexcoordX = pointer.texcoordX;
+    pointer.prevTexcoordY = pointer.texcoordY;
+    pointer.texcoordX = x / canvas.width;
+    pointer.texcoordY = 1 - y / canvas.height;
+
+    const aspectRatio = canvas.width / canvas.height;
+    pointer.deltaX = correctRadius(
+      pointer.texcoordX - pointer.prevTexcoordX,
+      aspectRatio < 1 ? aspectRatio : 1
+    );
+    pointer.deltaY = correctRadius(
+      pointer.texcoordY - pointer.prevTexcoordY,
+      aspectRatio > 1 ? 1 / aspectRatio : 1
+    );
+    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
+    pointer.color = generateWarmColor();
+  }, []);
+
+  const handleTouchStart = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!touch || !rect || !canvasRef.current) return;
+
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    const pointer = pointersRef.current[0];
+    pointer.id = -1;
+    pointer.down = true;
+    pointer.moved = false;
+    pointer.texcoordX = x / canvasRef.current.width;
+    pointer.texcoordY = 1 - y / canvasRef.current.height;
+    pointer.prevTexcoordX = pointer.texcoordX;
+    pointer.prevTexcoordY = pointer.texcoordY;
+    pointer.deltaX = 0;
+    pointer.deltaY = 0;
+    pointer.color = generateWarmColor();
+
+    const color = { ...pointer.color };
+    color.r *= 10;
+    color.g *= 10;
+    color.b *= 10;
+    const dx = 10 * (Math.random() - 0.5);
+    const dy = 30 * (Math.random() - 0.5);
+    splat(pointer.texcoordX, pointer.texcoordY, dx, dy, color);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const pointer = pointersRef.current[0];
+    pointer.down = false;
+  }, []);
+
+  const handleScroll = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dxPx = window.scrollX - lastScrollRef.current.x;
+    const dyPx = window.scrollY - lastScrollRef.current.y;
+    lastScrollRef.current = { x: window.scrollX, y: window.scrollY };
+
+    if (Math.abs(dxPx) === 0 && Math.abs(dyPx) === 0) return;
+
+    const centerXNorm = (canvas.clientWidth * 0.5) / canvas.width;
+    const centerYNorm = 1 - (canvas.clientHeight * 0.5) / canvas.height;
+    const dx = dxPx / Math.max(1, canvas.width);
+    const dy = -dyPx / Math.max(1, canvas.height);
+
+    const color = generateWarmColor();
+    splat(centerXNorm, centerYNorm, dx, dy, color);
+  }, []);
+
   let density: DoubleFramebuffer | null = null;
   let velocity: DoubleFramebuffer | null = null;
   let divergence: Framebuffer | null = null;
@@ -1006,16 +1092,25 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     resizeFramebuffers();
     updateSimulation();
 
+    lastScrollRef.current = { x: window.scrollX, y: window.scrollY };
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchstart', handleTouchStart as EventListener);
+      window.removeEventListener('touchmove', handleTouchMove as EventListener);
+      window.removeEventListener('touchend', handleTouchEnd as EventListener);
+      window.removeEventListener('scroll', handleScroll as EventListener);
     };
-  }, [handleMouseMove, handleMouseDown, handleMouseUp]);
+  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleTouchStart, handleTouchMove, handleTouchEnd, handleScroll]);
 
   return (
     <>

@@ -9,7 +9,6 @@ type Project = {
   description: string;
   image: string;
   technologies: string[];
-  liveUrl?: string;
   githubUrl?: string;
   featured?: boolean;
 };
@@ -42,7 +41,6 @@ const projects: Project[] = [
     description: "The Data Science Mentor AI Assistant is a comprehensive learning companion designed to bridge the gap between theoretical knowledge and practical application in data science. Whether you're debugging pandas operations, understanding machine learning algorithms, or exploring statistical concepts, this AI mentor provides interactive, personalized guidance with real-time code execution and voice explanations.",
     image: "/imageb.png",
     technologies: ["python", "Gradio 4.0+", "AI Models: OpenAI GPT-Series", "Anthropic Claude series", "Data Science Libraries:pandas, numpy, matplotlib, seaborn, scikit-learn", "Voice Synthesis:OpenAI TTS API"],
-    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Aihelper",
     featured: true
   },
@@ -53,7 +51,6 @@ const projects: Project[] = [
     description: "A full-stack e-commerce solution with React, Node.js, and Stripe integration.",
     image: "/image1.png", // Ensure this file exists in the public folder
     technologies: ["React", "Node.js", "MongoDB", "Stripe"],
-    //liveUrl: "https://example.com",
     githubUrl: "https://staging2.abelocollection.com/",
     featured: true
   },
@@ -63,7 +60,6 @@ const projects: Project[] = [
     description: "The Wellness Center Locator is a web-based application designed to help users find nearby wellness centers based on their health and fitness needs. ",
     image: "/image2.jpeg",
     technologies: ["html" , "css", "flask", "python"],
-    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Wellness-Center",
     featured: false
   },
@@ -73,7 +69,6 @@ const projects: Project[] = [
     description: "A responsive portfolio website with 3D animations and smooth interactions.",
     image: "/image3.png",
     technologies: ["Next.js", "Three.js", "Framer Motion", "Tailwind"],
-    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/mewebsite",
     featured: false
   },
@@ -83,7 +78,6 @@ const projects: Project[] = [
     description: "Conviniently shorteSns the long annoying URLs!.",
     image: "/image5.jpeg",
     technologies: ["python", "html"],
-    //liveUrl: "https://example.com",
     githubUrl: "https://github.com/pnehete23/Tiny-URL-main",
     featured: false
   },
@@ -130,16 +124,6 @@ export default function Projects() {
                     />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div className="flex gap-4">
-                        {project.liveUrl && (
-                          <a
-                            href={project.liveUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                          >
-                            Live Demo
-                          </a>
-                        )}
                         {project.githubUrl && (
                           <a
                             href={project.githubUrl}
