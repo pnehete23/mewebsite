@@ -50,6 +50,7 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#000000" />
         <link rel="icon" href="/favicon.ico" />
+        <script defer src="https://t.raah.dev/script.js" data-pid="proj_eewqwa3njk7g09r4" data-domain="mewebsite-delta.vercel.app"></script>
       </head>
       <body className="font-sans antialiased bg-black text-white overflow-x-hidden">
         {/* Fluid Background Canvas - Fixed behind everything */}
