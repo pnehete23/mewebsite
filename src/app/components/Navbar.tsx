@@ -118,13 +118,13 @@ const Navbar: React.FC = () => {
             <FaSun
               className={`absolute text-[13px] transition-all duration-300 ${
                 isLight ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-50"
-              }`}
+              } dark:text-gray-300`}
             />
             {/* Moon (visible in dark mode) */}
             <FaMoon
               className={`absolute text-[12px] transition-all duration-300 ${
                 isLight ? "opacity-0 rotate-90 scale-50" : "opacity-100 rotate-0 scale-100"
-              }`}
+              } dark:text-gray-300`}
             />
           </button>
 

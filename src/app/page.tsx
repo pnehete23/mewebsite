@@ -700,12 +700,12 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.1 }}
-                className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] tracking-tight"
+                className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] tracking-tight dark:text-gray-300"
               >
-                <span className="block bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent dark:text-gray-300">
                   Prathamesh
                 </span>
-                <span className="block bg-gradient-to-r from-blue-800 dark:from-purple-500 via-white to-blue-700 dark:to-purple-300 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-blue-800 dark:from-purple-500 via-white to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
                   Nehete
                 </span>
               </motion.h1>
@@ -719,7 +719,7 @@ export default function Home() {
               >
                 <span
                   aria-hidden="true"
-                  className="absolute top-0 left-0 text-[150px] md:text-[220px] font-serif italic select-none pointer-events-none"
+                  className="absolute top-0 left-0 text-[150px] md:text-[220px] font-serif italic select-none pointer-events-none dark:text-gray-300"
                   style={{
                     lineHeight: 0.9,
                     color: "rgba(180, 180, 190, 0.13)",
@@ -730,7 +730,7 @@ export default function Home() {
                 </span>
 
                 <p
-                  className="relative text-lg md:text-2xl leading-relaxed font-extrabold italic px-2 md:px-4"
+                  className="relative text-lg md:text-2xl leading-relaxed font-extrabold italic px-2 md:px-4 dark:text-gray-300"
                   style={{
                     color: "var(--ink-hero-quote)",
                     textShadow: "var(--ink-hero-quote-shadow)",
@@ -783,7 +783,7 @@ export default function Home() {
                   aria-label="LinkedIn"
                   className="hover:text-black dark:hover:text-white hover:scale-110 transition-all duration-300"
                 >
-                  <FaLinkedin className="text-2xl" />
+                  <FaLinkedin className="text-2xl dark:text-gray-300" />
                 </a>
                 <a
                   href="https://github.com/pnehete23"
@@ -792,7 +792,7 @@ export default function Home() {
                   aria-label="GitHub"
                   className="hover:text-black dark:hover:text-white hover:scale-110 transition-all duration-300"
                 >
-                  <FaGithub className="text-2xl" />
+                  <FaGithub className="text-2xl dark:text-gray-300" />
                 </a>
                 <span className="h-px w-10 bg-black/[0.08] dark:bg-white/15" />
                 <span
@@ -941,9 +941,9 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="text-center"
+            className="text-center dark:text-gray-300"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300">
               About Me
             </h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
@@ -1060,7 +1060,7 @@ export default function Home() {
                     rel="noreferrer noopener"
                     className="font-mono text-[9px] text-black dark:text-purple-300/70 hover:text-black dark:hover:text-purple-200 tracking-widest uppercase inline-flex items-center gap-1"
                   >
-                    <FaGithub className="text-[11px]" /> @pnehete23
+                    <FaGithub className="text-[11px] dark:text-gray-300" /> @pnehete23
                   </a>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -1089,9 +1089,9 @@ export default function Home() {
                       href={k.href}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="block rounded-lg bg-blue-800/10 dark:bg-purple-500/10 border border-blue-700/25 dark:border-purple-400/25 px-3 py-2 text-center hover:bg-blue-800/15 dark:hover:bg-purple-500/15 hover:border-blue-700/50 dark:hover:border-purple-400/50 transition-colors"
+                      className="block rounded-lg bg-blue-800/10 dark:bg-purple-500/10 border border-blue-700/25 dark:border-purple-400/25 px-3 py-2 text-center hover:bg-blue-800/15 dark:hover:bg-purple-500/15 hover:border-blue-700/50 dark:hover:border-purple-400/50 transition-colors dark:text-gray-300"
                     >
-                      <div className="text-xl font-bold bg-gradient-to-r from-blue-200 via-blue-200 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent">
+                      <div className="text-xl font-bold bg-gradient-to-r from-blue-200 via-blue-200 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
                         {k.value !== null ? k.value : k.fallback}
                       </div>
                       <div className="font-mono text-[9px] text-black dark:text-purple-300/80 tracking-wider uppercase mt-0.5">
@@ -1125,7 +1125,7 @@ export default function Home() {
               transition={{ duration: 1 }}
               className="absolute inset-0 flex items-center justify-center"
             >
-              <div className="text-center">
+              <div className="text-center dark:text-gray-300">
                 <div
                   className="font-mono text-[9px] md:text-[11px] text-yellow-400 dark:text-yellow-300 tracking-[0.5em] uppercase"
                   style={{
@@ -1160,13 +1160,13 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
-            className="text-center space-y-3"
+            className="text-center space-y-3 dark:text-gray-300"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-yellow-500 dark:text-yellow-300">
               Coursework
             </h2>
             <p className="font-mono text-[10px] md:text-[11px] text-black dark:text-purple-300/70 tracking-[0.4em] uppercase inline-flex items-center gap-2 justify-center">
-              <FaUniversity className="text-[12px]" />
+              <FaUniversity className="text-[12px] dark:text-gray-300" />
               Northwestern MSDS &middot; AI Specialization
             </p>
           </motion.div>
@@ -1188,7 +1188,7 @@ export default function Home() {
                     <div className="text-xs md:text-sm text-black dark:text-gray-400 mt-1 font-mono tracking-wide">
                       {c.term}
                       {inProgress && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-black">
+                        <span className="ml-2 inline-flex items-center gap-1 text-black dark:text-gray-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                           in progress
                         </span>
@@ -1210,7 +1210,7 @@ export default function Home() {
                       )}
                     </div>
                   </div>
-                  <div className="col-span-12 md:hidden text-sm text-black leading-snug">
+                  <div className="col-span-12 md:hidden text-sm text-black leading-snug dark:text-gray-300">
                     {c.skills.slice(0, 5).join(" · ")}
                     {c.skills.length > 5 && (
                       <span className="text-black dark:text-purple-300/60 ml-1">
@@ -1277,7 +1277,7 @@ export default function Home() {
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
                   <h3 className="text-xl font-semibold text-black dark:text-white">{exp.title}</h3>
-                  <span className="text-black font-medium">{exp.period}</span>
+                  <span className="text-black font-medium dark:text-gray-300">{exp.period}</span>
                 </div>
                 <h4 className="text-lg text-black dark:text-gray-300 mb-2">{exp.company}</h4>
                 {Array.isArray(exp.description) ? (
@@ -1345,9 +1345,9 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="text-center"
+            className="text-center dark:text-gray-300"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block dark:text-gray-300">
               My Projects
             </h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
@@ -1394,7 +1394,7 @@ export default function Home() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
                       <HeartPulse
                         strokeWidth={1.6}
-                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(244,114,182,0.55)]"
+                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(244,114,182,0.55)] dark:text-gray-300"
                       />
 
                       <svg
@@ -1459,7 +1459,7 @@ export default function Home() {
                         Northwestern
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-yellow-300 dark:via-pink-300 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-yellow-300 dark:via-pink-300 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       RA Flare Risk Predictor
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -1471,7 +1471,7 @@ export default function Home() {
                       under a 10% clinician review budget. Served as a real-time streaming inference
                       API behind a SHAP-driven clinician dashboard with HDBSCAN subgroup discovery.
                     </p>
-                    <p className="text-xs text-black italic leading-relaxed -mt-1">
+                    <p className="text-xs text-black italic leading-relaxed -mt-1 dark:text-gray-300">
                       Cohorts simulated from published RCT parameters (Wang et al., JMIR 2018;
                       NCT02822521). Hover the visual to explore the concept stack.
                     </p>
@@ -1552,10 +1552,10 @@ export default function Home() {
                       </div>
                       <div className="flex-1 flex items-center px-3 gap-3 overflow-hidden">
                         <span className="font-mono text-[9px] text-black dark:text-emerald-300 tracking-widest uppercase inline-flex items-center gap-1.5 whitespace-nowrap">
-                          <FaShieldAlt className="text-[10px]" />
+                          <FaShieldAlt className="text-[10px] dark:text-gray-300" />
                           HIPAA Safe Harbor
                         </span>
-                        <span className="font-mono text-[9px] text-black hidden md:inline whitespace-nowrap">
+                        <span className="font-mono text-[9px] text-black hidden md:inline whitespace-nowrap dark:text-gray-300">
                           CPIC &middot; openFDA &middot; CT.gov &middot; RxNav
                         </span>
                       </div>
@@ -1571,10 +1571,10 @@ export default function Home() {
                     <div className="absolute inset-x-0 top-9 bottom-[68px]">
                       <div className="relative w-full h-full">
                         <div className="absolute top-2 left-3 z-[1]">
-                          <div className="font-mono text-[9px] text-black tracking-widest uppercase">
+                          <div className="font-mono text-[9px] text-black tracking-widest uppercase dark:text-gray-300">
                             Pharmacogenomic Safety
                           </div>
-                          <div className="font-mono text-[8px] text-black mt-0.5">
+                          <div className="font-mono text-[8px] text-black mt-0.5 dark:text-gray-300">
                             CPIC 4-tier &middot; cross-gene scan
                           </div>
                         </div>
@@ -1585,13 +1585,13 @@ export default function Home() {
                           whileInView={{ opacity: 1, x: 0 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.6, delay: 0.3 }}
-                          className="absolute top-2 right-3 z-[1] px-2 py-1.5 rounded bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 backdrop-blur-sm font-mono text-[9px] max-w-[180px]"
+                          className="absolute top-2 right-3 z-[1] px-2 py-1.5 rounded bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 backdrop-blur-sm font-mono text-[9px] max-w-[180px] dark:text-gray-300"
                         >
                           <div className="flex items-center gap-1.5 text-black dark:text-rose-100">
                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-rose-400 animate-pulse" />
                             <span className="font-semibold tracking-wider">HIGH RISK</span>
                           </div>
-                          <div className="text-black text-[9px] mt-0.5 leading-snug">
+                          <div className="text-black text-[9px] mt-0.5 leading-snug dark:text-gray-300">
                             CYP2D6 + Codeine: poor metabolizer &middot; avoid
                           </div>
                         </motion.div>
@@ -1721,12 +1721,12 @@ export default function Home() {
                         </svg>
 
                         {/* Bottom helix label */}
-                        <div className="absolute bottom-2 left-3 z-[1] flex items-center gap-2 font-mono text-[8.5px] text-black tracking-wider">
+                        <div className="absolute bottom-2 left-3 z-[1] flex items-center gap-2 font-mono text-[8.5px] text-black tracking-wider dark:text-gray-300">
                           <span>22 GENES</span>
-                          <span className="text-black">·</span>
+                          <span className="text-black dark:text-gray-300">·</span>
                           <span>200 PATIENTS</span>
-                          <span className="text-black">·</span>
-                          <span className="text-black">2 ALERTS</span>
+                          <span className="text-black dark:text-gray-300">·</span>
+                          <span className="text-black dark:text-gray-300">2 ALERTS</span>
                         </div>
                       </div>
                     </div>
@@ -1741,7 +1741,7 @@ export default function Home() {
                       </div>
                       <div className="relative flex-1 overflow-hidden flex items-center">
                         <motion.div
-                          className="flex gap-6 items-center whitespace-nowrap font-mono text-[10px] pl-4"
+                          className="flex gap-6 items-center whitespace-nowrap font-mono text-[10px] pl-4 dark:text-gray-300"
                           animate={{ x: ["0%", "-50%"] }}
                           transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
                         >
@@ -1761,7 +1761,7 @@ export default function Home() {
                                 <span
                                   className={`w-1 h-1 rounded-full ${row.c} shrink-0`}
                                 />
-                                <span className="text-black">{row.t}</span>
+                                <span className="text-black dark:text-gray-300">{row.t}</span>
                                 <span className="text-black dark:text-gray-200">{row.e}</span>
                               </span>
                             ));
@@ -1771,7 +1771,7 @@ export default function Home() {
                     </div>
 
                     {/* BOTTOM STRIP */}
-                    <div className="absolute bottom-0 left-0 right-0 h-9 border-t border-blue-500/25 dark:border-cyan-500/25 bg-black/[0.06] dark:bg-black/60 backdrop-blur-sm flex items-center justify-between px-3 font-mono text-[10px] z-[2]">
+                    <div className="absolute bottom-0 left-0 right-0 h-9 border-t border-blue-500/25 dark:border-cyan-500/25 bg-black/[0.06] dark:bg-black/60 backdrop-blur-sm flex items-center justify-between px-3 font-mono text-[10px] z-[2] dark:text-gray-300">
                       <div className="flex items-center gap-2.5 md:gap-4 text-black dark:text-gray-400">
                         <span>
                           APIs <span className="text-black dark:text-cyan-100">4</span>
@@ -1793,7 +1793,7 @@ export default function Home() {
                     </div>
 
                     {/* Hover hint */}
-                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none dark:text-gray-300">
                       hover &rarr; stack
                     </div>
 
@@ -1817,7 +1817,7 @@ export default function Home() {
                         Synthetic Data
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-200 dark:from-cyan-200 via-blue-100 dark:via-sky-100 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-200 dark:from-cyan-200 via-blue-100 dark:via-sky-100 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       Patient360 NU
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -1832,7 +1832,7 @@ export default function Home() {
                       </span>
                       .
                     </p>
-                    <ul className="text-[12.5px] text-black leading-relaxed space-y-1 -mt-1">
+                    <ul className="text-[12.5px] text-black leading-relaxed space-y-1 -mt-1 dark:text-gray-300">
                       <li className="flex gap-2">
                         <span className="text-black dark:text-cyan-300">·</span>
                         Adverse-event prevention at prescription time
@@ -1846,7 +1846,7 @@ export default function Home() {
                         Consent as a first-class, revocable object
                       </li>
                     </ul>
-                    <p className="text-xs text-black italic leading-relaxed -mt-1">
+                    <p className="text-xs text-black italic leading-relaxed -mt-1 dark:text-gray-300">
                       Built on synthetic patient data &middot; live gene-level APIs are massive
                       and access-gated, so the generator mirrors real CPIC alleles, ClinVar
                       pathogenicity, and SEER prevalence. Hover the visual to explore the concept
@@ -1925,7 +1925,7 @@ export default function Home() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
                       <CandlestickChart
                         strokeWidth={1.6}
-                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(16,185,129,0.55)]"
+                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(16,185,129,0.55)] dark:text-gray-300"
                       />
 
                       <svg
@@ -1967,12 +1967,12 @@ export default function Home() {
                         </circle>
                       </svg>
 
-                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase">
+                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase dark:text-gray-300">
                         Quant Trading Dashboard
                       </div>
                     </div>
                     {/* Hover hint */}
-                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none dark:text-gray-300">
                       hover &rarr; stack
                     </div>
 
@@ -1984,7 +1984,7 @@ export default function Home() {
 
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-300 dark:from-emerald-300 via-blue-300 dark:via-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-300 dark:from-emerald-300 via-blue-300 dark:via-cyan-300 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       Quant Trading Dashboard
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -2337,7 +2337,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.7 }}
-            className="text-center mb-12"
+            className="text-center mb-12 dark:text-gray-300"
           >
             <div className="flex items-center gap-3 mb-3 max-w-md mx-auto">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/50 dark:to-purple-400/50" />
@@ -2347,7 +2347,7 @@ export default function Home() {
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/50 dark:to-purple-400/50" />
             </div>
             <h3
-              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-blue-200 via-blue-100 dark:via-violet-100 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent"
+              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-blue-200 via-blue-100 dark:via-violet-100 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300"
               style={{
                 fontFamily:
                   'var(--font-fraunces), "Fraunces", "Cormorant Garamond", Georgia, serif',
@@ -2357,7 +2357,7 @@ export default function Home() {
             >
               Honors &amp; Publication.
             </h3>
-            <p className="text-sm text-black mt-2 max-w-md mx-auto">
+            <p className="text-sm text-black mt-2 max-w-md mx-auto dark:text-gray-300">
               Three artifacts, fanned out like a hand of cards. Hover any card to lift and read it.
             </p>
           </motion.div>
@@ -2458,7 +2458,7 @@ export default function Home() {
                     </div>
 
                     {/* Center content */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center dark:text-gray-300">
                       <div className="mb-3 w-12 h-12 rounded-full bg-blue-800/20 dark:bg-purple-500/20 border border-blue-700/35 dark:border-purple-300/35 flex items-center justify-center shadow-[0_0_20px_-4px_rgba(168,85,247,0.5)]">
                         <card.Icon
                           strokeWidth={1.6}
@@ -2478,7 +2478,7 @@ export default function Home() {
                         {card.subtitle}
                       </p>
                       <p
-                        className="text-[11px] md:text-xs text-black mt-3 leading-snug px-1"
+                        className="text-[11px] md:text-xs text-black mt-3 leading-snug px-1 dark:text-gray-300"
                         style={{
                           fontFamily:
                             'var(--font-fraunces), "Fraunces", Georgia, serif',
@@ -2511,7 +2511,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="text-center relative"
+            className="text-center relative dark:text-gray-300"
           >
             {/* Wildcat mascot — peeking next to the title with a speech bubble */}
             <motion.div
@@ -2561,7 +2561,7 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300">
               Get In Touch
             </h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-2xl mx-auto">
@@ -2597,7 +2597,7 @@ export default function Home() {
                 href="mailto:prathameshnehete2026@u.northwestern.edu"
                 className="font-mono text-[10px] text-black dark:text-purple-200 tracking-widest uppercase hover:text-black dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
               >
-                <FaEnvelope className="text-[10px]" />
+                <FaEnvelope className="text-[10px] dark:text-gray-300" />
                 Reach out
               </a>
             </div>
@@ -2623,7 +2623,7 @@ export default function Home() {
                 <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <FaEnvelope className="text-black" />
+                      <FaEnvelope className="text-black dark:text-gray-300" />
                     </div>
                     <div>
                       <h4 className="text-black dark:text-white font-semibold">Email</h4>
@@ -2641,7 +2641,7 @@ export default function Home() {
                     onClick={() => copyToClipboard("prathameshnehete2026@u.northwestern.edu", "email")}
                     className="shrink-0 px-3 py-2 rounded-md bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   >
-                    {copied.email ? <FaCheck className="text-black" /> : <FaCopy />}
+                    {copied.email ? <FaCheck className="text-black dark:text-gray-300" /> : <FaCopy />}
                   </button>
                 </div>
 
@@ -2686,7 +2686,7 @@ export default function Home() {
                 <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-yellow-500/20 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
-                      <FaPhone className="text-black" />
+                      <FaPhone className="text-black dark:text-gray-300" />
                     </div>
                     <div>
                       <h4 className="text-black dark:text-white font-semibold">Phone</h4>
@@ -2704,7 +2704,7 @@ export default function Home() {
                     onClick={() => copyToClipboard("+14808730791", "phone")}
                     className="shrink-0 px-3 py-2 rounded-md bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   >
-                    {copied.phone ? <FaCheck className="text-black" /> : <FaCopy />}
+                    {copied.phone ? <FaCheck className="text-black dark:text-gray-300" /> : <FaCopy />}
                   </button>
                 </div>
               </div>
@@ -2788,7 +2788,7 @@ export default function Home() {
                       status.type === "success"
                         ? "border-yellow-400/40 dark:border-green-400/40 bg-yellow-500/10 dark:bg-green-500/10 text-black"
                         : "border-yellow-400/40 dark:border-red-400/40 bg-yellow-500/10 dark:bg-red-500/10 text-black"
-                    }`}
+                    } dark:text-gray-300`}
                   >
                     {status.message}
                   </div>

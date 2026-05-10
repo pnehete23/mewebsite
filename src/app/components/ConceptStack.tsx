@@ -40,7 +40,7 @@ export default function ConceptStack({
     <>
       <div className="flex items-center gap-3 mb-4">
         <span
-          className={`font-mono text-[10px] tracking-[0.4em] uppercase ${accentColor}`}
+          className={`font-mono text-[10px] tracking-[0.4em] uppercase ${accentColor} dark:text-gray-300`}
         >
           Concept Stack
         </span>
@@ -63,9 +63,9 @@ export default function ConceptStack({
             }
           >
             <div className="flex items-center gap-2 mb-2">
-              <group.Icon className={`${group.iconColor} text-sm`} />
+              <group.Icon className={`${group.iconColor} text-sm dark:text-gray-300`} />
               <span
-                className={`text-[11px] font-mono uppercase tracking-widest ${group.titleColor}`}
+                className={`text-[11px] font-mono uppercase tracking-widest ${group.titleColor} dark:text-gray-300`}
               >
                 {group.title}
               </span>
