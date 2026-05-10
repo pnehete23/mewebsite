@@ -1,42 +1,48 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { Inter, Roboto_Mono } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans';
+import { GeistMono } from 'geist/font/mono';
+import { Cormorant_Garamond, Fraunces } from 'next/font/google';
 import Navbar from './components/Navbar';
 import FluidCanvas from './components/FluidCanvas';
+import Starfield from './components/Starfield';
 import { Analytics } from "@vercel/analytics/next"
 
-
-// Load Inter as the primary font
-const inter = Inter({
-  variable: '--font-inter',
+// Classic book-typography serif — used for the "scroll" coursework section
+const cormorant = Cormorant_Garamond({
+  variable: '--font-cormorant',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
   display: 'swap',
 });
 
-// Load Roboto Mono as the monospace font
-const robotoMono = Roboto_Mono({
-  variable: '--font-roboto-mono',
+// Modern editorial serif with personality — for narrative sections like My Story
+const fraunces = Fraunces({
+  variable: '--font-fraunces',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  style: ['normal', 'italic'],
   display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: 'Prathamesh Nehete - Portfolio',
-  description: 'Full-stack developer and UI/UX designer. Explore my projects, skills, and professional journey.',
-  keywords: 'Prathamesh Nehete, Portfolio, Web Developer, Full Stack Developer, React, Next.js, TypeScript',
+  title: 'Prathamesh Nehete - Data Scientist & ML Engineer',
+  description: 'Data scientist and machine learning engineer. Northwestern MSDS (AI concentration). Explore my projects in analytics, statistical modeling, and AI.',
+  keywords: 'Prathamesh Nehete, Data Scientist, Machine Learning, AI, Analytics, Northwestern, MSDS, Python, R, Statistics, Deep Learning',
   authors: [{ name: 'Prathamesh Nehete' }],
   creator: 'Prathamesh Nehete',
   robots: 'index, follow',
   openGraph: {
-    title: 'Prathamesh Nehete - Portfolio',
-    description: 'Full-stack developer and UI/UX designer portfolio',
+    title: 'Prathamesh Nehete - Data Scientist & ML Engineer',
+    description: 'Data scientist and ML engineer. Northwestern MSDS with AI concentration.',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Prathamesh Nehete - Portfolio',
-    description: 'Full-stack developer and UI/UX designer portfolio',
+    title: 'Prathamesh Nehete - Data Scientist & ML Engineer',
+    description: 'Data scientist and ML engineer. Northwestern MSDS with AI concentration.',
   },
 };
 
@@ -46,17 +52,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
+    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${cormorant.variable} ${fraunces.variable}`}>
       <head>
         <meta name="theme-color" content="#000000" />
         <link rel="icon" href="/favicon.ico" />
         <script defer src="https://t.raah.dev/script.js" data-pid="proj_eewqwa3njk7g09r4" data-domain="mewebsite-delta.vercel.app"></script>
       </head>
       <body className="font-sans antialiased bg-black text-white overflow-x-hidden">
-        {/* Fluid Background Canvas - Fixed behind everything */}
-        <FluidCanvas 
-          
-        />
+        {/* Starry space layer */}
+        <Starfield />
+
+        {/* Fluid Background Canvas - transparent, sits over starfield */}
+        <FluidCanvas />
 
         {/* Main App Container */}
         <div className="relative z-10 min-h-screen flex flex-col">

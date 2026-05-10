@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:www.rohangosavi.com)",
+      "Bash(npx --no-install tsc --noEmit -p .)",
+      "Bash(npx --no-install tsc --noEmit)",
+      "Bash(npx tsc *)"
     ],
     "deny": []
   }

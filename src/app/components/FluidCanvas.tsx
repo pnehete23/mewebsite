@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 
 interface FluidCanvasProps {
   className?: string;
@@ -55,11 +55,11 @@ interface Config {
 }
 
 const FluidCanvas: React.FC<FluidCanvasProps> = ({
-  className = 'fixed top-0 left-0 w-full h-full z-0 pointer-events-none',
+  className = 'fixed top-0 left-0 w-full h-full pointer-events-none',
   style = {},
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const cursorRef = useRef<HTMLDivElement>(null);
   const glRef = useRef<WebGLRenderingContext | null>(null);
   const extRef = useRef<any>(null);
   const pointersRef = useRef<Pointer[]>([
@@ -77,22 +77,24 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     },
   ]);
   const lastScrollRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const moveAccumRef = useRef<{ dist: number; dx: number; dy: number }>({ dist: 0, dx: 0, dy: 0 });
   const config = {
-  SIM_RESOLUTION: 512, // Increased from 128 for more detail
-  DYE_RESOLUTION: 1024, // Increased from 512 for finer fluid texture
+  SIM_RESOLUTION: 256,
+  DYE_RESOLUTION: 1024,
   CAPTURE_RESOLUTION: 512,
-  DENSITY_DISSIPATION: 0.8, // Slightly higher to retain density longer
-  VELOCITY_DISSIPATION: 0.8, // Slightly higher for smoother velocity
-  PRESSURE: 0.5, // Adjust pressure for more fluid interaction
-  PRESSURE_ITERATIONS: 20, // Increased iterations for better pressure solving
-  CURL: 0.5, // Increased curl for more swirling effect
-  SPLAT_RADIUS: 0.1, // Smaller radius for more precise splats
-  SPLAT_FORCE: 5000, // Increased force for more responsive splats
-  SHADING: true, // Ensure shading is enabled for depth
-  COLOR_UPDATE_SPEED: 0.5, // Faster color updates for vibrancy
+  DENSITY_DISSIPATION: 1.6,
+  VELOCITY_DISSIPATION: 0.9,
+  PRESSURE: 0.8,
+  PRESSURE_ITERATIONS: 20,
+  CURL: 2,
+  SPLAT_RADIUS: 0.045,
+  SPLAT_FORCE: 700,
+  SHADING: true,
+  COLOR_UPDATE_SPEED: 1.4,
+  MOVE_SPLAT_DISTANCE: 0,
   PAUSED: false,
-  BACK_COLOR: { r: 0, g: 0, b: 0 }, // Black background to match the image
-  Neon_cycle: true, // Enable neon cycle for dynamic color changes
+  BACK_COLOR: { r: 0, g: 0, b: 0 },
+  Neon_cycle: true,
 };
 
   const baseVertexShader = `
@@ -305,9 +307,10 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     uniform sampler2D uTexture;
     uniform vec2 texelSize;
 
-    vec3 linearToGamma(vec3 color) {
-      color = max(color, vec3(0));
-      return max(1.055 * pow(color, vec3(0.416666667)) - 0.055, vec3(0));
+    vec3 hueShift(vec3 col, float h) {
+      const vec3 k = vec3(0.57735);
+      float cosA = cos(h);
+      return col * cosA + cross(k, col) * sin(h) + k * dot(k, col) * (1.0 - cosA);
     }
 
     void main () {
@@ -324,13 +327,31 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
         float diffuse = clamp(dot(n, l) + 0.7, 0.7, 1.0);
         c *= diffuse;
       #endif
-      float a = max(c.r, max(c.g, c.b));
+
+      float lum = max(c.r, max(c.g, c.b));
+
+      // Subtle hue drift on dissipating wisps — water-like color bleed, not a neon flash
+      float fade = 1.0 - smoothstep(0.05, 0.4, lum);
+      vec3 shifted = hueShift(c, fade * 1.0);
+      c = mix(c, shifted, fade * 0.45);
+
+      float a = clamp(max(c.r, max(c.g, c.b)) * 0.85, 0.0, 1.0);
       gl_FragColor = vec4(c, a);
     }
   `;
 
   const initGL = (canvas: HTMLCanvasElement) => {
-  const context = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  const ctxAttrs: WebGLContextAttributes = {
+    alpha: true,
+    premultipliedAlpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    preserveDrawingBuffer: false,
+  };
+  const context =
+    canvas.getContext('webgl', ctxAttrs) ||
+    canvas.getContext('experimental-webgl', ctxAttrs);
   if (!context) {
     throw new Error('WebGL not supported');
   }
@@ -342,7 +363,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   let formatRG = null;
   let formatR = null;
 
-  gl.clearColor(0, 0, 0, 1);
+  gl.clearColor(0, 0, 0, 0);
   const halfFloat = gl.getExtension('OES_texture_half_float');
   supportLinearFiltering = !!gl.getExtension('OES_texture_half_float_linear');
 
@@ -592,13 +613,12 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   };
 
   const generateWarmColor = () => {
-  // Neon color cycle: cycle through hues in the neon range (pink, purple, blue, cyan, green)
-  // Example: [0.83 (magenta), 0.72 (purple), 0.58 (blue), 0.48 (cyan), 0.39 (green)]
-  // Animate or randomize within this range for vibrant neon
-  const neonHues = [0.83, 0.72, 0.58, 0.48, 0.39];
-  const hue = neonHues[Math.floor(Math.random() * neonHues.length)];
+  // Extremely dark neon violet: tight deep-violet hue band, full neon saturation,
+  // very low value so splashes read as a dim, glowing violet rather than bright purple.
+  const nuHues = [0.74, 0.75, 0.76, 0.77, 0.78];
+  const hue = nuHues[Math.floor(Math.random() * nuHues.length)];
   const saturation = 1;
-  const value = 1;
+  const value = 0.42;
   let r = 0,
     g = 0,
     b = 0;
@@ -642,7 +662,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       break;
   }
 
-  return { r: r * 0.15, g: g * 0.15, b: b * 0.15 };
+  return { r: r * 0.75, g: g * 0.75, b: b * 0.75 };
 };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -652,7 +672,9 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    setCursorPos({ x: e.clientX, y: e.clientY });
+    if (cursorRef.current) {
+      cursorRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+    }
 
     const pointer = pointersRef.current[0];
     const canvas = canvasRef.current;
@@ -672,11 +694,10 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       pointer.texcoordY - pointer.prevTexcoordY,
       aspectRatio > 1 ? 1 / aspectRatio : 1
     );
-    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    pointer.color = generateWarmColor();
-  }, []);
 
-  
+    pointer.moved = pointer.deltaX !== 0 || pointer.deltaY !== 0;
+    if (pointer.moved) pointer.color = generateWarmColor();
+  }, []);
 
   const handleMouseDown = useCallback((e: MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -719,7 +740,9 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
 
-    setCursorPos({ x: touch.clientX, y: touch.clientY });
+    if (cursorRef.current) {
+      cursorRef.current.style.transform = `translate3d(${touch.clientX}px, ${touch.clientY}px, 0) translate(-50%, -50%)`;
+    }
 
     const pointer = pointersRef.current[0];
     const canvas = canvasRef.current;
@@ -739,8 +762,9 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       pointer.texcoordY - pointer.prevTexcoordY,
       aspectRatio > 1 ? 1 / aspectRatio : 1
     );
-    pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
-    pointer.color = generateWarmColor();
+
+    pointer.moved = pointer.deltaX !== 0 || pointer.deltaY !== 0;
+    if (pointer.moved) pointer.color = generateWarmColor();
   }, []);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
@@ -817,12 +841,13 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   const canvas = canvasRef.current;
   if (!gl || !splatProgram || !velocity || !density || !canvas || !blit) return;
 
+  const aspect = canvas.width / canvas.height;
   splatProgram.bind();
   splatProgram.uniforms.uTarget && gl.uniform1i(splatProgram.uniforms.uTarget, velocity.read.attach(0));
-  splatProgram.uniforms.aspectRatio && gl.uniform1f(splatProgram.uniforms.aspectRatio, canvas.width / canvas.height);
+  splatProgram.uniforms.aspectRatio && gl.uniform1f(splatProgram.uniforms.aspectRatio, aspect);
   splatProgram.uniforms.point && gl.uniform2f(splatProgram.uniforms.point, x, y);
   splatProgram.uniforms.color && gl.uniform3f(splatProgram.uniforms.color, dx * config.SPLAT_FORCE, dy * config.SPLAT_FORCE, 0);
-  splatProgram.uniforms.radius && gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100, canvas.width / canvas.height));
+  splatProgram.uniforms.radius && gl.uniform1f(splatProgram.uniforms.radius, correctRadius(config.SPLAT_RADIUS / 100, aspect));
   blit(velocity.write);
   velocity.swap();
 
@@ -893,14 +918,14 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   const velocityId = velocity.read.attach(0);
   advectionProgram.uniforms.uVelocity && gl.uniform1i(advectionProgram.uniforms.uVelocity, velocityId);
   advectionProgram.uniforms.uSource && gl.uniform1i(advectionProgram.uniforms.uSource, velocityId);
-  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.8); // Slightly slower advection for stability
+  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.55); // Slightly slower advection for stability
   advectionProgram.uniforms.dissipation && gl.uniform1f(advectionProgram.uniforms.dissipation, config.VELOCITY_DISSIPATION);
   blit(velocity.write);
   velocity.swap();
 
   advectionProgram.uniforms.uVelocity && gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
   advectionProgram.uniforms.uSource && gl.uniform1i(advectionProgram.uniforms.uSource, density.read.attach(1));
-  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.8);
+  advectionProgram.uniforms.dt && gl.uniform1f(advectionProgram.uniforms.dt, dt * 0.55);
   advectionProgram.uniforms.dissipation && gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION);
   blit(density.write);
   density.swap();
@@ -992,7 +1017,7 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       }
       if (clear) {
-        gl.clearColor(0, 0, 0, 1);
+        gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
       }
       gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
@@ -1061,7 +1086,19 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
       pointersRef.current.forEach((p) => {
         if (p.moved) {
           p.moved = false;
-          splat(p.texcoordX, p.texcoordY, p.deltaX * config.SPLAT_FORCE, p.deltaY * config.SPLAT_FORCE, p.color);
+          // Stage-1 impulse cap: clamp per-frame delta so fast cursor moves
+          // don't push the dye any harder than gentle ones — trail stays at the
+          // calm baseline regardless of cursor speed.
+          const maxDelta = 0.0007;
+          const mag = Math.hypot(p.deltaX, p.deltaY);
+          let dx = p.deltaX;
+          let dy = p.deltaY;
+          if (mag > maxDelta) {
+            const k = maxDelta / mag;
+            dx *= k;
+            dy *= k;
+          }
+          splat(p.texcoordX, p.texcoordY, dx * config.SPLAT_FORCE, dy * config.SPLAT_FORCE, p.color);
         }
       });
 
@@ -1119,24 +1156,26 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
         className={className}
         style={{
           display: 'block',
+          zIndex: 1,
           ...style,
         }}
       />
       <div
+  ref={cursorRef}
   className="cursor"
   style={{
-    left: cursorPos.x,
-    top: cursorPos.y,
+    left: 0,
+    top: 0,
     position: 'fixed',
-    width: '5px', // Smaller size
-    height: '5px', // Smaller size
+    width: '8px',
+    height: '8px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(226, 26, 149, 0.8)', // Neon cyan
-    mixBlendMode: 'difference',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     pointerEvents: 'none',
-    transform: 'translate(-50%, -50%)',
-    transition: 'width 0.3s, height 0.3s, background-color 0.3s',
-    animation: 'glow 0.8s infinite alternate', // Faster glow for intensity
+    willChange: 'transform',
+    transform: 'translate3d(-100px, -100px, 0) translate(-50%, -50%)',
+    boxShadow:
+      '0 0 8px 2px rgba(255,255,255,0.85), 0 0 18px 6px rgba(236,72,153,0.55), 0 0 32px 12px rgba(168,85,247,0.35), 0 0 60px 22px rgba(59,130,246,0.18)',
     zIndex: 9999,
   }}
 />
