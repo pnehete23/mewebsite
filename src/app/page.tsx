@@ -1281,7 +1281,7 @@ export default function Home() {
                 </div>
                 <h4 className="text-lg text-black dark:text-gray-300 mb-2">{exp.company}</h4>
                 {Array.isArray(exp.description) ? (
-                  <ul className="text-black dark:text-gray-400 space-y-1.5 list-disc pl-5 marker:text-black">
+                  <ul className="text-black dark:text-gray-400 space-y-1.5 list-disc pl-5 marker:text-black dark:marker:text-gray-500">
                     {exp.description.map((line, i) => (
                       <li key={i}>{line}</li>
                     ))}
