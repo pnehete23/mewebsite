@@ -1,70 +1,90 @@
 @import "tailwindcss";
 
-html { scroll-behavior: smooth; }
+/* Override Tailwind v4 default dark variant from media query → class-based.
+   Lets next-themes drive `dark:` utilities via the `.dark` class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+   Theme tokens — light mode is the default.
+   `.dark` overrides take effect when next-themes adds the class.
+   Used for arbitrary values that can't take a Tailwind `dark:` prefix
+   (drop shadows, inline-styled inks, image-cover overlays).
+   ============================================================ */
 
 :root {
-  --background: #292cd4;
-  --foreground: #171717;
-  /* Add these new variables */
-  --primary-color: #0066cc;
-  --accent-color: #5c15e0;
-  --background-color: #000000;
-  --text-color: #ffffff;
+  /* Core surfaces */
+  --background: #ffffff;
+  --foreground: #000000;
+
+  /* Hero italic quote: pitch-black ink in light mode.
+     Soft black halo so the italic still feels emphasized without color tint. */
+  --ink-hero-quote: #000000;
+  --ink-hero-quote-shadow:
+    0 0 28px rgba(0, 0, 0, 0.10),
+    0 0 10px rgba(0, 0, 0, 0.10),
+    0 1px 2px rgba(255, 255, 255, 0.5);
+
+  /* Card / panel drop shadows */
+  --shadow-card-strong:
+    0 25px 50px -12px rgba(15, 23, 42, 0.18),
+    0 0 30px -5px rgba(168, 85, 247, 0.16);
+  --shadow-card-soft: 0 10px 30px -10px rgba(15, 23, 42, 0.18);
+
+  /* Brand accent glows (purple / emerald / cyan / blue / rose) */
+  --shadow-glow-purple: 0 20px 50px -10px rgba(168, 85, 247, 0.25);
+  --shadow-glow-emerald: 0 20px 50px -10px rgba(16, 185, 129, 0.20);
+  --shadow-glow-cyan: 0 20px 50px -10px rgba(34, 211, 238, 0.20);
+  --shadow-glow-blue: 0 20px 50px -10px rgba(59, 130, 246, 0.20);
+  --shadow-glow-rose: 0 20px 50px -10px rgba(244, 114, 182, 0.20);
+
+  /* Navbar scrolled-state shadow */
+  --shadow-navbar-scrolled:
+    0 10px 40px -10px rgba(15, 23, 42, 0.20),
+    0 0 22px -10px rgba(168, 85, 247, 0.30);
+
+  /* Image-cover gradient base (project card image bottom darkener) */
+  --overlay-image-from: rgba(255, 255, 255, 0.92);
+  --overlay-image-via: rgba(255, 255, 255, 0.30);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-fraunces), "Fraunces", var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-feature-settings: "ss01", "cv11";
-  letter-spacing: -0.005em;
-  /* Add these for FluidCanvas color integration */
-  accent-color: var(--accent-color);
-}
-
-/* Additional styling for fluid canvas color integration */
-body {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-roboto-mono);
-}
-
-
-:root {
+.dark {
   --background: #000000;
-  --foreground: #171717;
-  --primary-color: #0066cc;
-  --accent-color: #ff6b6b;
-  --background-color: #000000;
-  --text-color: #ffffff;
+  --foreground: #ffffff;
+
+  --ink-hero-quote: #c4b5fd; /* violet-300 — bright on dark */
+  --ink-hero-quote-shadow:
+    0 0 28px rgba(124, 58, 237, 0.6),
+    0 0 10px rgba(168, 85, 247, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+
+  --shadow-card-strong:
+    0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    0 0 30px -5px rgba(168, 85, 247, 0.4);
+  --shadow-card-soft: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+
+  --shadow-glow-purple: 0 20px 50px -10px rgba(168, 85, 247, 0.6);
+  --shadow-glow-emerald: 0 20px 50px -10px rgba(16, 185, 129, 0.55);
+  --shadow-glow-cyan: 0 20px 50px -10px rgba(34, 211, 238, 0.55);
+  --shadow-glow-blue: 0 20px 50px -10px rgba(99, 102, 241, 0.55);
+  --shadow-glow-rose: 0 20px 50px -10px rgba(244, 114, 182, 0.55);
+
+  --shadow-navbar-scrolled:
+    0 10px 40px -10px rgba(0, 0, 0, 0.55),
+    0 0 22px -10px rgba(168, 85, 247, 0.55);
+
+  --overlay-image-from: rgba(0, 0, 0, 0.85);
+  --overlay-image-via: rgba(0, 0, 0, 0.30);
 }
 
- inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ededed;
-  }
-}
-
+/* Body typography only — bg/text colors handled by Tailwind utilities on <body>
+   in layout.tsx (`bg-white dark:bg-black text-gray-900 dark:text-white`). */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-fraunces), "Fraunces", var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-fraunces), "Fraunces", var(--font-geist-sans),
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-feature-settings: "ss01", "cv11";
   letter-spacing: -0.005em;
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
 
 export type RadarAxis = {
   axis: string;
@@ -20,6 +21,37 @@ const LABEL_OFFSET = 24;
 
 export default function SkillRadar({ data }: { data: RadarAxis[] }) {
   const [hover, setHover] = useState<number | null>(null);
+  const { resolvedTheme } = useTheme();
+  // Avoid hydration flash — server has no theme; default to dark to match
+  // first-paint (provider's defaultTheme). Once mounted, follow the user.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isLight = mounted && resolvedTheme === "light";
+
+  // Theme-aware ink for the SVG (Tailwind utilities don't apply inside
+  // SVG fill/stroke attributes, so we branch in JS).
+  const ink = isLight
+    ? {
+        // Light mode: blue polygon edge, pitch-black labels and vertices.
+        polygonStroke: "#1d4ed8", // blue-700
+        polygonFillId: "skillRadarFillLight",
+        vertexFill: "#000000",
+        vertexStroke: "#000000",
+        ringStroke: "rgba(0, 0, 0, 0.18)",
+        axisStroke: "rgba(0, 0, 0, 0.22)",
+        axisLabelFill: "#000000",
+        axisLabelActive: "#000000",
+      }
+    : {
+        polygonStroke: "#ddd6fe", // violet-200
+        polygonFillId: "skillRadarFillDark",
+        vertexFill: "#ffffff",
+        vertexStroke: "#a78bfa", // violet-400
+        ringStroke: "rgba(168, 85, 247, 0.18)",
+        axisStroke: "rgba(168, 85, 247, 0.22)",
+        axisLabelFill: "rgba(216, 180, 254, 0.85)",
+        axisLabelActive: "#f5f3ff",
+      };
 
   const angle = (i: number) => (Math.PI * 2 * i) / data.length - Math.PI / 2;
 
@@ -69,7 +101,7 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl bg-white/[0.025] border border-purple-400/15 backdrop-blur-sm p-3 sm:p-4">
+      <div className="rounded-xl bg-black/[0.025] dark:bg-white/[0.025] border border-blue-700/30 dark:border-purple-400/15 backdrop-blur-sm p-3 sm:p-4">
         <svg
           viewBox={`0 0 ${SIZE} ${SIZE}`}
           className="w-full h-auto select-none"
@@ -77,7 +109,13 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
           aria-label="Skills radar chart"
         >
           <defs>
-            <radialGradient id="skillRadarFill" cx="50%" cy="50%" r="50%">
+            {/* Two gradients defined; we pick which to reference based on theme */}
+            <radialGradient id="skillRadarFillLight" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.50" />
+              <stop offset="65%" stopColor="#3b82f6" stopOpacity="0.30" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.10" />
+            </radialGradient>
+            <radialGradient id="skillRadarFillDark" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.55" />
               <stop offset="65%" stopColor="#8b5cf6" stopOpacity="0.32" />
               <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.12" />
@@ -96,7 +134,7 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
               key={pct}
               points={ringPoints(pct)}
               fill="none"
-              stroke="rgba(168, 85, 247, 0.18)"
+              stroke={ink.ringStroke}
               strokeWidth={pct === 100 ? 1 : 0.6}
               strokeDasharray={pct === 100 ? "0" : "2 3"}
             />
@@ -111,7 +149,7 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
                 y1={CY}
                 x2={e.x}
                 y2={e.y}
-                stroke="rgba(168, 85, 247, 0.22)"
+                stroke={ink.axisStroke}
                 strokeWidth={0.8}
               />
             );
@@ -119,8 +157,8 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
 
           <motion.polygon
             points={polygonPoints}
-            fill="url(#skillRadarFill)"
-            stroke="#ddd6fe"
+            fill={`url(#${ink.polygonFillId})`}
+            stroke={ink.polygonStroke}
             strokeWidth={1.5}
             strokeLinejoin="round"
             filter="url(#skillRadarGlow)"
@@ -139,8 +177,8 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
                 cx={p.x}
                 cy={p.y}
                 r={active ? 5.5 : 3.8}
-                fill="#ffffff"
-                stroke="#a78bfa"
+                fill={ink.vertexFill}
+                stroke={ink.vertexStroke}
                 strokeWidth={2}
                 filter="url(#skillRadarGlow)"
                 initial={{ opacity: 0 }}
@@ -175,7 +213,7 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
                   x={lp.x}
                   y={lp.y}
                   textAnchor={anchor}
-                  fill={active ? "#f5f3ff" : "rgba(216, 180, 254, 0.85)"}
+                  fill={active ? ink.axisLabelActive : ink.axisLabelFill}
                   fontSize="10.5"
                   fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
                   letterSpacing="1"
@@ -206,12 +244,12 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
         </svg>
       </div>
 
-      <div className="rounded-lg bg-purple-500/[0.06] border border-purple-400/20 px-3 py-2.5 min-h-[58px]">
+      <div className="rounded-lg bg-blue-800/[0.08] dark:bg-purple-500/[0.06] border border-blue-800/30 dark:border-purple-400/20 px-3 py-2.5 min-h-[58px]">
         <div className="flex items-baseline justify-between gap-2 mb-1.5">
-          <span className="font-mono text-[10px] text-purple-100 tracking-[0.25em] uppercase truncate">
+          <span className="font-mono text-[10px] text-black dark:text-purple-100 tracking-[0.25em] uppercase truncate">
             {activeLabel}
           </span>
-          <span className="font-mono text-[9px] text-purple-300/70 tracking-wide shrink-0">
+          <span className="font-mono text-[9px] text-black dark:text-purple-300/70 tracking-wide shrink-0">
             {activeNote}
           </span>
         </div>
@@ -219,7 +257,7 @@ export default function SkillRadar({ data }: { data: RadarAxis[] }) {
           {activeTools.map((t) => (
             <span
               key={t}
-              className="px-2 py-0.5 text-[10px] rounded-full bg-purple-500/15 border border-purple-400/30 text-purple-100 font-mono"
+              className="px-2 py-0.5 text-[10px] rounded-full bg-blue-800/15 dark:bg-purple-500/15 border border-blue-800/35 dark:border-purple-400/30 text-black dark:text-purple-100 font-mono"
             >
               {t}
             </span>

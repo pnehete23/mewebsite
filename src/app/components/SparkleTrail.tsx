@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
 
 interface Spark {
   x: number;
@@ -21,6 +22,13 @@ const SparkleTrail: React.FC = () => {
   const sparksRef = useRef<Spark[]>([]);
   const lastEmitRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const rafRef = useRef<number | null>(null);
+  // Theme: composite mode flips so neon sparkles read as bright additive
+  // glints on dark bg, and as soft saturated blots on light bg.
+  const { resolvedTheme } = useTheme();
+  const isLightRef = useRef(false);
+  useEffect(() => {
+    isLightRef.current = resolvedTheme === 'light';
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -100,7 +108,10 @@ const SparkleTrail: React.FC = () => {
       const h = window.innerHeight;
       ctx.clearRect(0, 0, w, h);
 
-      ctx.globalCompositeOperation = 'lighter';
+      const isLight = isLightRef.current;
+      // Additive lighter on dark (neon glint), source-over on light so dye
+      // doesn't blow out to white on a white page.
+      ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
 
       const sparks = sparksRef.current;
       for (let i = sparks.length - 1; i >= 0; i--) {
@@ -121,9 +132,13 @@ const SparkleTrail: React.FC = () => {
         // Slightly damped alpha to compensate for the denser bunch of sparks
         const a = k * k * tw * 0.7;
 
-        const core = `hsla(${s.hue}, 100%, 80%, ${(a * 0.95).toFixed(3)})`;
-        const halo = `hsla(${s.hue}, 100%, 60%, ${(a * 0.45).toFixed(3)})`;
-        const outer = `hsla(${s.hue}, 100%, 55%, 0)`;
+        // Light mode: drop core lightness so saturated dots read on white
+        const coreL = isLight ? 50 : 80;
+        const haloL = isLight ? 45 : 60;
+        const outerL = isLight ? 40 : 55;
+        const core = `hsla(${s.hue}, 100%, ${coreL}%, ${(a * 0.95).toFixed(3)})`;
+        const halo = `hsla(${s.hue}, 100%, ${haloL}%, ${(a * 0.45).toFixed(3)})`;
+        const outer = `hsla(${s.hue}, 100%, ${outerL}%, 0)`;
 
         const r = s.r;
         // Halo decoupled from the (50x-smaller) core so the neon still glows

@@ -1,8 +1,14 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FaLinkedin,
   FaGithub,
@@ -74,6 +80,7 @@ import {
 } from "lucide-react";
 import SkillRadar from "./components/SkillRadar";
 import SkillChip, { SkillChipVariant } from "./components/SkillChip";
+import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -370,6 +377,154 @@ const TECH_TOOLTIPS: Record<string, string> = {
     "Anthropic Claude API for resume rewriting and interview question generation; streaming responses with prompt caching to keep p95 latency under 15s.",
 };
 
+// Single source of truth for the concept-stack chips on each featured
+// project. Used both by the desktop hover overlay AND a mobile-visible
+// static section, so phone users (no hover) see the same curated chips.
+
+const gradientRiskGroups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaBrain,
+    title: "ML Methodology",
+    iconColor: "text-black dark:text-purple-300",
+    titleColor: "text-black dark:text-purple-200",
+    variant: "purple",
+    chips: [
+      { label: "Patient-grouped walk-forward CV", tooltip: "Splits by patient AND time so the same patient never appears in both train and validation — kills both subject leakage and look-ahead bias." },
+      { label: "Isotonic calibration", tooltip: "Non-parametric monotonic mapping from raw XGBoost scores to true probabilities, validated by reliability diagram + Brier score." },
+      { label: "Precision @ 10% review budget", tooltip: "Top-k threshold tuned to the realistic clinician triage capacity, not an abstract F1 — what actually matters in deployment." },
+      { label: "Optuna Bayesian HPO", tooltip: "TPE sampler over learning rate, depth, regularization; pruned trials via MedianPruner — far cheaper than grid search." },
+      { label: "SHAP feature attribution", tooltip: "TreeSHAP per-prediction explanations; surfaced in the clinician UI so flagged cases come with the why, not just the score." },
+      { label: "HDBSCAN subgroup discovery", tooltip: "Density-based clustering on SHAP-space embeddings to discover patient subgroups with distinct flare patterns." },
+    ],
+  },
+  {
+    Icon: FaCogs,
+    title: "Production Engineering",
+    iconColor: "text-black dark:text-blue-300",
+    titleColor: "text-black dark:text-blue-200",
+    variant: "blue",
+    chips: [
+      { label: "Real-time streaming inference", tooltip: "Sub-100ms per-event scoring on incoming patient telemetry; backpressure handled at the queue." },
+      { label: "Kafka event ingestion", tooltip: "Patient-data events partitioned by subject_id for ordering; consumer groups for horizontal scale." },
+      { label: "Async FastAPI · Pydantic v2", tooltip: "Async I/O so a slow model call doesn't block the loop; Pydantic v2 schemas validate every payload at the edge." },
+      { label: "MLflow versioning", tooltip: "Model registry with stages (Staging → Production), artifact storage, and a recorded lineage from data to deployed binary." },
+      { label: "DuckDB analytical store", tooltip: "In-process columnar SQL — vectorized aggregations on parquet without standing up Postgres for analytical workloads." },
+      { label: "Docker Compose", tooltip: "API + Kafka + MLflow + DuckDB stack stood up via one compose file; reproducible across dev and CI." },
+    ],
+  },
+  {
+    Icon: FaShieldAlt,
+    title: "Responsible AI & Rigor",
+    iconColor: "text-black dark:text-emerald-300",
+    titleColor: "text-black dark:text-emerald-200",
+    variant: "emerald",
+    chips: [
+      { label: "Data-leakage guardrails", tooltip: "Time-based + group-based splits enforced in code; assertions catch any feature derived after the prediction window." },
+      { label: "PHI scanning in CI", tooltip: "Pre-merge regex/entity scans on diffs to block raw PHI from entering the repo or model artifacts." },
+      { label: "Model + data cards", tooltip: "Each model ships with a model card (intended use, fairness, limits) and a data card (provenance, splits, demographics)." },
+      { label: "Threat model & ADRs", tooltip: "STRIDE-style threat model; architecture decisions captured as numbered ADRs so future changes know the trade-offs." },
+      { label: "Hypothesis property tests", tooltip: "Property-based tests via Hypothesis catch edge cases unit tests never enumerate (NaNs, monotonicity, idempotence)." },
+      { label: "Strict Mypy · 80%+ coverage", tooltip: "strict-mode type checking + branch coverage gate so refactors don't silently break invariants in untested branches." },
+    ],
+  },
+];
+
+const patient360Groups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaHeartbeat,
+    title: "Clinical & Genomic Engineering",
+    iconColor: "text-black dark:text-cyan-300",
+    titleColor: "text-black dark:text-cyan-200",
+    variant: "cyan",
+    chips: [
+      { label: "4-tier CPIC safety engine", tooltip: "Pharmacogenomic prescribing rules graded Level A → D from CPIC; engine fires per-prescription drug + diplotype check at the point of order." },
+      { label: "HIPAA Safe Harbor (18 categories)", tooltip: "All 18 PHI identifier classes (names, dates, geo, MRNs, etc.) detected and tokenized before storage so re-identification risk stays under §164.514(b)." },
+      { label: "Deterministic PII tokenization", tooltip: "HMAC-SHA256 with a per-tenant salt — same PHI maps to the same token forever, enabling joins without ever surfacing raw values." },
+      { label: "Cross-runtime hash parity (Py ↔ JS)", tooltip: "Browser tokenizes identically to the Python generator. Verified by parity tests so a clinician token resolves the same on either side." },
+      { label: "Granular consent model", tooltip: "Consent is a first-class object: scoped per-field, per-purpose, revocable, with time bounds and an audit trail back to the patient action." },
+      { label: "Real CPIC genes & alleles", tooltip: "Synthetic patients carry real CPIC genes (CYP2D6, DPYD, TPMT, …) with authentic star-allele frequencies — not random labels." },
+    ],
+  },
+  {
+    Icon: FaShieldAlt,
+    title: "Governance & Compliance",
+    iconColor: "text-black dark:text-emerald-300",
+    titleColor: "text-black dark:text-emerald-200",
+    variant: "emerald",
+    chips: [
+      { label: "Immutable audit log (classified events)", tooltip: "Append-only ledger; every reveal/consent/alert is a typed event — replays produce the same state and satisfy 21 CFR Part 11 e-records." },
+      { label: "Per-field reveal · vault model", tooltip: "Tokens by default; raw value released only on a typed reveal request that's logged, scoped, and tied to a specific clinical purpose." },
+      { label: "Data lineage + catalog", tooltip: "Every derived field traces back to source records; downstream models inherit consent and PHI classification automatically." },
+      { label: "Composite integrity score", tooltip: "One number summarizing freshness, completeness, and concordance across upstream APIs — surfaced as a UI badge." },
+      { label: "Consent-gated computation", tooltip: "If consent doesn't cover a feature/purpose, the pipeline short-circuits — no silent overrides, no exception paths." },
+      { label: "21 CFR Part 11 / GDPR Art. 30 ready", tooltip: "Audit log + lineage + tokenization map cleanly onto the FDA e-records and EU records-of-processing requirements." },
+    ],
+  },
+  {
+    Icon: FaCogs,
+    title: "Engineering & Live Integrations",
+    iconColor: "text-black dark:text-blue-300",
+    titleColor: "text-black dark:text-blue-200",
+    variant: "blue",
+    chips: [
+      { label: "React 18 + Vite 5 (319KB / 92KB gzip)", tooltip: "Code-split routes, treeshaken icons, and a precomputed dataset bundle keep the production gzip under 100 KB." },
+      { label: "Python synthetic data generator", tooltip: "Reproducible cohort generator: 200 patients, 22 genes, realistic prevalence/comorbidity priors — seeded RNG for parity in tests." },
+      { label: "Live: CPIC · openFDA · CT.gov · RxNav", tooltip: "Four public APIs wired in: CPIC (gene-drug rules), openFDA (adverse events), ClinicalTrials.gov (matching), RxNav (DDI)." },
+      { label: "Custom Node static server", tooltip: "Tiny Node server adds the security headers and SPA fallback routing that vanilla static hosting on Railway lacks." },
+      { label: "Railway + Nixpacks deployment", tooltip: "Nixpacks autodetects the build; Railway provides the proxy, TLS, and zero-config HTTPS." },
+      { label: "Memoized derived datasets", tooltip: "Heavy joins computed once and memoized by hash of inputs — UI tab switches stay instant on a 200-patient cohort." },
+    ],
+  },
+];
+
+const quantDashboardGroups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaChartLine,
+    title: "Strategy & Signals",
+    iconColor: "text-black dark:text-emerald-300",
+    titleColor: "text-black dark:text-emerald-200",
+    variant: "emerald",
+    chips: [
+      { label: "RSI · MACD · Bollinger overlays", tooltip: "Momentum/trend indicators plus volatility-band confirmation. Computed via rolling/EW windows in pandas; no Python row loops." },
+      { label: "Momentum + mean-reversion screens", tooltip: "Two complementary strategy classes — trending breakouts vs. reversion-to-mean — wired through one engine." },
+      { label: "Multi-timeframe alignment", tooltip: "Daily-trend filter on top of intraday entries to suppress chop and only trade with the higher-TF bias." },
+      { label: "Walk-forward backtesting", tooltip: "Out-of-sample testing on rolling time slices — the only way to detect overfit parameters before a live deploy." },
+      { label: "Volatility regime detection", tooltip: "Bucket equity curve by ATR percentile so regime-dependent edge is visible instead of blended into one Sharpe." },
+      { label: "Pairs / cointegration checks", tooltip: "Engle-Granger cointegration on candidate pairs (ADF on residuals) for stat-arb screening." },
+    ],
+  },
+  {
+    Icon: FaShieldAlt,
+    title: "Risk & Performance",
+    iconColor: "text-black dark:text-cyan-300",
+    titleColor: "text-black dark:text-cyan-200",
+    variant: "cyan",
+    chips: [
+      { label: "Sharpe · Sortino · Calmar", tooltip: "Risk-adjusted return: Sharpe (full vol), Sortino (downside dev), Calmar (CAGR ÷ max drawdown)." },
+      { label: "Max drawdown & VaR / CVaR", tooltip: "Tail-risk: peak-to-trough loss, 95% historical VaR, expected shortfall — drives circuit breakers." },
+      { label: "Slippage + transaction-cost model", tooltip: "Per-trade cost in bps + fixed; cost-sensitivity sweep visualizes how alpha decays with realistic frictions." },
+      { label: "Out-of-sample validation", tooltip: "Train/test split + walk-forward to measure decay vs. in-sample fit; flags parameter overfitting." },
+      { label: "Rolling correlation matrix", tooltip: "30-day rolling correlations across watchlist for diversification and regime-shift detection." },
+      { label: "Risk-parity position sizing", tooltip: "Inverse-volatility weighting so each position contributes equal portfolio variance, not equal capital." },
+    ],
+  },
+  {
+    Icon: FaCogs,
+    title: "Data & Engineering",
+    iconColor: "text-black dark:text-blue-300",
+    titleColor: "text-black dark:text-blue-200",
+    variant: "blue",
+    chips: [
+      { label: "Live market-data ingestion", tooltip: "yfinance pulls with TTL=3600s caching; tickers regex-validated (^[A-Z0-9][A-Z0-9.\\-]{0,9}$) as a security boundary." },
+      { label: "Vectorized pandas pipelines", tooltip: "All indicators / features computed via rolling, ewm, groupby, NumPy ops — no per-row Python." },
+      { label: "Plotly interactive charts", tooltip: "Candlestick + indicator overlays with brush zoom, crosshair tooltips, and entry/exit markers." },
+      { label: "Reactive Streamlit UI (4-page)", tooltip: "Backtest · Watchlist · Compare · Optimize. Sidebar inputs trigger memoized recomputation per tab." },
+      { label: "Cached compute layer", tooltip: "@st.cache_data on data fetches and @st.cache_resource on engine instances — sub-second tab switches." },
+      { label: "Containerized on Railway", tooltip: "Procfile + railway.json define the start command; XSRF disabled behind Railway's proxy." },
+    ],
+  },
+];
+
 type Project = {
   id: number;
   title: string;
@@ -423,6 +578,36 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  // Wildcat Willy hanging — drops down when Projects section enters viewport
+  // and retracts back up when it exits. Driven by section scroll progress so
+  // the descent ties cleanly to the section's lifecycle.
+  const projectsRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: projectsProgress } = useScroll({
+    target: projectsRef,
+    offset: ["start end", "end start"],
+  });
+  // -260px (above the section, hidden) → 0px (fully dropped, hanging) → -260px (retracted up)
+  const willyY = useTransform(
+    projectsProgress,
+    [0, 0.12, 0.88, 1],
+    [-260, 0, 0, -260]
+  );
+
+  // Profile coin flip — front: pfp1.png, back: image01.jpeg.
+  // Highly sensitive thresholds so the slightest swipe / nudge triggers a flip.
+  const reduceMotion = useReducedMotion();
+  const [coinFlipped, setCoinFlipped] = useState(false);
+  const [coinLocked, setCoinLocked] = useState(false);
+  const flipDuration = reduceMotion ? 0.001 : 0.85;
+  const flipCoin = () => {
+    if (coinLocked) return;
+    setCoinLocked(true);
+    setCoinFlipped((p) => !p);
+    window.setTimeout(
+      () => setCoinLocked(false),
+      Math.max(80, flipDuration * 1000 + 50)
+    );
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -517,11 +702,11 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] tracking-tight"
               >
-                <span className="block bg-gradient-to-r from-purple-300 via-violet-200 to-purple-500 bg-clip-text text-transparent">
+                <span className="block bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent">
                   Prathamesh
                 </span>
-                <span className="block bg-gradient-to-r from-purple-500 via-white to-purple-300 bg-clip-text text-transparent">
-                  Nehete.
+                <span className="block bg-gradient-to-r from-blue-800 dark:from-purple-500 via-white to-blue-700 dark:to-purple-300 bg-clip-text text-transparent">
+                  Nehete
                 </span>
               </motion.h1>
 
@@ -534,8 +719,12 @@ export default function Home() {
               >
                 <span
                   aria-hidden="true"
-                  className="absolute top-0 left-0 text-[110px] md:text-[150px] font-serif text-white/[0.07] select-none pointer-events-none"
-                  style={{ lineHeight: 0.7, transform: "translate(-12%, -22%)" }}
+                  className="absolute top-0 left-0 text-[150px] md:text-[220px] font-serif italic select-none pointer-events-none"
+                  style={{
+                    lineHeight: 0.9,
+                    color: "rgba(180, 180, 190, 0.13)",
+                    transform: "translate(-18%, -32%)",
+                  }}
                 >
                   &ldquo;
                 </span>
@@ -543,21 +732,12 @@ export default function Home() {
                 <p
                   className="relative text-lg md:text-2xl leading-relaxed font-extrabold italic px-2 md:px-4"
                   style={{
-                    color: "#7C3AED",
-                    textShadow:
-                      "0 0 28px rgba(124,58,237,0.6), 0 0 10px rgba(168,85,247,0.5), 0 1px 2px rgba(0,0,0,0.65)",
+                    color: "var(--ink-hero-quote)",
+                    textShadow: "var(--ink-hero-quote-shadow)",
                   }}
                 >
                   All models are wrong. The useful ones ship anyway.
                 </p>
-
-                <span
-                  aria-hidden="true"
-                  className="absolute bottom-0 right-0 text-[110px] md:text-[150px] font-serif text-white/[0.07] select-none pointer-events-none"
-                  style={{ lineHeight: 0.7, transform: "translate(8%, 28%)" }}
-                >
-                  &rdquo;
-                </span>
               </motion.div>
 
               {/* CTAs */}
@@ -569,7 +749,7 @@ export default function Home() {
               >
                 <a
                   href="#projects"
-                  className="group px-7 py-3 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-700 rounded-full text-white font-semibold hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.8)] transition-all duration-300 inline-flex items-center gap-2"
+                  className="group px-7 py-3 bg-gradient-to-r from-blue-800 dark:from-purple-600 via-blue-800 dark:via-violet-500 to-blue-900 dark:to-purple-700 rounded-full text-black dark:text-white font-semibold hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.8)] transition-all duration-300 inline-flex items-center gap-2"
                 >
                   View My Work
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
@@ -580,7 +760,7 @@ export default function Home() {
                   href="/pnu04%20(1).pdf"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group px-7 py-3 bg-white/5 border border-white/15 backdrop-blur-sm rounded-full text-white font-medium hover:bg-white/10 hover:border-white/30 transition-all duration-300 inline-flex items-center gap-2"
+                  className="group px-7 py-3 bg-black/[0.04] dark:bg-white/5 border border-black/15 dark:border-white/15 backdrop-blur-sm rounded-full text-black dark:text-white font-medium hover:bg-black/[0.07] dark:hover:bg-white/10 hover:border-black/20 dark:hover:border-white/30 transition-all duration-300 inline-flex items-center gap-2"
                 >
                   Resume
                   <span className="transition-transform duration-300 group-hover:translate-y-0.5">
@@ -594,14 +774,14 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
-                className="flex items-center gap-4 pt-2 text-gray-400"
+                className="flex items-center gap-4 pt-2 text-black dark:text-gray-400"
               >
                 <a
                   href="https://www.linkedin.com/in/nehete23/"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
-                  className="hover:text-white hover:scale-110 transition-all duration-300"
+                  className="hover:text-black dark:hover:text-white hover:scale-110 transition-all duration-300"
                 >
                   <FaLinkedin className="text-2xl" />
                 </a>
@@ -610,21 +790,21 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub"
-                  className="hover:text-white hover:scale-110 transition-all duration-300"
+                  className="hover:text-black dark:hover:text-white hover:scale-110 transition-all duration-300"
                 >
                   <FaGithub className="text-2xl" />
                 </a>
-                <span className="h-px w-10 bg-white/15" />
+                <span className="h-px w-10 bg-black/[0.08] dark:bg-white/15" />
                 <span
-                  className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.18em] text-purple-200/85 uppercase"
+                  className="inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.18em] text-black dark:text-purple-200/85 uppercase"
                   aria-label="Location and current local time"
                 >
-                  <FaMapMarkerAlt className="text-purple-300/90 text-[11px]" />
+                  <FaMapMarkerAlt className="text-black dark:text-purple-300/90 text-[11px]" />
                   Evanston, IL
-                  <span className="text-purple-400/45">·</span>
-                  <span className="text-gray-300">CT</span>
+                  <span className="text-black dark:text-purple-400/45">·</span>
+                  <span className="text-black dark:text-gray-300">CT</span>
                   {localTime && (
-                    <span className="text-gray-300 tabular-nums" suppressHydrationWarning>
+                    <span className="text-black dark:text-gray-300 tabular-nums" suppressHydrationWarning>
                       {localTime}
                     </span>
                   )}
@@ -648,20 +828,83 @@ export default function Home() {
                 />
                 {/* Inner violet wash */}
                 <motion.div
-                  className="absolute inset-0 -m-4 rounded-full bg-violet-400/30 blur-2xl"
+                  className="absolute inset-0 -m-4 rounded-full bg-blue-700/30 dark:bg-violet-400/30 blur-2xl"
                   animate={{ opacity: [0.55, 0.9, 0.55] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 />
 
-                {/* Profile photo */}
-                <div className="relative aspect-square w-full rounded-full overflow-hidden border-2 border-purple-300/40 shadow-[0_20px_50px_-10px_rgba(168,85,247,0.6)]">
-                  <img
-                    src="/pfp1.png"
-                    alt="Prathamesh Nehete"
-                    draggable={false}
-                    className="w-full h-full object-cover select-none pointer-events-none"
-                  />
-                </div>
+                {/* Profile coin — front: pfp1, back: image01. Flips on slightest swipe. */}
+                <motion.div
+                  drag="x"
+                  dragSnapToOrigin
+                  dragElastic={0.4}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragMomentum={false}
+                  onDragEnd={(_, info) => {
+                    // Highly sensitive — slightest nudge flips the coin
+                    if (
+                      Math.abs(info.offset.x) > 12 ||
+                      Math.abs(info.velocity.x) > 60
+                    ) {
+                      flipCoin();
+                    }
+                  }}
+                  onClick={flipCoin}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      flipCoin();
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-pressed={coinFlipped}
+                  aria-label={`Profile coin, currently showing ${
+                    coinFlipped ? "back image" : "front photo"
+                  }. Tap, swipe, or press Enter to flip.`}
+                  whileTap={{ scale: 0.97 }}
+                  className="relative aspect-square w-full cursor-grab active:cursor-grabbing select-none rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/70 dark:focus-visible:ring-purple-300/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                  style={{ perspective: "1200px", touchAction: "pan-y" }}
+                >
+                  <motion.div
+                    className="relative w-full h-full"
+                    style={{ transformStyle: "preserve-3d" }}
+                    animate={{ rotateY: coinFlipped ? 180 : 0 }}
+                    transition={{ duration: flipDuration, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    {/* Front face — pfp1.png */}
+                    <div
+                      className="absolute inset-0 rounded-full overflow-hidden border-2 border-blue-700/40 dark:border-purple-300/40 shadow-[0_20px_50px_-10px_rgba(168,85,247,0.6)]"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                      }}
+                    >
+                      <img
+                        src="/pfp1.png"
+                        alt="Prathamesh Nehete"
+                        draggable={false}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                      />
+                    </div>
+                    {/* Back face — image01.jpeg */}
+                    <div
+                      className="absolute inset-0 rounded-full overflow-hidden border-2 border-blue-700/40 dark:border-purple-300/40 shadow-[0_20px_50px_-10px_rgba(168,85,247,0.6)]"
+                      style={{
+                        backfaceVisibility: "hidden",
+                        WebkitBackfaceVisibility: "hidden",
+                        transform: "rotateY(180deg)",
+                      }}
+                    >
+                      <img
+                        src="/image01.jpeg"
+                        alt="Prathamesh Nehete (alt)"
+                        draggable={false}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                      />
+                    </div>
+                  </motion.div>
+                </motion.div>
 
               </div>
             </motion.div>
@@ -674,7 +917,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 1.2 }}
             className="max-w-md"
           >
-            <div className="relative overflow-hidden px-4 py-3 rounded-xl bg-white/[0.03] border border-purple-400/20 backdrop-blur-sm hover:bg-purple-500/[0.08] hover:border-purple-400/40 transition-colors">
+            <div className="relative overflow-hidden px-4 py-3 rounded-xl bg-black/[0.035] dark:bg-white/[0.03] border border-blue-700/20 dark:border-purple-400/20 backdrop-blur-sm hover:bg-blue-800/[0.08] dark:hover:bg-purple-500/[0.08] hover:border-blue-700/40 dark:hover:border-purple-400/40 transition-colors">
               <div className="flex items-center h-9 md:h-11">
                 <img
                   src="/nu.jpg"
@@ -682,7 +925,7 @@ export default function Home() {
                   className="h-full w-auto object-contain rounded"
                 />
               </div>
-              <div className="text-[10px] md:text-[11px] uppercase tracking-widest text-gray-400 mt-1 font-mono">
+              <div className="text-[10px] md:text-[11px] uppercase tracking-widest text-black dark:text-gray-400 mt-1 font-mono">
                 Northwestern &middot; M.S. Data Science (AI)
               </div>
             </div>
@@ -700,10 +943,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 via-violet-200 to-purple-500 bg-clip-text text-transparent mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6">
               About Me
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
               I&apos;m Prathamesh Nehete, a data scientist and machine learning engineer with a strong
               foundation in computer science, statistics, and AI. I build models and systems that
               turn raw data into actionable insights.
@@ -725,7 +968,7 @@ export default function Home() {
               }}
             >
               <h3
-                className="text-4xl md:text-5xl font-bold text-white text-center md:text-left tracking-tight italic"
+                className="text-4xl md:text-5xl font-bold text-black dark:text-white text-center md:text-left tracking-tight italic"
                 style={{
                   fontVariationSettings: '"opsz" 144, "SOFT" 30',
                   letterSpacing: "-0.02em",
@@ -742,7 +985,7 @@ export default function Home() {
                   viewport={{ once: true, margin: "-50px" }}
                   whileHover={{ rotate: 0, scale: 1.04, y: -4 }}
                   transition={{ type: "spring", stiffness: 130, damping: 14, delay: 0.15 }}
-                  className="flex-shrink-0 w-44 sm:w-48 self-center sm:self-start relative aspect-[4/5] overflow-hidden rounded-xl border border-purple-300/30 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7),_0_0_30px_-5px_rgba(168,85,247,0.4)] cursor-pointer"
+                  className="flex-shrink-0 w-44 sm:w-48 self-center sm:self-start relative aspect-[4/5] overflow-hidden rounded-xl border border-blue-700/30 dark:border-purple-300/30 shadow-[0_25px_50px_-12px_rgba(15,23,42,0.18),_0_0_30px_-5px_rgba(168,85,247,0.18)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7),_0_0_30px_-5px_rgba(168,85,247,0.4)] cursor-pointer"
                 >
                   <img
                     src="/nu1.jpg"
@@ -750,39 +993,39 @@ export default function Home() {
                     className="w-full h-full object-cover"
                     draggable={false}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/40 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-950/40 dark:from-purple-900/40 via-transparent to-transparent pointer-events-none" />
                 </motion.div>
 
-                <p className="text-gray-200 leading-[1.7] text-center sm:text-left text-lg">
+                <p className="text-black dark:text-gray-200 leading-[1.7] text-center sm:text-left text-lg">
                   I&apos;m currently pursuing an{" "}
-                  <span className="italic text-white">M.S. in Data Science</span> with a
+                  <span className="italic text-black dark:text-white">M.S. in Data Science</span> with a
                   concentration in Artificial Intelligence at{" "}
-                  <span className="italic text-purple-200">Northwestern University</span>. I
+                  <span className="italic text-black dark:text-purple-200">Northwestern University</span>. I
                   completed my B.S. in Computer Science with a Business Minor at Arizona State
                   University (GPA: 3.93).
                 </p>
               </div>
 
-              <p className="text-gray-200 leading-[1.75] text-center md:text-left text-lg">
+              <p className="text-black dark:text-gray-200 leading-[1.75] text-center md:text-left text-lg">
                 My coursework this quarter covered the foundations of{" "}
-                <span className="italic text-purple-200">statistical inference</span>: hypothesis
+                <span className="italic text-black dark:text-purple-200">statistical inference</span>: hypothesis
                 testing, p-values, confidence intervals, cross-validation, and regression
                 analysis. I combine this statistical rigor with hands-on ML engineering
                 experience from internships building data pipelines, recommendation engines, and
                 anomaly detection systems.
               </p>
-              <p className="text-gray-200 leading-[1.75] text-center md:text-left text-lg">
+              <p className="text-black dark:text-gray-200 leading-[1.75] text-center md:text-left text-lg">
                 I&apos;m passionate about applying data science to solve{" "}
-                <span className="italic text-white">real-world problems</span>, from healthcare
+                <span className="italic text-black dark:text-white">real-world problems</span>, from healthcare
                 AI to predictive analytics and NLP systems.
               </p>
-              <p className="text-gray-200 leading-[1.75] text-center md:text-left text-lg">
+              <p className="text-black dark:text-gray-200 leading-[1.75] text-center md:text-left text-lg">
                 And I ship outside the classroom. I built a working clone of{" "}
-                <span className="italic text-purple-200">Cluely</span> (the real-time interview
+                <span className="italic text-black dark:text-purple-200">Cluely</span> (the real-time interview
                 and meeting copilot) to learn the production loop end-to-end. I also built{" "}
-                <span className="italic text-purple-200">CareerCraft.ai</span>, an AI resume and
+                <span className="italic text-black dark:text-purple-200">CareerCraft.ai</span>, an AI resume and
                 interview-prep product, which I{" "}
-                <span className="font-semibold text-white not-italic">
+                <span className="font-semibold text-black dark:text-white not-italic">
                   sold to a startup
                 </span>
                 .
@@ -797,8 +1040,8 @@ export default function Home() {
               className="max-w-3xl mx-auto space-y-6"
             >
               <div className="flex items-baseline justify-between">
-                <h3 className="text-3xl font-bold text-white">Skills</h3>
-                <span className="font-mono text-[10px] text-purple-300/70 tracking-[0.35em] uppercase">
+                <h3 className="text-3xl font-bold text-black dark:text-white">Skills</h3>
+                <span className="font-mono text-[10px] text-black dark:text-purple-300/70 tracking-[0.35em] uppercase">
                   Projects &middot; Coursework
                 </span>
               </div>
@@ -808,14 +1051,14 @@ export default function Home() {
               {/* Live GitHub KPI strip */}
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between">
-                  <h4 className="font-mono text-[10px] text-purple-300/80 tracking-widest uppercase">
+                  <h4 className="font-mono text-[10px] text-black dark:text-purple-300/80 tracking-widest uppercase">
                     GitHub &middot; live
                   </h4>
                   <a
                     href="https://github.com/pnehete23"
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="font-mono text-[9px] text-purple-300/70 hover:text-purple-200 tracking-widest uppercase inline-flex items-center gap-1"
+                    className="font-mono text-[9px] text-black dark:text-purple-300/70 hover:text-black dark:hover:text-purple-200 tracking-widest uppercase inline-flex items-center gap-1"
                   >
                     <FaGithub className="text-[11px]" /> @pnehete23
                   </a>
@@ -846,12 +1089,12 @@ export default function Home() {
                       href={k.href}
                       target="_blank"
                       rel="noreferrer noopener"
-                      className="block rounded-lg bg-purple-500/10 border border-purple-400/25 px-3 py-2 text-center hover:bg-purple-500/15 hover:border-purple-400/50 transition-colors"
+                      className="block rounded-lg bg-blue-800/10 dark:bg-purple-500/10 border border-blue-700/25 dark:border-purple-400/25 px-3 py-2 text-center hover:bg-blue-800/15 dark:hover:bg-purple-500/15 hover:border-blue-700/50 dark:hover:border-purple-400/50 transition-colors"
                     >
-                      <div className="text-xl font-bold bg-gradient-to-r from-purple-200 via-violet-200 to-purple-300 bg-clip-text text-transparent">
+                      <div className="text-xl font-bold bg-gradient-to-r from-blue-200 via-blue-200 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent">
                         {k.value !== null ? k.value : k.fallback}
                       </div>
-                      <div className="font-mono text-[9px] text-purple-300/80 tracking-wider uppercase mt-0.5">
+                      <div className="font-mono text-[9px] text-black dark:text-purple-300/80 tracking-wider uppercase mt-0.5">
                         {k.label}
                       </div>
                     </a>
@@ -862,15 +1105,19 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* NU FOOTBALL FIELD — decorative banner moved here, between My Story and Coursework */}
-          <div className="relative my-2 h-24 md:h-36 overflow-hidden rounded-2xl border border-purple-400/20">
+          {/* NU FOOTBALL FIELD — full-bleed decorative banner. In light mode the
+              image renders at full strength; in dark mode a soft veil keeps it
+              consistent with the surrounding dark sections. */}
+          <div className="relative my-2 h-24 md:h-36 overflow-hidden rounded-2xl">
             <img
               src="/northwestern-wildcats-desktop-2025-2000px-thumb.webp"
               alt="Northwestern Wildcats Field"
-              className="absolute inset-0 w-full h-full object-cover opacity-50"
+              className="absolute inset-0 w-full h-full object-cover opacity-100 dark:opacity-65"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-purple-950/40 to-black" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+            {/* Dark-mode-only veil so text reads on the photo at night.
+                In light mode the photo is fully visible — no overlay. */}
+            <div className="hidden dark:block absolute inset-0 bg-gradient-to-r from-black via-purple-950/40 to-black" />
+            <div className="hidden dark:block absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
             <motion.div
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -879,18 +1126,27 @@ export default function Home() {
               className="absolute inset-0 flex items-center justify-center"
             >
               <div className="text-center">
-                <div className="font-mono text-[9px] md:text-[11px] text-purple-300/80 tracking-[0.5em] uppercase">
+                <div
+                  className="font-mono text-[9px] md:text-[11px] text-yellow-400 dark:text-yellow-300 tracking-[0.5em] uppercase"
+                  style={{
+                    textShadow:
+                      "0 1px 3px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.55)",
+                  }}
+                >
                   Northwestern Wildcats &middot; Evanston, IL
                 </div>
-                <div className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-purple-300 via-white to-purple-400 bg-clip-text text-transparent mt-1 tracking-tight">
+                <div
+                  className="text-2xl md:text-4xl font-bold mt-1 tracking-tight text-yellow-400 dark:text-yellow-300"
+                  style={{
+                    textShadow:
+                      "0 2px 8px rgba(0,0,0,0.85), 0 0 14px rgba(0,0,0,0.55)",
+                    WebkitTextStroke: "1px black",
+                  }}
+                >
                   Go &lsquo;Cats.
                 </div>
               </div>
             </motion.div>
-            <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-purple-300/60" />
-            <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-purple-300/60" />
-            <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-purple-300/60" />
-            <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-purple-300/60" />
           </div>
 
         </div>
@@ -906,10 +1162,10 @@ export default function Home() {
             transition={{ duration: 0.7 }}
             className="text-center space-y-3"
           >
-            <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-300 via-violet-200 to-purple-500 bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-bold text-yellow-500 dark:text-yellow-300">
               Coursework
             </h2>
-            <p className="font-mono text-[10px] md:text-[11px] text-purple-300/70 tracking-[0.4em] uppercase inline-flex items-center gap-2 justify-center">
+            <p className="font-mono text-[10px] md:text-[11px] text-black dark:text-purple-300/70 tracking-[0.4em] uppercase inline-flex items-center gap-2 justify-center">
               <FaUniversity className="text-[12px]" />
               Northwestern MSDS &middot; AI Specialization
             </p>
@@ -921,43 +1177,43 @@ export default function Home() {
               const inner = (
                 <div className="grid grid-cols-12 gap-4 items-baseline">
                   <div className="col-span-3 sm:col-span-2">
-                    <span className="font-mono text-sm md:text-base font-semibold text-purple-200 tracking-wider whitespace-nowrap">
+                    <span className="font-mono text-sm md:text-base font-semibold text-black dark:text-purple-200 tracking-wider whitespace-nowrap">
                       {c.code}
                     </span>
                   </div>
                   <div className="col-span-9 sm:col-span-10 md:col-span-5 min-w-0">
-                    <h3 className="text-base md:text-lg font-semibold text-white leading-snug">
+                    <h3 className="text-base md:text-lg font-semibold text-black dark:text-white leading-snug">
                       {c.title}
                     </h3>
-                    <div className="text-xs md:text-sm text-gray-400 mt-1 font-mono tracking-wide">
+                    <div className="text-xs md:text-sm text-black dark:text-gray-400 mt-1 font-mono tracking-wide">
                       {c.term}
                       {inProgress && (
-                        <span className="ml-2 inline-flex items-center gap-1 text-emerald-300/90">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="ml-2 inline-flex items-center gap-1 text-black">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                           in progress
                         </span>
                       )}
                       {c.syllabus && (
-                        <span className="ml-2 text-purple-300">
+                        <span className="ml-2 text-black dark:text-purple-300">
                           &middot; syllabus &rarr;
                         </span>
                       )}
                     </div>
                   </div>
                   <div className="hidden md:block md:col-span-5 min-w-0">
-                    <div className="text-sm text-gray-300 leading-snug">
+                    <div className="text-sm text-black dark:text-gray-300 leading-snug">
                       {c.skills.slice(0, 5).join(" · ")}
                       {c.skills.length > 5 && (
-                        <span className="text-purple-300/60 ml-1">
+                        <span className="text-black dark:text-purple-300/60 ml-1">
                           +{c.skills.length - 5}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="col-span-12 md:hidden text-sm text-gray-300/85 leading-snug">
+                  <div className="col-span-12 md:hidden text-sm text-black leading-snug">
                     {c.skills.slice(0, 5).join(" · ")}
                     {c.skills.length > 5 && (
-                      <span className="text-purple-300/60 ml-1">
+                      <span className="text-black dark:text-purple-300/60 ml-1">
                         +{c.skills.length - 5}
                       </span>
                     )}
@@ -966,7 +1222,7 @@ export default function Home() {
               );
 
               const wrapperClass =
-                "block rounded-xl border border-purple-400/15 bg-white/[0.03] hover:bg-purple-500/[0.06] hover:border-purple-400/40 backdrop-blur-sm px-5 py-4 transition-colors";
+                "block rounded-xl border border-blue-700/15 dark:border-purple-400/15 bg-black/[0.035] dark:bg-white/[0.03] hover:bg-blue-800/[0.06] dark:hover:bg-purple-500/[0.06] hover:border-blue-700/40 dark:hover:border-purple-400/40 backdrop-blur-sm px-5 py-4 transition-colors";
 
               return (
                 <motion.div
@@ -1005,7 +1261,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-5xl font-bold text-white text-center"
+            className="text-4xl md:text-5xl font-bold text-black dark:text-white text-center"
           >
             Experience
           </motion.h2>
@@ -1017,21 +1273,21 @@ export default function Home() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6"
+                className="bg-black/[0.04] dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl p-6"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-white">{exp.title}</h3>
-                  <span className="text-blue-400 font-medium">{exp.period}</span>
+                  <h3 className="text-xl font-semibold text-black dark:text-white">{exp.title}</h3>
+                  <span className="text-black font-medium">{exp.period}</span>
                 </div>
-                <h4 className="text-lg text-gray-300 mb-2">{exp.company}</h4>
+                <h4 className="text-lg text-black dark:text-gray-300 mb-2">{exp.company}</h4>
                 {Array.isArray(exp.description) ? (
-                  <ul className="text-gray-400 space-y-1.5 list-disc pl-5 marker:text-blue-400/70">
+                  <ul className="text-black dark:text-gray-400 space-y-1.5 list-disc pl-5 marker:text-black">
                     {exp.description.map((line, i) => (
                       <li key={i}>{line}</li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-400">{exp.description}</p>
+                  <p className="text-black dark:text-gray-400">{exp.description}</p>
                 )}
               </motion.div>
             ))}
@@ -1040,33 +1296,45 @@ export default function Home() {
       </section>
 
       {/* PROJECTS */}
-      <section id="projects" className="pt-16 pb-20 px-4 relative">
-        {/* Wildcat Willy hanging on the side */}
-        <div className="hidden lg:block absolute top-0 right-6 xl:right-16 z-10 pointer-events-none select-none">
-          {/* Hanger string */}
-          <div className="w-px h-14 bg-gradient-to-b from-transparent via-purple-300/30 to-purple-300/60 mx-auto" />
-          {/* Pin */}
-          <div className="w-2.5 h-2.5 rounded-full bg-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.7)] mx-auto -mt-1" />
+      <section
+        ref={projectsRef}
+        id="projects"
+        className="pt-16 pb-20 px-4 relative"
+      >
+        {/* Wildcat Willy — hangs down on the LEFT side throughout the Projects
+            section. Outer wrapper fills the section so the inner sticky pin
+            has room to travel. Inner motion.div is `position: sticky` so Willy
+            stays in viewport while the user scrolls through every project; the
+            existing willyY transform handles the entry drop and the exit
+            retract (string yanks him back up to the section's start). */}
+        <div className="hidden lg:block absolute inset-0 left-6 xl:left-12 z-10 pointer-events-none select-none">
           <motion.div
-            style={{ transformOrigin: "top center" }}
-            initial={{ rotate: -8, opacity: 0 }}
-            whileInView={{ rotate: 0, opacity: 1 }}
-            viewport={{ once: true }}
-            animate={{ rotate: [-3, 3, -3] }}
-            transition={{
-              rotate: { duration: 5, repeat: Infinity, ease: "easeInOut" },
-              opacity: { duration: 0.8 },
-            }}
-            whileHover={{ rotate: 12, scale: 1.05 }}
-            className="relative -mt-0.5 w-32 xl:w-40 pointer-events-auto cursor-pointer"
+            style={{ y: willyY }}
+            className="sticky top-24 w-fit"
           >
-            <img
-              src="/wildcatwilly.jpg"
-              alt="Northwestern Wildcat Willy"
-              className="w-full h-auto rounded-lg shadow-[0_20px_40px_-10px_rgba(168,85,247,0.5)] mix-blend-screen"
-            />
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-purple-900/80 backdrop-blur-sm border border-purple-400/40 font-mono text-[9px] text-purple-200 tracking-widest uppercase whitespace-nowrap">
-              Go Cats
+            <div className="flex flex-col items-center">
+              {/* Hanger string */}
+              <div className="w-px h-14 bg-gradient-to-b from-transparent via-blue-700/30 dark:via-purple-300/30 to-blue-700/60 dark:to-purple-300/60" />
+              {/* Pin */}
+              <div className="w-2.5 h-2.5 rounded-full bg-blue-700 dark:bg-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.7)] -mt-1" />
+              <motion.div
+                style={{ transformOrigin: "top center" }}
+                animate={{ rotate: [-3, 3, -3] }}
+                transition={{
+                  rotate: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+                }}
+                whileHover={{ rotate: 12, scale: 1.05 }}
+                className="relative -mt-0.5 w-32 xl:w-40 pointer-events-auto cursor-pointer"
+              >
+                <img
+                  src="/wildcatwilly.jpg"
+                  alt="Northwestern Wildcat Willy"
+                  className="w-full h-auto rounded-lg shadow-[0_20px_40px_-10px_rgba(168,85,247,0.5)] mix-blend-screen"
+                />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-blue-950/80 dark:bg-purple-900/80 backdrop-blur-sm border border-blue-700/40 dark:border-purple-400/40 font-mono text-[9px] text-black dark:text-purple-200 tracking-widest uppercase whitespace-nowrap">
+                  Go Cats
+                </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
@@ -1079,10 +1347,10 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 via-violet-200 to-purple-500 bg-clip-text text-transparent mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block">
               My Projects
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
               Recent work spanning research prototypes, AI products, ML pipelines, and full-stack apps.
             </p>
           </motion.div>
@@ -1095,11 +1363,11 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-purple-400/60" />
-              <span className="text-purple-300 text-xs font-mono uppercase tracking-[0.3em]">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-purple-400/60" />
+              <span className="text-black dark:text-purple-300 text-xs font-mono uppercase tracking-[0.3em]">
                 Research Prototype
               </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-purple-400/60" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-purple-400/60" />
             </div>
 
             <a
@@ -1108,11 +1376,11 @@ export default function Home() {
               rel="noopener noreferrer"
               className="group block"
             >
-              <div className="relative rounded-2xl overflow-hidden border border-purple-400/30 bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-purple-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(168,85,247,0.55)]">
+              <div className="relative rounded-2xl overflow-hidden border border-blue-700/30 dark:border-purple-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-blue-700/70 dark:group-hover:border-purple-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(168,85,247,0.55)]">
                 <div className="grid md:grid-cols-5">
                   {/* Clinical RA-flare risk dashboard */}
-                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-950" />
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50 dark:from-slate-950 dark:via-purple-950/40 dark:to-slate-950" />
                     <div
                       className="absolute inset-0 opacity-25"
                       style={{
@@ -1126,7 +1394,7 @@ export default function Home() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
                       <HeartPulse
                         strokeWidth={1.6}
-                        className="text-rose-300/95 w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(244,114,182,0.55)]"
+                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(244,114,182,0.55)]"
                       />
 
                       <svg
@@ -1161,218 +1429,49 @@ export default function Home() {
                         </circle>
                       </svg>
 
-                      <div className="font-mono text-[11px] text-purple-200/85 tracking-[0.4em] uppercase">
+                      <div className="font-mono text-[11px] text-black dark:text-purple-200/85 tracking-[0.4em] uppercase">
                         RA Flare Risk Predictor
                       </div>
                     </div>
 
                     {/* Hover hint */}
-                    <div className="hidden md:block absolute top-5 right-12 font-mono text-[9px] text-purple-200/70 tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
+                    <div className="hidden md:block absolute top-5 right-12 font-mono text-[9px] text-black dark:text-purple-200/70 tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
                       hover &rarr; stack
                     </div>
 
-                    {/* Concept stack hover overlay (desktop) */}
-                    <div className="hidden md:flex absolute inset-0 bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-10 overflow-y-auto">
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className="font-mono text-[10px] text-purple-300 tracking-[0.4em] uppercase">
-                          Concept Stack
-                        </span>
-                        <span className="h-px flex-1 bg-gradient-to-r from-purple-400/60 to-transparent" />
-                        <span className="font-mono text-[9px] text-purple-200/60 tracking-widest uppercase">
-                          Hover a chip
-                        </span>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaBrain className="text-purple-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-purple-200">
-                              ML Methodology
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Patient-grouped walk-forward CV",
-                                  tooltip:
-                                    "Splits by patient AND time so the same patient never appears in both train and validation — kills both subject leakage and look-ahead bias.",
-                                },
-                                {
-                                  label: "Isotonic calibration",
-                                  tooltip:
-                                    "Non-parametric monotonic mapping from raw XGBoost scores to true probabilities, validated by reliability diagram + Brier score.",
-                                },
-                                {
-                                  label: "Precision @ 10% review budget",
-                                  tooltip:
-                                    "Top-k threshold tuned to the realistic clinician triage capacity, not an abstract F1 — what actually matters in deployment.",
-                                },
-                                {
-                                  label: "Optuna Bayesian HPO",
-                                  tooltip:
-                                    "TPE sampler over learning rate, depth, regularization; pruned trials via MedianPruner — far cheaper than grid search.",
-                                },
-                                {
-                                  label: "SHAP feature attribution",
-                                  tooltip:
-                                    "TreeSHAP per-prediction explanations; surfaced in the clinician UI so flagged cases come with the why, not just the score.",
-                                },
-                                {
-                                  label: "HDBSCAN subgroup discovery",
-                                  tooltip:
-                                    "Density-based clustering on SHAP-space embeddings to discover patient subgroups with distinct flare patterns.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="purple"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-200 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaCogs className="text-blue-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-200">
-                              Production Engineering
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Real-time streaming inference",
-                                  tooltip:
-                                    "Sub-100ms per-event scoring on incoming patient telemetry; backpressure handled at the queue.",
-                                },
-                                {
-                                  label: "Kafka event ingestion",
-                                  tooltip:
-                                    "Patient-data events partitioned by subject_id for ordering; consumer groups for horizontal scale.",
-                                },
-                                {
-                                  label: "Async FastAPI · Pydantic v2",
-                                  tooltip:
-                                    "Async I/O so a slow model call doesn't block the loop; Pydantic v2 schemas validate every payload at the edge.",
-                                },
-                                {
-                                  label: "MLflow versioning",
-                                  tooltip:
-                                    "Model registry with stages (Staging → Production), artifact storage, and a recorded lineage from data to deployed binary.",
-                                },
-                                {
-                                  label: "DuckDB analytical store",
-                                  tooltip:
-                                    "In-process columnar SQL — vectorized aggregations on parquet without standing up Postgres for analytical workloads.",
-                                },
-                                {
-                                  label: "Docker Compose",
-                                  tooltip:
-                                    "API + Kafka + MLflow + DuckDB stack stood up via one compose file; reproducible across dev and CI.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="blue"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-300 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaShieldAlt className="text-emerald-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-200">
-                              Responsible AI &amp; Rigor
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Data-leakage guardrails",
-                                  tooltip:
-                                    "Time-based + group-based splits enforced in code; assertions catch any feature derived after the prediction window.",
-                                },
-                                {
-                                  label: "PHI scanning in CI",
-                                  tooltip:
-                                    "Pre-merge regex/entity scans on diffs to block raw PHI from entering the repo or model artifacts.",
-                                },
-                                {
-                                  label: "Model + data cards",
-                                  tooltip:
-                                    "Each model ships with a model card (intended use, fairness, limits) and a data card (provenance, splits, demographics).",
-                                },
-                                {
-                                  label: "Threat model & ADRs",
-                                  tooltip:
-                                    "STRIDE-style threat model; architecture decisions captured as numbered ADRs so future changes know the trade-offs.",
-                                },
-                                {
-                                  label: "Hypothesis property tests",
-                                  tooltip:
-                                    "Property-based tests via Hypothesis catch edge cases unit tests never enumerate (NaNs, monotonicity, idempotence).",
-                                },
-                                {
-                                  label: "Strict Mypy · 80%+ coverage",
-                                  tooltip:
-                                    "strict-mode type checking + branch coverage gate so refactors don't silently break invariants in untested branches.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="emerald"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                    {/* Concept stack hover overlay (desktop, single source of truth) */}
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={gradientRiskGroups} accentColor="text-black dark:text-purple-300" mode="overlay" />
                     </div>
                   </div>
 
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-200 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-blue-800/20 dark:bg-purple-500/20 border border-blue-700/40 dark:border-purple-400/40 text-black dark:text-purple-200 font-mono">
                         Stealth Mode
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-200 font-mono inline-flex items-center gap-1.5">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-blue-500/20 border border-blue-400/40 text-black dark:text-blue-200 font-mono inline-flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                         Live
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-pink-500/20 border border-pink-400/40 text-pink-200 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/20 dark:bg-pink-500/20 border border-yellow-400/40 dark:border-pink-400/40 text-black dark:text-pink-200 font-mono">
                         Northwestern
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-yellow-300 dark:via-pink-300 to-blue-300 bg-clip-text text-transparent">
                       RA Flare Risk Predictor
                     </h3>
-                    <p className="text-gray-300 leading-relaxed">
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
                       A 7-day flare-risk pipeline for rheumatoid arthritis. XGBoost with
                       isotonic calibration on patient-grouped walk-forward splits, hitting{" "}
-                      <span className="text-purple-200 font-medium">
+                      <span className="text-black dark:text-purple-200 font-medium">
                         61.5% precision at 21.6% recall
                       </span>{" "}
                       under a 10% clinician review budget. Served as a real-time streaming inference
                       API behind a SHAP-driven clinician dashboard with HDBSCAN subgroup discovery.
                     </p>
-                    <p className="text-xs text-gray-400/80 italic leading-relaxed -mt-1">
+                    <p className="text-xs text-black italic leading-relaxed -mt-1">
                       Cohorts simulated from published RCT parameters (Wang et al., JMIR 2018;
                       NCT02822521). Hover the visual to explore the concept stack.
                     </p>
@@ -1382,7 +1481,7 @@ export default function Home() {
                         return (
                           <span
                             key={tech}
-                            className="px-3 py-1 bg-purple-500/15 border border-purple-400/30 text-purple-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                            className="px-3 py-1 bg-blue-800/15 dark:bg-purple-500/15 border border-blue-700/30 dark:border-purple-400/30 text-black dark:text-purple-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
                           >
                             {Icon && <Icon className="shrink-0" />}
                             {tech}
@@ -1391,7 +1490,7 @@ export default function Home() {
                       })}
                     </div>
                     <div className="pt-2">
-                      <span className="inline-flex items-center gap-2 text-purple-300 group-hover:text-white font-medium transition-colors">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-purple-300 group-hover:text-black dark:group-hover:text-white font-medium transition-colors">
                         View prototype
                         <span className="transition-transform duration-300 group-hover:translate-x-1">
                           &rarr;
@@ -1402,6 +1501,11 @@ export default function Home() {
                 </div>
               </div>
             </a>
+
+          {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
+          <div className="md:hidden mt-3 rounded-2xl border border-blue-700/25 dark:border-purple-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={gradientRiskGroups} accentColor="text-black dark:text-purple-300" mode="static" />
+          </div>
           </motion.div>
 
           {/* PATIENT360 NU — featured clinical-genomic governance prototype */}
@@ -1412,11 +1516,11 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-cyan-400/60" />
-              <span className="text-cyan-300 text-xs font-mono uppercase tracking-[0.3em]">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-400/60 dark:to-cyan-400/60" />
+              <span className="text-black dark:text-cyan-300 text-xs font-mono uppercase tracking-[0.3em]">
                 Patient360 NU
               </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-cyan-400/60" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-400/60 dark:to-cyan-400/60" />
             </div>
 
             <a
@@ -1425,11 +1529,11 @@ export default function Home() {
               rel="noopener noreferrer"
               className="group block"
             >
-              <div className="relative rounded-2xl overflow-hidden border border-cyan-400/30 bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-cyan-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(34,211,238,0.55)]">
+              <div className="relative rounded-2xl overflow-hidden border border-blue-400/30 dark:border-cyan-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-blue-400/70 dark:group-hover:border-cyan-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(34,211,238,0.55)]">
                 <div className="grid md:grid-cols-5">
                   {/* Clinical-genomic dashboard visual */}
-                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-cyan-950/40 to-slate-950" />
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 dark:from-cyan-50 via-blue-100 dark:via-cyan-100 to-blue-50 dark:to-cyan-50 dark:from-slate-950 dark:via-cyan-950/40 dark:to-slate-950" />
                     <div
                       className="absolute inset-0 opacity-25"
                       style={{
@@ -1440,24 +1544,24 @@ export default function Home() {
                     />
 
                     {/* TOP STRIP */}
-                    <div className="absolute top-0 left-0 right-0 h-9 border-b border-cyan-500/25 bg-black/60 backdrop-blur-sm flex items-stretch overflow-hidden z-[2]">
-                      <div className="px-3 flex items-center border-r border-cyan-500/25 bg-cyan-500/10">
-                        <span className="font-mono text-[10px] text-cyan-100 tracking-[0.3em] uppercase">
+                    <div className="absolute top-0 left-0 right-0 h-9 border-b border-blue-500/25 dark:border-cyan-500/25 bg-black/[0.06] dark:bg-black/60 backdrop-blur-sm flex items-stretch overflow-hidden z-[2]">
+                      <div className="px-3 flex items-center border-r border-blue-500/25 dark:border-cyan-500/25 bg-blue-500/10 dark:bg-cyan-500/10">
+                        <span className="font-mono text-[10px] text-black dark:text-cyan-100 tracking-[0.3em] uppercase">
                           Patient360 NU &middot; v3
                         </span>
                       </div>
                       <div className="flex-1 flex items-center px-3 gap-3 overflow-hidden">
-                        <span className="font-mono text-[9px] text-emerald-300 tracking-widest uppercase inline-flex items-center gap-1.5 whitespace-nowrap">
+                        <span className="font-mono text-[9px] text-black dark:text-emerald-300 tracking-widest uppercase inline-flex items-center gap-1.5 whitespace-nowrap">
                           <FaShieldAlt className="text-[10px]" />
                           HIPAA Safe Harbor
                         </span>
-                        <span className="font-mono text-[9px] text-gray-500 hidden md:inline whitespace-nowrap">
+                        <span className="font-mono text-[9px] text-black hidden md:inline whitespace-nowrap">
                           CPIC &middot; openFDA &middot; CT.gov &middot; RxNav
                         </span>
                       </div>
-                      <div className="px-3 flex items-center gap-1.5 border-l border-cyan-500/25">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="font-mono text-[10px] text-emerald-300 tracking-widest">
+                      <div className="px-3 flex items-center gap-1.5 border-l border-blue-500/25 dark:border-cyan-500/25">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                        <span className="font-mono text-[10px] text-black dark:text-emerald-300 tracking-widest">
                           LIVE
                         </span>
                       </div>
@@ -1467,10 +1571,10 @@ export default function Home() {
                     <div className="absolute inset-x-0 top-9 bottom-[68px]">
                       <div className="relative w-full h-full">
                         <div className="absolute top-2 left-3 z-[1]">
-                          <div className="font-mono text-[9px] text-cyan-300/80 tracking-widest uppercase">
+                          <div className="font-mono text-[9px] text-black tracking-widest uppercase">
                             Pharmacogenomic Safety
                           </div>
-                          <div className="font-mono text-[8px] text-gray-500 mt-0.5">
+                          <div className="font-mono text-[8px] text-black mt-0.5">
                             CPIC 4-tier &middot; cross-gene scan
                           </div>
                         </div>
@@ -1481,13 +1585,13 @@ export default function Home() {
                           whileInView={{ opacity: 1, x: 0 }}
                           viewport={{ once: true }}
                           transition={{ duration: 0.6, delay: 0.3 }}
-                          className="absolute top-2 right-3 z-[1] px-2 py-1.5 rounded bg-rose-500/15 border border-rose-400/40 backdrop-blur-sm font-mono text-[9px] max-w-[180px]"
+                          className="absolute top-2 right-3 z-[1] px-2 py-1.5 rounded bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 backdrop-blur-sm font-mono text-[9px] max-w-[180px]"
                         >
-                          <div className="flex items-center gap-1.5 text-rose-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                          <div className="flex items-center gap-1.5 text-black dark:text-rose-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-rose-400 animate-pulse" />
                             <span className="font-semibold tracking-wider">HIGH RISK</span>
                           </div>
-                          <div className="text-rose-100/95 text-[9px] mt-0.5 leading-snug">
+                          <div className="text-black text-[9px] mt-0.5 leading-snug">
                             CYP2D6 + Codeine: poor metabolizer &middot; avoid
                           </div>
                         </motion.div>
@@ -1617,21 +1721,21 @@ export default function Home() {
                         </svg>
 
                         {/* Bottom helix label */}
-                        <div className="absolute bottom-2 left-3 z-[1] flex items-center gap-2 font-mono text-[8.5px] text-cyan-300/55 tracking-wider">
+                        <div className="absolute bottom-2 left-3 z-[1] flex items-center gap-2 font-mono text-[8.5px] text-black tracking-wider">
                           <span>22 GENES</span>
-                          <span className="text-cyan-300/30">·</span>
+                          <span className="text-black">·</span>
                           <span>200 PATIENTS</span>
-                          <span className="text-cyan-300/30">·</span>
-                          <span className="text-emerald-300/85">2 ALERTS</span>
+                          <span className="text-black">·</span>
+                          <span className="text-black">2 ALERTS</span>
                         </div>
                       </div>
                     </div>
 
                     {/* AUDIT LOG MARQUEE — horizontal scrolling band (replaces sidebar) */}
-                    <div className="absolute bottom-9 left-0 right-0 h-7 border-y border-cyan-500/25 bg-black/55 backdrop-blur-sm flex items-stretch overflow-hidden z-[2]">
-                      <div className="px-3 flex items-center border-r border-cyan-500/25 bg-cyan-500/10 shrink-0">
-                        <span className="font-mono text-[8px] tracking-[0.25em] uppercase text-cyan-200 inline-flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <div className="absolute bottom-9 left-0 right-0 h-7 border-y border-blue-500/25 dark:border-cyan-500/25 bg-white/70 dark:bg-black/55 backdrop-blur-sm flex items-stretch overflow-hidden z-[2]">
+                      <div className="px-3 flex items-center border-r border-blue-500/25 dark:border-cyan-500/25 bg-blue-500/10 dark:bg-cyan-500/10 shrink-0">
+                        <span className="font-mono text-[8px] tracking-[0.25em] uppercase text-black dark:text-cyan-200 inline-flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                           Audit
                         </span>
                       </div>
@@ -1643,22 +1747,22 @@ export default function Home() {
                         >
                           {(() => {
                             const events = [
-                              { t: "12:34", e: "consent:granted", c: "bg-emerald-400" },
-                              { t: "12:33", e: "reveal:dx_code", c: "bg-amber-400" },
-                              { t: "12:33", e: "cpic:CYP2D6", c: "bg-cyan-400" },
-                              { t: "12:32", e: "alert:hi-risk", c: "bg-rose-400" },
-                              { t: "12:32", e: "vault:lookup", c: "bg-violet-400" },
-                              { t: "12:31", e: "fda:adverse", c: "bg-cyan-400" },
-                              { t: "12:30", e: "lineage:view", c: "bg-indigo-400" },
-                              { t: "12:29", e: "rxnav:ddi", c: "bg-cyan-400" },
+                              { t: "12:34", e: "consent:granted", c: "bg-yellow-400 dark:bg-emerald-400" },
+                              { t: "12:33", e: "reveal:dx_code", c: "bg-yellow-400 dark:bg-amber-400" },
+                              { t: "12:33", e: "cpic:CYP2D6", c: "bg-blue-400 dark:bg-cyan-400" },
+                              { t: "12:32", e: "alert:hi-risk", c: "bg-yellow-400 dark:bg-rose-400" },
+                              { t: "12:32", e: "vault:lookup", c: "bg-blue-700 dark:bg-violet-400" },
+                              { t: "12:31", e: "fda:adverse", c: "bg-blue-400 dark:bg-cyan-400" },
+                              { t: "12:30", e: "lineage:view", c: "bg-blue-400 dark:bg-indigo-400" },
+                              { t: "12:29", e: "rxnav:ddi", c: "bg-blue-400 dark:bg-cyan-400" },
                             ];
                             return [...events, ...events].map((row, i) => (
                               <span key={i} className="flex items-center gap-1.5">
                                 <span
                                   className={`w-1 h-1 rounded-full ${row.c} shrink-0`}
                                 />
-                                <span className="text-gray-500">{row.t}</span>
-                                <span className="text-gray-200">{row.e}</span>
+                                <span className="text-black">{row.t}</span>
+                                <span className="text-black dark:text-gray-200">{row.e}</span>
                               </span>
                             ));
                           })()}
@@ -1667,251 +1771,82 @@ export default function Home() {
                     </div>
 
                     {/* BOTTOM STRIP */}
-                    <div className="absolute bottom-0 left-0 right-0 h-9 border-t border-cyan-500/25 bg-black/60 backdrop-blur-sm flex items-center justify-between px-3 font-mono text-[10px] z-[2]">
-                      <div className="flex items-center gap-2.5 md:gap-4 text-gray-400">
+                    <div className="absolute bottom-0 left-0 right-0 h-9 border-t border-blue-500/25 dark:border-cyan-500/25 bg-black/[0.06] dark:bg-black/60 backdrop-blur-sm flex items-center justify-between px-3 font-mono text-[10px] z-[2]">
+                      <div className="flex items-center gap-2.5 md:gap-4 text-black dark:text-gray-400">
                         <span>
-                          APIs <span className="text-cyan-100">4</span>
+                          APIs <span className="text-black dark:text-cyan-100">4</span>
                         </span>
                         <span>
-                          PHI <span className="text-emerald-300">18 cat</span>
+                          PHI <span className="text-black dark:text-emerald-300">18 cat</span>
                         </span>
                         <span className="hidden md:inline">
-                          Audit <span className="text-emerald-300">100%</span>
+                          Audit <span className="text-black dark:text-emerald-300">100%</span>
                         </span>
                         <span className="hidden md:inline">
-                          Bundle <span className="text-cyan-100">92KB</span>
+                          Bundle <span className="text-black dark:text-cyan-100">92KB</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-emerald-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <div className="flex items-center gap-1.5 text-black dark:text-emerald-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                         <span>0 LEAKS</span>
                       </div>
                     </div>
 
                     {/* Hover hint */}
-                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-cyan-200/70 tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
                       hover &rarr; stack
                     </div>
 
-                    {/* Concept stack hover overlay */}
-                    <div className="hidden md:flex absolute inset-0 bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className="font-mono text-[10px] text-cyan-300 tracking-[0.4em] uppercase">
-                          Concept Stack
-                        </span>
-                        <span className="h-px flex-1 bg-gradient-to-r from-cyan-400/60 to-transparent" />
-                        <span className="font-mono text-[9px] text-cyan-200/60 tracking-widest uppercase">
-                          Hover a chip
-                        </span>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaHeartbeat className="text-cyan-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-200">
-                              Clinical &amp; Genomic Engineering
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "4-tier CPIC safety engine",
-                                  tooltip:
-                                    "Pharmacogenomic prescribing rules graded Level A → D from CPIC; engine fires per-prescription drug + diplotype check at the point of order.",
-                                },
-                                {
-                                  label: "HIPAA Safe Harbor (18 categories)",
-                                  tooltip:
-                                    "All 18 PHI identifier classes (names, dates, geo, MRNs, etc.) detected and tokenized before storage so re-identification risk stays under §164.514(b).",
-                                },
-                                {
-                                  label: "Deterministic PII tokenization",
-                                  tooltip:
-                                    "HMAC-SHA256 with a per-tenant salt — same PHI maps to the same token forever, enabling joins without ever surfacing raw values.",
-                                },
-                                {
-                                  label: "Cross-runtime hash parity (Py ↔ JS)",
-                                  tooltip:
-                                    "Browser tokenizes identically to the Python generator. Verified by parity tests so a clinician token resolves the same on either side.",
-                                },
-                                {
-                                  label: "Granular consent model",
-                                  tooltip:
-                                    "Consent is a first-class object: scoped per-field, per-purpose, revocable, with time bounds and an audit trail back to the patient action.",
-                                },
-                                {
-                                  label: "Real CPIC genes & alleles",
-                                  tooltip:
-                                    "Synthetic patients carry real CPIC genes (CYP2D6, DPYD, TPMT, …) with authentic star-allele frequencies — not random labels.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="cyan"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-200 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaShieldAlt className="text-emerald-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-200">
-                              Governance &amp; Compliance
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Immutable audit log (classified events)",
-                                  tooltip:
-                                    "Append-only ledger; every reveal/consent/alert is a typed event — replays produce the same state and satisfy 21 CFR Part 11 e-records.",
-                                },
-                                {
-                                  label: "Per-field reveal · vault model",
-                                  tooltip:
-                                    "Tokens by default; raw value released only on a typed reveal request that's logged, scoped, and tied to a specific clinical purpose.",
-                                },
-                                {
-                                  label: "Data lineage + catalog",
-                                  tooltip:
-                                    "Every derived field traces back to source records; downstream models inherit consent and PHI classification automatically.",
-                                },
-                                {
-                                  label: "Composite integrity score",
-                                  tooltip:
-                                    "One number summarizing freshness, completeness, and concordance across upstream APIs — surfaced as a UI badge.",
-                                },
-                                {
-                                  label: "Consent-gated computation",
-                                  tooltip:
-                                    "If consent doesn't cover a feature/purpose, the pipeline short-circuits — no silent overrides, no exception paths.",
-                                },
-                                {
-                                  label: "21 CFR Part 11 / GDPR Art. 30 ready",
-                                  tooltip:
-                                    "Audit log + lineage + tokenization map cleanly onto the FDA e-records and EU records-of-processing requirements.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="emerald"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-300 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaCogs className="text-blue-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-200">
-                              Engineering &amp; Live Integrations
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "React 18 + Vite 5 (319KB / 92KB gzip)",
-                                  tooltip:
-                                    "Code-split routes, treeshaken icons, and a precomputed dataset bundle keep the production gzip under 100 KB.",
-                                },
-                                {
-                                  label: "Python synthetic data generator",
-                                  tooltip:
-                                    "Reproducible cohort generator: 200 patients, 22 genes, realistic prevalence/comorbidity priors — seeded RNG for parity in tests.",
-                                },
-                                {
-                                  label: "Live: CPIC · openFDA · CT.gov · RxNav",
-                                  tooltip:
-                                    "Four public APIs wired in: CPIC (gene-drug rules), openFDA (adverse events), ClinicalTrials.gov (matching), RxNav (DDI).",
-                                },
-                                {
-                                  label: "Custom Node static server",
-                                  tooltip:
-                                    "Tiny Node server adds the security headers and SPA fallback routing that vanilla static hosting on Railway lacks.",
-                                },
-                                {
-                                  label: "Railway + Nixpacks deployment",
-                                  tooltip:
-                                    "Nixpacks autodetects the build; Railway provides the proxy, TLS, and zero-config HTTPS.",
-                                },
-                                {
-                                  label: "Memoized derived datasets",
-                                  tooltip:
-                                    "Heavy joins computed once and memoized by hash of inputs — UI tab switches stay instant on a 200-patient cohort.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="blue"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                    {/* Concept stack hover overlay (desktop, single source of truth) */}
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={patient360Groups} accentColor="text-black dark:text-cyan-300" mode="overlay" />
                     </div>
                   </div>
 
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 font-mono inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/20 dark:bg-emerald-500/20 border border-yellow-400/40 dark:border-emerald-400/40 text-black dark:text-emerald-100 font-mono inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                         Live
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-rose-500/15 border border-rose-400/40 text-rose-100 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 text-black dark:text-rose-100 font-mono">
                         HIPAA
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-cyan-500/15 border border-cyan-400/35 text-cyan-100 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-blue-500/15 dark:bg-cyan-500/15 border border-blue-400/35 dark:border-cyan-400/35 text-black dark:text-cyan-100 font-mono">
                         Synthetic Data
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-cyan-200 via-sky-100 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-200 dark:from-cyan-200 via-blue-100 dark:via-sky-100 to-blue-300 bg-clip-text text-transparent">
                       Patient360 NU
                     </h3>
-                    <p className="text-gray-300 leading-relaxed">
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
                       A HIPAA-compliant clinical-genomic governance prototype. A{" "}
-                      <span className="text-cyan-200 font-medium">
+                      <span className="text-black dark:text-cyan-200 font-medium">
                         4-tier CPIC safety engine
                       </span>{" "}
                       catches high-risk gene-drug pairs at prescription time, paired with a PHI
                       vault, immutable audit log, and granular consent. All backed by{" "}
-                      <span className="text-cyan-200 font-medium">
+                      <span className="text-black dark:text-cyan-200 font-medium">
                         four live public health APIs
                       </span>
                       .
                     </p>
-                    <ul className="text-[12.5px] text-gray-400/95 leading-relaxed space-y-1 -mt-1">
+                    <ul className="text-[12.5px] text-black leading-relaxed space-y-1 -mt-1">
                       <li className="flex gap-2">
-                        <span className="text-cyan-300">·</span>
+                        <span className="text-black dark:text-cyan-300">·</span>
                         Adverse-event prevention at prescription time
                       </li>
                       <li className="flex gap-2">
-                        <span className="text-cyan-300">·</span>
+                        <span className="text-black dark:text-cyan-300">·</span>
                         Regulator-ready: HIPAA, GDPR Art. 30, 21 CFR Part 11
                       </li>
                       <li className="flex gap-2">
-                        <span className="text-cyan-300">·</span>
+                        <span className="text-black dark:text-cyan-300">·</span>
                         Consent as a first-class, revocable object
                       </li>
                     </ul>
-                    <p className="text-xs text-gray-400/80 italic leading-relaxed -mt-1">
+                    <p className="text-xs text-black italic leading-relaxed -mt-1">
                       Built on synthetic patient data &middot; live gene-level APIs are massive
                       and access-gated, so the generator mirrors real CPIC alleles, ClinVar
                       pathogenicity, and SEER prevalence. Hover the visual to explore the concept
@@ -1923,7 +1858,7 @@ export default function Home() {
                         return (
                           <span
                             key={tech}
-                            className="px-3 py-1 bg-cyan-500/15 border border-cyan-400/30 text-cyan-100 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                            className="px-3 py-1 bg-blue-500/15 dark:bg-cyan-500/15 border border-blue-400/30 dark:border-cyan-400/30 text-black dark:text-cyan-100 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
                           >
                             {Icon && <Icon className="shrink-0" />}
                             {tech}
@@ -1932,7 +1867,7 @@ export default function Home() {
                       })}
                     </div>
                     <div className="pt-2">
-                      <span className="inline-flex items-center gap-2 text-cyan-200 group-hover:text-white font-medium transition-colors">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-cyan-200 group-hover:text-black dark:group-hover:text-white font-medium transition-colors">
                         Open prototype
                         <span className="transition-transform duration-300 group-hover:translate-x-1">
                           &rarr;
@@ -1943,6 +1878,11 @@ export default function Home() {
                 </div>
               </div>
             </a>
+
+          {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
+          <div className="md:hidden mt-3 rounded-2xl border border-blue-400/25 dark:border-cyan-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={patient360Groups} accentColor="text-black dark:text-cyan-300" mode="static" />
+          </div>
           </motion.div>
 
           {/* QUANT TRADING DASHBOARD — featured */}
@@ -1953,11 +1893,11 @@ export default function Home() {
             transition={{ duration: 0.8 }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-emerald-400/60" />
-              <span className="text-emerald-300 text-xs font-mono uppercase tracking-[0.3em]">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-yellow-400/60 dark:to-emerald-400/60" />
+              <span className="text-black dark:text-emerald-300 text-xs font-mono uppercase tracking-[0.3em]">
                 Quant Trading Dashboard
               </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-emerald-400/60" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-yellow-400/60 dark:to-emerald-400/60" />
             </div>
 
             <a
@@ -1966,12 +1906,12 @@ export default function Home() {
               rel="noopener noreferrer"
               className="group block"
             >
-              <div className="relative rounded-2xl overflow-hidden border border-emerald-400/30 bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-emerald-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(16,185,129,0.55)]">
+              <div className="relative rounded-2xl overflow-hidden border border-yellow-400/30 dark:border-emerald-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-yellow-400/70 dark:group-hover:border-emerald-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(16,185,129,0.55)]">
                 <div className="grid md:grid-cols-5">
                   {/* Live trading terminal visual (multi-pane) */}
-                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-white/10">
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
                     {/* Background — different motif from stealth: dot grid on deep slate */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-emerald-950/30 to-slate-950" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-yellow-50 dark:from-emerald-50 via-yellow-100 dark:via-emerald-100 to-yellow-50 dark:to-emerald-50 dark:from-slate-950 dark:via-emerald-950/30 dark:to-slate-950" />
                     <div
                       className="absolute inset-0 opacity-30"
                       style={{
@@ -1985,7 +1925,7 @@ export default function Home() {
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
                       <CandlestickChart
                         strokeWidth={1.6}
-                        className="text-emerald-300/95 w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(16,185,129,0.55)]"
+                        className="text-black w-16 h-16 md:w-20 md:h-20 drop-shadow-[0_0_28px_rgba(16,185,129,0.55)]"
                       />
 
                       <svg
@@ -2027,201 +1967,31 @@ export default function Home() {
                         </circle>
                       </svg>
 
-                      <div className="font-mono text-[11px] text-emerald-200/85 tracking-[0.4em] uppercase">
+                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase">
                         Quant Trading Dashboard
                       </div>
                     </div>
                     {/* Hover hint */}
-                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-emerald-200/70 tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none">
                       hover &rarr; stack
                     </div>
 
-                    {/* Concept stack hover overlay (desktop) — chips become
-                        interactive on hover so individual tooltips work. */}
-                    <div className="hidden md:flex absolute inset-0 bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
-                      <div className="flex items-center gap-3 mb-4">
-                        <span className="font-mono text-[10px] text-emerald-300 tracking-[0.4em] uppercase">
-                          Concept Stack
-                        </span>
-                        <span className="h-px flex-1 bg-gradient-to-r from-emerald-400/60 to-transparent" />
-                        <span className="font-mono text-[9px] text-emerald-200/60 tracking-widest uppercase">
-                          Hover a chip
-                        </span>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-100 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaChartLine className="text-emerald-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-emerald-200">
-                              Strategy &amp; Signals
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "RSI · MACD · Bollinger overlays",
-                                  tooltip:
-                                    "Momentum/trend indicators plus volatility-band confirmation. Computed via rolling/EW windows in pandas; no Python row loops.",
-                                },
-                                {
-                                  label: "Momentum + mean-reversion screens",
-                                  tooltip:
-                                    "Two complementary strategy classes — trending breakouts vs. reversion-to-mean — wired through one engine.",
-                                },
-                                {
-                                  label: "Multi-timeframe alignment",
-                                  tooltip:
-                                    "Daily-trend filter on top of intraday entries to suppress chop and only trade with the higher-TF bias.",
-                                },
-                                {
-                                  label: "Walk-forward backtesting",
-                                  tooltip:
-                                    "Out-of-sample testing on rolling time slices — the only way to detect overfit parameters before a live deploy.",
-                                },
-                                {
-                                  label: "Volatility regime detection",
-                                  tooltip:
-                                    "Bucket equity curve by ATR percentile so regime-dependent edge is visible instead of blended into one Sharpe.",
-                                },
-                                {
-                                  label: "Pairs / cointegration checks",
-                                  tooltip:
-                                    "Engle-Granger cointegration on candidate pairs (ADF on residuals) for stat-arb screening.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="emerald"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-200 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaShieldAlt className="text-cyan-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-200">
-                              Risk &amp; Performance
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Sharpe · Sortino · Calmar",
-                                  tooltip:
-                                    "Risk-adjusted return: Sharpe (full vol), Sortino (downside dev), Calmar (CAGR ÷ max drawdown).",
-                                },
-                                {
-                                  label: "Max drawdown & VaR / CVaR",
-                                  tooltip:
-                                    "Tail-risk: peak-to-trough loss, 95% historical VaR, expected shortfall — drives circuit breakers.",
-                                },
-                                {
-                                  label: "Slippage + transaction-cost model",
-                                  tooltip:
-                                    "Per-trade cost in bps + fixed; cost-sensitivity sweep visualizes how alpha decays with realistic frictions.",
-                                },
-                                {
-                                  label: "Out-of-sample validation",
-                                  tooltip:
-                                    "Train/test split + walk-forward to measure decay vs. in-sample fit; flags parameter overfitting.",
-                                },
-                                {
-                                  label: "Rolling correlation matrix",
-                                  tooltip:
-                                    "30-day rolling correlations across watchlist for diversification and regime-shift detection.",
-                                },
-                                {
-                                  label: "Risk-parity position sizing",
-                                  tooltip:
-                                    "Inverse-volatility weighting so each position contributes equal portfolio variance, not equal capital.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="cyan"
-                              />
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="opacity-0 translate-y-3 transition-all duration-500 delay-300 group-hover:opacity-100 group-hover:translate-y-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <FaCogs className="text-blue-300 text-sm" />
-                            <span className="text-[11px] font-mono uppercase tracking-widest text-blue-200">
-                              Data &amp; Engineering
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {(
-                              [
-                                {
-                                  label: "Live market-data ingestion",
-                                  tooltip:
-                                    "yfinance pulls with TTL=3600s caching; tickers regex-validated (^[A-Z0-9][A-Z0-9.\\-]{0,9}$) as a security boundary.",
-                                },
-                                {
-                                  label: "Vectorized pandas pipelines",
-                                  tooltip:
-                                    "All indicators / features computed via rolling, ewm, groupby, NumPy ops — no per-row Python.",
-                                },
-                                {
-                                  label: "Plotly interactive charts",
-                                  tooltip:
-                                    "Candlestick + indicator overlays with brush zoom, crosshair tooltips, and entry/exit markers.",
-                                },
-                                {
-                                  label: "Reactive Streamlit UI (4-page)",
-                                  tooltip:
-                                    "Backtest · Watchlist · Compare · Optimize. Sidebar inputs trigger memoized recomputation per tab.",
-                                },
-                                {
-                                  label: "Cached compute layer",
-                                  tooltip:
-                                    "@st.cache_data on data fetches and @st.cache_resource on engine instances — sub-second tab switches.",
-                                },
-                                {
-                                  label: "Containerized on Railway",
-                                  tooltip:
-                                    "Procfile + railway.json define the start command; XSRF disabled behind Railway's proxy.",
-                                },
-                              ] as const
-                            ).map((c) => (
-                              <SkillChip
-                                key={c.label}
-                                label={c.label}
-                                tooltip={c.tooltip}
-                                size="md"
-                                variant="blue"
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      </div>
+                    {/* Concept stack hover overlay (desktop, single source of truth) */}
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={quantDashboardGroups} accentColor="text-black dark:text-emerald-300" mode="overlay" />
                     </div>
                   </div>
 
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-300 via-cyan-300 to-blue-300 bg-clip-text text-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-300 dark:from-emerald-300 via-blue-300 dark:via-cyan-300 to-blue-300 bg-clip-text text-transparent">
                       Quant Trading Dashboard
                     </h3>
-                    <p className="text-gray-300 leading-relaxed">
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
                       A 4-page Streamlit dashboard for momentum and mean-reversion backtesting on
-                      live yfinance data. Includes <span className="text-emerald-200">walk-forward validation</span>,
-                      a <span className="text-emerald-200">parameter heatmap</span>, a{" "}
-                      <span className="text-emerald-200">cost-sensitivity sweep</span>, watchlist
+                      live yfinance data. Includes <span className="text-black dark:text-emerald-200">walk-forward validation</span>,
+                      a <span className="text-black dark:text-emerald-200">parameter heatmap</span>, a{" "}
+                      <span className="text-black dark:text-emerald-200">cost-sensitivity sweep</span>, watchlist
                       compare, and entry/exit markers on real prices. Vectorized pandas core with a
                       TTL-cached compute layer; deployed on Railway.
                     </p>
@@ -2233,7 +2003,7 @@ export default function Home() {
                           return (
                             <span
                               key={tech}
-                              className="px-3 py-1 bg-emerald-500/15 border border-emerald-400/30 text-emerald-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                              className="px-3 py-1 bg-yellow-500/15 dark:bg-emerald-500/15 border border-yellow-400/30 dark:border-emerald-400/30 text-black dark:text-emerald-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
                             >
                               {Icon && <Icon className="shrink-0" />}
                               {tech}
@@ -2244,7 +2014,7 @@ export default function Home() {
                     </div>
 
                     <div className="pt-2">
-                      <span className="inline-flex items-center gap-2 text-emerald-300 group-hover:text-white font-medium transition-colors">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-emerald-300 group-hover:text-black dark:group-hover:text-white font-medium transition-colors">
                         Open dashboard
                         <span className="transition-transform duration-300 group-hover:translate-x-1">
                           &rarr;
@@ -2255,13 +2025,18 @@ export default function Home() {
                 </div>
               </div>
             </a>
+
+          {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
+          <div className="md:hidden mt-3 rounded-2xl border border-yellow-400/25 dark:border-emerald-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={quantDashboardGroups} accentColor="text-black dark:text-emerald-300" mode="static" />
+          </div>
           </motion.div>
 
           {/* SELECTED PROJECTS */}
           <div className="space-y-8">
             <div className="flex items-center gap-3">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-400/60" />
-              <span className="text-blue-300 text-xs font-mono uppercase tracking-[0.3em]">
+              <span className="text-black dark:text-blue-300 text-xs font-mono uppercase tracking-[0.3em]">
                 Selected Projects
               </span>
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-400/60" />
@@ -2277,7 +2052,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: (index % 4) * 0.08 }}
                   className={`group ${project.featured ? "md:col-span-2" : ""}`}
                 >
-                  <div className="relative h-full bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden hover:border-white/30 transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.45)]">
+                  <div className="relative h-full bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-2xl overflow-hidden hover:border-black/20 dark:hover:border-white/30 transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.45)]">
                     <div className="relative h-64 md:h-80 overflow-hidden">
                       {project.title === "CareerCraft AI" ? (
                         <div className="absolute inset-0">
@@ -2480,8 +2255,8 @@ export default function Home() {
                           </svg>
 
                           {/* Meta chip */}
-                          <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 border border-purple-300/35 font-mono text-[10px] tracking-widest uppercase text-purple-100/90 backdrop-blur-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-800/15 dark:bg-purple-500/15 border border-blue-700/35 dark:border-purple-300/35 font-mono text-[10px] tracking-widest uppercase text-black dark:text-purple-100/90 backdrop-blur-sm">
+                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                             AI Resume Engine
                           </div>
                         </div>
@@ -2494,9 +2269,9 @@ export default function Home() {
                           sizes="(min-width: 768px) 50vw, 100vw"
                         />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/92 dark:from-black/85 via-white/30 dark:via-black/30 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-5">
-                        <h3 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg group-hover:text-blue-300 transition-colors">
+                        <h3 className="text-2xl md:text-3xl font-bold text-black dark:text-white drop-shadow-lg group-hover:text-black dark:group-hover:text-blue-300 transition-colors">
                           {project.title}
                         </h3>
                       </div>
@@ -2505,7 +2280,7 @@ export default function Home() {
                           href={project.githubUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="absolute top-4 right-4 px-3 py-2 rounded-full bg-black/70 backdrop-blur-sm border border-white/20 text-white text-xs flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-black/90 hover:scale-105"
+                          className="absolute top-4 right-4 px-3 py-2 rounded-full bg-white/85 dark:bg-black/70 backdrop-blur-sm border border-black/15 dark:border-white/20 text-black dark:text-white text-xs flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/95 dark:hover:bg-black/90 hover:scale-105"
                         >
                           <FaGithub />
                           View
@@ -2513,7 +2288,7 @@ export default function Home() {
                       )}
                     </div>
                     <div className="p-6 space-y-4">
-                      <p className="text-gray-300 leading-relaxed">{project.description}</p>
+                      <p className="text-black dark:text-gray-300 leading-relaxed">{project.description}</p>
                       <div className="flex flex-wrap gap-2">
                         {project.technologies.map((tech) => {
                           const Icon = getTechIcon(tech);
@@ -2524,7 +2299,7 @@ export default function Home() {
                               className="relative inline-block group/chip align-middle"
                             >
                               <span
-                                className={`px-3 py-1 bg-blue-500/10 border border-blue-400/30 text-blue-200 text-xs rounded-full font-medium inline-flex items-center gap-1.5 transition-colors duration-200 cursor-default ${
+                                className={`px-3 py-1 bg-blue-500/10 border border-blue-400/30 text-black dark:text-blue-200 text-xs rounded-full font-medium inline-flex items-center gap-1.5 transition-colors duration-200 cursor-default ${
                                   tooltip
                                     ? "underline decoration-dotted decoration-blue-400/30 underline-offset-[5px] group-hover/chip:bg-blue-500/25 group-hover/chip:border-blue-400/55"
                                     : ""
@@ -2536,7 +2311,7 @@ export default function Home() {
                               {tooltip && (
                                 <span
                                   role="tooltip"
-                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[15rem] rounded-md bg-slate-950/95 backdrop-blur-md border border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-gray-100 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
+                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[15rem] rounded-md bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-500/45 dark:border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.22)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
                                 >
                                   {tooltip}
                                 </span>
@@ -2565,14 +2340,14 @@ export default function Home() {
             className="text-center mb-12"
           >
             <div className="flex items-center gap-3 mb-3 max-w-md mx-auto">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-purple-400/50" />
-              <span className="font-mono text-[10px] tracking-[0.4em] uppercase text-purple-300/85">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/50 dark:to-purple-400/50" />
+              <span className="font-mono text-[10px] tracking-[0.4em] uppercase text-black dark:text-purple-300/85">
                 Recognition
               </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-purple-400/50" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/50 dark:to-purple-400/50" />
             </div>
             <h3
-              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-purple-200 via-violet-100 to-purple-300 bg-clip-text text-transparent"
+              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-blue-200 via-blue-100 dark:via-violet-100 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent"
               style={{
                 fontFamily:
                   'var(--font-fraunces), "Fraunces", "Cormorant Garamond", Georgia, serif',
@@ -2582,7 +2357,7 @@ export default function Home() {
             >
               Honors &amp; Publication.
             </h3>
-            <p className="text-sm text-gray-400/85 mt-2 max-w-md mx-auto">
+            <p className="text-sm text-black mt-2 max-w-md mx-auto">
               Three artifacts, fanned out like a hand of cards. Hover any card to lift and read it.
             </p>
           </motion.div>
@@ -2604,7 +2379,7 @@ export default function Home() {
                   Icon: Award,
                   rotate: -10,
                   z: 1,
-                  margin: "mr-[-22px] sm:mr-[-32px]",
+                  margin: "mr-[-8px] sm:mr-[-32px]",
                 },
                 {
                   title: "IJERT Publication",
@@ -2628,7 +2403,7 @@ export default function Home() {
                   Icon: Award,
                   rotate: 10,
                   z: 1,
-                  margin: "ml-[-22px] sm:ml-[-32px]",
+                  margin: "ml-[-8px] sm:ml-[-32px]",
                 },
               ];
               return cards.map((card, i) => (
@@ -2647,7 +2422,7 @@ export default function Home() {
                     damping: 15,
                     delay: i * 0.12,
                   }}
-                  className={`group relative w-40 sm:w-48 md:w-52 aspect-[3/4] cursor-pointer ${card.margin}`}
+                  className={`group relative w-28 sm:w-48 md:w-52 aspect-[3/4] cursor-pointer ${card.margin}`}
                   style={{
                     transformOrigin: "bottom center",
                     zIndex: card.z,
@@ -2655,18 +2430,18 @@ export default function Home() {
                   aria-label={`${card.title} ${card.subtitle} — opens PDF in a new tab`}
                   title={`${card.title} — ${card.subtitle}`}
                 >
-                  <div className="absolute inset-0 rounded-xl border border-purple-300/30 bg-gradient-to-br from-purple-950/85 via-violet-950/75 to-purple-950/85 backdrop-blur-md shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75),_0_0_30px_-8px_rgba(168,85,247,0.4)] group-hover:border-purple-200/55 group-hover:shadow-[0_35px_60px_-12px_rgba(0,0,0,0.85),_0_0_50px_-6px_rgba(168,85,247,0.7)] transition-all duration-300 overflow-hidden">
+                  <div className="absolute inset-0 rounded-xl border border-blue-700/40 dark:border-purple-300/30 bg-gradient-to-br from-blue-200/85 dark:from-purple-200/85 via-blue-200/75 dark:via-violet-200/75 to-blue-200/85 dark:to-purple-200/85 dark:from-purple-950/85 dark:via-violet-950/75 dark:to-purple-950/85 backdrop-blur-md shadow-[0_25px_50px_-12px_rgba(15,23,42,0.20),_0_0_30px_-8px_rgba(168,85,247,0.20)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.75),_0_0_30px_-8px_rgba(168,85,247,0.4)] group-hover:border-blue-800/65 dark:group-hover:border-purple-500/65 dark:group-hover:border-purple-200/55 group-hover:shadow-[0_35px_60px_-12px_rgba(15,23,42,0.25),_0_0_50px_-6px_rgba(168,85,247,0.30)] dark:group-hover:shadow-[0_35px_60px_-12px_rgba(0,0,0,0.85),_0_0_50px_-6px_rgba(168,85,247,0.7)] transition-all duration-300 overflow-hidden">
                     {/* Inner ornamental border (playing card frame) */}
-                    <div className="absolute inset-2 rounded-lg border border-purple-300/15 pointer-events-none" />
-                    <div className="absolute inset-3 rounded-md border border-purple-300/[0.07] pointer-events-none" />
+                    <div className="absolute inset-2 rounded-lg border border-blue-700/15 dark:border-purple-300/15 pointer-events-none" />
+                    <div className="absolute inset-3 rounded-md border border-blue-700/[0.07] dark:border-purple-300/[0.07] pointer-events-none" />
 
                     {/* Top-left corner index */}
                     <div className="absolute top-2.5 left-3 flex flex-col items-center leading-none">
                       <card.Icon
                         strokeWidth={1.6}
-                        className="text-purple-200/90 w-3.5 h-3.5"
+                        className="text-black dark:text-purple-200/90 w-3.5 h-3.5"
                       />
-                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-purple-300/65 mt-0.5">
+                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-black dark:text-purple-300/65 mt-0.5">
                         {card.index}
                       </span>
                     </div>
@@ -2675,23 +2450,23 @@ export default function Home() {
                     <div className="absolute bottom-2.5 right-3 flex flex-col items-center leading-none rotate-180">
                       <card.Icon
                         strokeWidth={1.6}
-                        className="text-purple-200/90 w-3.5 h-3.5"
+                        className="text-black dark:text-purple-200/90 w-3.5 h-3.5"
                       />
-                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-purple-300/65 mt-0.5">
+                      <span className="font-mono text-[7px] tracking-[0.18em] uppercase text-black dark:text-purple-300/65 mt-0.5">
                         {card.index}
                       </span>
                     </div>
 
                     {/* Center content */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center px-5 text-center">
-                      <div className="mb-3 w-12 h-12 rounded-full bg-purple-500/20 border border-purple-300/35 flex items-center justify-center shadow-[0_0_20px_-4px_rgba(168,85,247,0.5)]">
+                      <div className="mb-3 w-12 h-12 rounded-full bg-blue-800/20 dark:bg-purple-500/20 border border-blue-700/35 dark:border-purple-300/35 flex items-center justify-center shadow-[0_0_20px_-4px_rgba(168,85,247,0.5)]">
                         <card.Icon
                           strokeWidth={1.6}
-                          className="text-purple-100 w-6 h-6"
+                          className="text-black dark:text-purple-100 w-6 h-6"
                         />
                       </div>
                       <h4
-                        className="text-base md:text-lg font-bold text-white leading-tight italic tracking-tight"
+                        className="text-base md:text-lg font-bold text-black dark:text-white leading-tight italic tracking-tight"
                         style={{
                           fontFamily:
                             'var(--font-fraunces), "Fraunces", Georgia, serif',
@@ -2699,11 +2474,11 @@ export default function Home() {
                       >
                         {card.title}
                       </h4>
-                      <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-purple-300/80 mt-1.5">
+                      <p className="font-mono text-[9px] tracking-[0.18em] uppercase text-black dark:text-purple-300/80 mt-1.5">
                         {card.subtitle}
                       </p>
                       <p
-                        className="text-[11px] md:text-xs text-gray-300/85 mt-3 leading-snug px-1"
+                        className="text-[11px] md:text-xs text-black mt-3 leading-snug px-1"
                         style={{
                           fontFamily:
                             'var(--font-fraunces), "Fraunces", Georgia, serif',
@@ -2714,7 +2489,7 @@ export default function Home() {
                     </div>
 
                     {/* "Open PDF" CTA — appears on hover, sits above bottom corner */}
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-7 inline-flex items-center gap-1 font-mono text-[9px] text-purple-100 tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-7 inline-flex items-center gap-1 font-mono text-[9px] text-black dark:text-purple-100 tracking-[0.2em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
                       Open PDF
                       <span className="transition-transform duration-300 group-hover:translate-x-1">
                         &rarr;
@@ -2760,17 +2535,17 @@ export default function Home() {
                   className="w-20 h-20 lg:w-24 lg:h-24 object-contain drop-shadow-[0_12px_28px_rgba(168,85,247,0.6)] pointer-events-none"
                 />
                 {/* Glow halo behind cat */}
-                <div className="absolute inset-0 -z-10 rounded-full bg-purple-500/25 blur-2xl" />
+                <div className="absolute inset-0 -z-10 rounded-full bg-blue-800/25 dark:bg-purple-500/25 blur-2xl" />
                 {/* Speech bubble */}
                 <motion.div
                   animate={{ scale: [0.96, 1.04, 0.96], opacity: [0.85, 1, 0.85] }}
                   transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-purple-500/25 backdrop-blur-md border border-purple-300/45 font-mono text-[9px] text-purple-50 whitespace-nowrap shadow-[0_4px_15px_rgba(168,85,247,0.45)]"
+                  className="absolute -top-7 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-blue-800/25 dark:bg-purple-500/25 backdrop-blur-md border border-blue-700/45 dark:border-purple-300/45 font-mono text-[9px] text-black dark:text-purple-50 whitespace-nowrap shadow-[0_4px_15px_rgba(168,85,247,0.45)]"
                 >
                   Say hi!
                   <span
                     aria-hidden="true"
-                    className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-1.5 h-1.5 rotate-45 bg-purple-500/25 border-r border-b border-purple-300/45"
+                    className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-1.5 h-1.5 rotate-45 bg-blue-800/25 dark:bg-purple-500/25 border-r border-b border-blue-700/45 dark:border-purple-300/45"
                   />
                 </motion.div>
                 {/* Tiny paw print trail */}
@@ -2778,7 +2553,7 @@ export default function Home() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: [0, 0.7, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute -bottom-3 -right-2 font-mono text-[10px] text-purple-300/60"
+                  className="absolute -bottom-3 -right-2 font-mono text-[10px] text-black dark:text-purple-300/60"
                   aria-hidden="true"
                 >
                   &#10042;
@@ -2786,10 +2561,10 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-300 via-violet-200 to-purple-500 bg-clip-text text-transparent mb-6">
+            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6">
               Get In Touch
             </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            <p className="text-xl text-black dark:text-gray-300 max-w-2xl mx-auto">
               Let&apos;s work together to bring your ideas to life. I typically respond within 24 hours.
             </p>
           </motion.div>
@@ -2800,27 +2575,27 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
-            className="relative max-w-3xl mx-auto rounded-xl bg-gradient-to-br from-purple-500/15 via-violet-500/10 to-purple-500/15 border border-purple-300/30 px-5 py-5 backdrop-blur-sm"
+            className="relative max-w-3xl mx-auto rounded-xl bg-gradient-to-br from-blue-800/15 dark:from-purple-500/15 via-blue-800/10 dark:via-violet-500/10 to-blue-800/15 dark:to-purple-500/15 border border-blue-700/30 dark:border-purple-300/30 px-5 py-5 backdrop-blur-sm"
           >
-            <span className="absolute -top-2 left-5 px-2 py-0.5 rounded-full bg-purple-500/40 border border-purple-300/50 font-mono text-[10px] text-purple-50 tracking-[0.3em] uppercase backdrop-blur-md">
+            <span className="absolute -top-2 left-5 px-2 py-0.5 rounded-full bg-blue-800/40 dark:bg-purple-500/40 border border-blue-700/50 dark:border-purple-300/50 font-mono text-[10px] text-black dark:text-purple-50 tracking-[0.3em] uppercase backdrop-blur-md">
               Open to Roles
             </span>
-            <p className="text-purple-50 leading-relaxed text-[15px] md:text-base mt-1 text-center md:text-left">
-              Graduating <span className="font-semibold text-white">August 2026</span> and actively
+            <p className="text-black dark:text-purple-50 leading-relaxed text-[15px] md:text-base mt-1 text-center md:text-left">
+              Graduating <span className="font-semibold text-black dark:text-white">August 2026</span> and actively
               interviewing for{" "}
-              <span className="font-semibold text-white">data science internship</span> and{" "}
-              <span className="font-semibold text-white">full-time roles</span>. Available to start
+              <span className="font-semibold text-black dark:text-white">data science internship</span> and{" "}
+              <span className="font-semibold text-black dark:text-white">full-time roles</span>. Available to start
               immediately.
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-2">
-              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-emerald-200 tracking-widest uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-black dark:text-emerald-200 tracking-widest uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
                 Replying within 24h
               </span>
-              <span className="text-purple-300/40">/</span>
+              <span className="text-black dark:text-purple-300/40">/</span>
               <a
                 href="mailto:prathameshnehete2026@u.northwestern.edu"
-                className="font-mono text-[10px] text-purple-200 tracking-widest uppercase hover:text-white transition-colors inline-flex items-center gap-1.5"
+                className="font-mono text-[10px] text-black dark:text-purple-200 tracking-widest uppercase hover:text-black dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
               >
                 <FaEnvelope className="text-[10px]" />
                 Reach out
@@ -2837,24 +2612,24 @@ export default function Home() {
               className="space-y-8"
             >
               <div>
-                <h3 className="text-3xl font-bold text-white mb-6">Let&apos;s Connect</h3>
-                <p className="text-gray-300 leading-relaxed">
+                <h3 className="text-3xl font-bold text-black dark:text-white mb-6">Let&apos;s Connect</h3>
+                <p className="text-black dark:text-gray-300 leading-relaxed">
                   I&apos;m open to roles and collaborations in data science, analytics, and machine
                   learning. Reach out directly using the options below or the form.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <FaEnvelope className="text-blue-400" />
+                      <FaEnvelope className="text-black" />
                     </div>
                     <div>
-                      <h4 className="text-white font-semibold">Email</h4>
+                      <h4 className="text-black dark:text-white font-semibold">Email</h4>
                       <a
                         href="mailto:prathameshnehete2026@u.northwestern.edu"
-                        className="text-gray-300 hover:text-white transition-colors"
+                        className="text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                       >
                         prathameshnehete2026@u.northwestern.edu
                       </a>
@@ -2864,24 +2639,24 @@ export default function Home() {
                     type="button"
                     aria-label="Copy email"
                     onClick={() => copyToClipboard("prathameshnehete2026@u.northwestern.edu", "email")}
-                    className="shrink-0 px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white transition-colors"
+                    className="shrink-0 px-3 py-2 rounded-md bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   >
-                    {copied.email ? <FaCheck className="text-green-400" /> : <FaCopy />}
+                    {copied.email ? <FaCheck className="text-black" /> : <FaCopy />}
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <FaLinkedin className="text-purple-300" />
+                    <div className="w-12 h-12 bg-blue-800/20 dark:bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <FaLinkedin className="text-black dark:text-purple-300" />
                     </div>
                     <div>
-                      <h4 className="text-white font-semibold">LinkedIn</h4>
+                      <h4 className="text-black dark:text-white font-semibold">LinkedIn</h4>
                       <a
                         href="https://linkedin.com/in/nehete23"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-gray-300 hover:text-white transition-colors"
+                        className="text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                       >
                         linkedin.com/in/nehete23
                       </a>
@@ -2889,18 +2664,18 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gray-500/20 rounded-lg flex items-center justify-center">
-                      <FaGithub className="text-gray-300" />
+                      <FaGithub className="text-black dark:text-gray-300" />
                     </div>
                     <div>
-                      <h4 className="text-white font-semibold">GitHub</h4>
+                      <h4 className="text-black dark:text-white font-semibold">GitHub</h4>
                       <a
                         href="https://github.com/pnehete23"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-gray-300 hover:text-white transition-colors"
+                        className="text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                       >
                         github.com/pnehete23
                       </a>
@@ -2908,16 +2683,16 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                      <FaPhone className="text-green-400" />
+                    <div className="w-12 h-12 bg-yellow-500/20 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <FaPhone className="text-black" />
                     </div>
                     <div>
-                      <h4 className="text-white font-semibold">Phone</h4>
+                      <h4 className="text-black dark:text-white font-semibold">Phone</h4>
                       <a
                         href="tel:+14808730791"
-                        className="text-gray-300 hover:text-white transition-colors"
+                        className="text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                       >
                         (480) 873-0791
                       </a>
@@ -2927,9 +2702,9 @@ export default function Home() {
                     type="button"
                     aria-label="Copy phone"
                     onClick={() => copyToClipboard("+14808730791", "phone")}
-                    className="shrink-0 px-3 py-2 rounded-md bg-white/5 border border-white/10 hover:border-white/20 text-gray-300 hover:text-white transition-colors"
+                    className="shrink-0 px-3 py-2 rounded-md bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 hover:border-black/15 dark:hover:border-white/20 text-black dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   >
-                    {copied.phone ? <FaCheck className="text-green-400" /> : <FaCopy />}
+                    {copied.phone ? <FaCheck className="text-black" /> : <FaCopy />}
                   </button>
                 </div>
               </div>
@@ -2943,7 +2718,7 @@ export default function Home() {
             >
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                     Name
                   </label>
                   <input
@@ -2952,14 +2727,14 @@ export default function Home() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full px-4 py-3 bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
                     placeholder="Your name"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                     Email
                   </label>
                   <input
@@ -2968,14 +2743,14 @@ export default function Home() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full px-4 py-3 bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
                     placeholder="your.email@example.com"
                     required
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-black dark:text-gray-300 mb-2">
                     Message
                   </label>
                   <textarea
@@ -2984,7 +2759,7 @@ export default function Home() {
                     value={formData.message}
                     onChange={handleChange}
                     rows={6}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                    className="w-full px-4 py-3 bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg text-black dark:text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors resize-none"
                     placeholder="Tell me about your project..."
                     required
                   />
@@ -2993,7 +2768,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 via-violet-500 to-purple-700 text-white font-semibold rounded-lg hover:scale-[1.02] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.6)] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-800 dark:from-purple-600 via-blue-800 dark:via-violet-500 to-blue-900 dark:to-purple-700 text-black dark:text-white font-semibold rounded-lg hover:scale-[1.02] hover:shadow-[0_0_30px_-5px_rgba(168,85,247,0.6)] transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -3011,8 +2786,8 @@ export default function Home() {
                     role="status"
                     className={`mt-2 rounded-md px-4 py-3 border ${
                       status.type === "success"
-                        ? "border-green-400/40 bg-green-500/10 text-green-200"
-                        : "border-red-400/40 bg-red-500/10 text-red-200"
+                        ? "border-yellow-400/40 dark:border-green-400/40 bg-yellow-500/10 dark:bg-green-500/10 text-black"
+                        : "border-yellow-400/40 dark:border-red-400/40 bg-yellow-500/10 dark:bg-red-500/10 text-black"
                     }`}
                   >
                     {status.message}

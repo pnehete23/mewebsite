@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
+import { useTheme } from 'next-themes';
 
 interface FluidCanvasProps {
   className?: string;
@@ -62,6 +63,13 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   const cursorRef = useRef<HTMLDivElement>(null);
   const glRef = useRef<WebGLRenderingContext | null>(null);
   const extRef = useRef<any>(null);
+  // Theme-aware ink: dim deep violet on dark, deeper saturated violet on
+  // light so the splats stay visible against a white page background.
+  const { resolvedTheme } = useTheme();
+  const isLightRef = useRef(false);
+  useEffect(() => {
+    isLightRef.current = resolvedTheme === 'light';
+  }, [resolvedTheme]);
   const pointersRef = useRef<Pointer[]>([
     {
       id: -1,
@@ -613,12 +621,12 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   };
 
   const generateWarmColor = () => {
-  // Extremely dark neon violet: tight deep-violet hue band, full neon saturation,
-  // very low value so splashes read as a dim, glowing violet rather than bright purple.
+  // Tight deep-violet hue band, full neon saturation. Value is scaled down
+  // in light mode so the additive splats don't blow out white surfaces.
   const nuHues = [0.74, 0.75, 0.76, 0.77, 0.78];
   const hue = nuHues[Math.floor(Math.random() * nuHues.length)];
   const saturation = 1;
-  const value = 0.42;
+  const value = isLightRef.current ? 0.22 : 0.42;
   let r = 0,
     g = 0,
     b = 0;

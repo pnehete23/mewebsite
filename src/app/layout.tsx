@@ -6,6 +6,7 @@ import { Cormorant_Garamond, Fraunces } from 'next/font/google';
 import Navbar from './components/Navbar';
 import FluidCanvas from './components/FluidCanvas';
 import Starfield from './components/Starfield';
+import Providers from './providers';
 import { Analytics } from "@vercel/analytics/next"
 
 // Classic book-typography serif — used for the "scroll" coursework section
@@ -52,38 +53,36 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} ${cormorant.variable} ${fraunces.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable} ${cormorant.variable} ${fraunces.variable}`}>
       <head>
         <meta name="theme-color" content="#000000" />
         <link rel="icon" href="/favicon.ico" />
         <script defer src="https://t.raah.dev/script.js" data-pid="proj_eewqwa3njk7g09r4" data-domain="mewebsite-delta.vercel.app"></script>
       </head>
-      <body className="font-sans antialiased bg-black text-white overflow-x-hidden">
-        {/* Starry space layer */}
-        <Starfield />
+      <body className="font-sans antialiased bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden transition-colors duration-500">
+        <Providers>
+          {/* Starry space layer */}
+          <Starfield />
 
-        {/* Fluid Background Canvas - transparent, sits over starfield */}
-        <FluidCanvas />
+          {/* Fluid Background Canvas - transparent, sits over starfield */}
+          <FluidCanvas />
 
-        {/* Main App Container */}
-        <div className="relative z-10 min-h-screen flex flex-col">
-          {/* Navigation */}
-          <header className="relative z-20">
-            <Navbar />
-          </header>
+          {/* Main App Container */}
+          <div className="relative z-10 min-h-screen flex flex-col">
+            {/* Navigation */}
+            <header className="relative z-20">
+              <Navbar />
+            </header>
 
-          {/* Main Content */}
-          <main className="relative z-10 flex-1">
-            {children}
-          </main>
+            {/* Main Content */}
+            <main className="relative z-10 flex-1">{children}</main>
 
-          {/* Optional Footer */}
-          <footer className="relative z-20 mt-auto">
-            {/* Footer content can go here */}
-          </footer>
-        </div>
-
-        
+            {/* Optional Footer */}
+            <footer className="relative z-20 mt-auto">
+              {/* Footer content can go here */}
+            </footer>
+          </div>
+        </Providers>
       </body>
     </html>
   );

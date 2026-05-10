@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import { useTheme } from 'next-themes';
 
 interface Star {
   // polar coords from screen center — stars drift outward from origin
@@ -18,6 +19,14 @@ const Starfield: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const starsRef = useRef<Star[]>([]);
   const rafRef = useRef<number | null>(null);
+  // Theme: in light mode the stars render black, in dark they render white.
+  // Track via a ref so the rAF draw loop always reads the latest value
+  // without re-subscribing or restarting.
+  const { resolvedTheme } = useTheme();
+  const isLightRef = useRef(false);
+  useEffect(() => {
+    isLightRef.current = resolvedTheme === 'light';
+  }, [resolvedTheme]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -70,7 +79,11 @@ const Starfield: React.FC = () => {
       // Full clear every frame — no smear, no trails. The page bg shows through.
       ctx.clearRect(0, 0, w, h);
 
-      ctx.globalCompositeOperation = 'lighter';
+      const isLight = isLightRef.current;
+      // 'lighter' is additive — perfect for white stars on dark bg, but it
+      // would erase black stars on light bg. Use 'source-over' in light mode
+      // so the black ink lands cleanly on the page.
+      ctx.globalCompositeOperation = isLight ? 'source-over' : 'lighter';
 
       const stars = starsRef.current;
       for (const s of stars) {
@@ -94,22 +107,32 @@ const Starfield: React.FC = () => {
         const depthK = s.radius;
         const tw = 0.55 + 0.45 * Math.sin(s.twinklePhase);
         const baseAlpha = (0.22 + depthK * 0.78) * tw * s.born;
-        const sz = s.size * (0.55 + depthK * 1.0);
+        // In light mode, beef up the ink so stars read as solid pitch-black
+        // dots instead of washed-out gray pixels (sub-pixel cores blend with
+        // white bg). Bigger size + higher alpha + pure-black halo.
+        const sz = s.size * (isLight ? 1.6 : 1.0) * (0.55 + depthK * 1.0);
 
-        // Glow halo — bigger relative to the tiny core so each star reads as
-        // a glowy pinprick. No aura trail.
         const haloR = Math.max(1.4, sz * 8);
         const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR);
-        halo.addColorStop(0, `rgba(255, 255, 255, ${(baseAlpha * 0.95).toFixed(3)})`);
-        halo.addColorStop(0.4, `rgba(225, 230, 255, ${(baseAlpha * 0.35).toFixed(3)})`);
-        halo.addColorStop(1, 'rgba(220, 230, 255, 0)');
+        if (isLight) {
+          // Pitch-black ink — full alpha at the core, soft fade to transparent
+          halo.addColorStop(0, `rgba(0, 0, 0, ${Math.min(1, baseAlpha * 1.4).toFixed(3)})`);
+          halo.addColorStop(0.4, `rgba(0, 0, 0, ${(baseAlpha * 0.55).toFixed(3)})`);
+          halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        } else {
+          halo.addColorStop(0, `rgba(255, 255, 255, ${(baseAlpha * 0.95).toFixed(3)})`);
+          halo.addColorStop(0.4, `rgba(225, 230, 255, ${(baseAlpha * 0.35).toFixed(3)})`);
+          halo.addColorStop(1, 'rgba(220, 230, 255, 0)');
+        }
         ctx.fillStyle = halo;
         ctx.beginPath();
         ctx.arc(x, y, haloR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Bright white core
-        ctx.fillStyle = `rgba(255, 255, 255, ${Math.min(1, baseAlpha * 1.7).toFixed(3)})`;
+        // Solid core — white in dark mode, pitch-black (alpha 1) in light mode
+        ctx.fillStyle = isLight
+          ? `rgba(0, 0, 0, 1)`
+          : `rgba(255, 255, 255, ${Math.min(1, baseAlpha * 1.7).toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(x, y, sz, 0, Math.PI * 2);
         ctx.fill();
