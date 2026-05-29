@@ -8,7 +8,6 @@ import {
   useTransform,
 } from "framer-motion";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import {
   FaLinkedin,
@@ -83,17 +82,7 @@ import SkillChip, { SkillChipVariant } from "./components/SkillChip";
 import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
 import CountUp from "./components/CountUp";
 import TiltSpotlight from "./components/TiltSpotlight";
-
-const SkillSphere3D = dynamic(() => import("./components/SkillSphere3D"), {
-  ssr: false,
-  loading: () => (
-    <div className="rounded-xl bg-black/[0.025] dark:bg-white/[0.025] border border-blue-700/30 dark:border-purple-400/15 backdrop-blur-sm aspect-square sm:aspect-[4/3] flex items-center justify-center">
-      <span className="font-mono text-[10px] text-black/60 dark:text-purple-300/60 tracking-widest uppercase">
-        Loading 3D skills…
-      </span>
-    </div>
-  ),
-});
+import SkillMatrix from "./components/SkillMatrix";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -602,14 +591,6 @@ export default function Home() {
   const heroOpacity = useTransform(heroProgress, [0, 0.7, 1], [1, 0.6, 0]);
   const heroBgY = useTransform(heroProgress, [0, 1], [0, 80]);
 
-  // Skill sphere section — derives a scroll-progress signal that the sphere
-  // component can subtly tie its rotation to (see SkillSphere3D `scrollSpin`).
-  const skillsRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress: skillsProgress } = useScroll({
-    target: skillsRef,
-    offset: ["start end", "end start"],
-  });
-
   // Wildcat Willy hanging — drops down when Projects section enters viewport
   // and retracts back up when it exits. Driven by section scroll progress so
   // the descent ties cleanly to the section's lifecycle.
@@ -1094,8 +1075,8 @@ export default function Home() {
                 </span>
               </div>
 
-              <div ref={skillsRef}>
-                <SkillSphere3D data={skillRadar} scrollProgress={skillsProgress} />
+              <div>
+                <SkillMatrix data={skillRadar} />
               </div>
 
               {/* Live GitHub KPI strip */}
