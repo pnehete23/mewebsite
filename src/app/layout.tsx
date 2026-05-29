@@ -6,6 +6,8 @@ import { Cormorant_Garamond, Fraunces } from 'next/font/google';
 import Navbar from './components/Navbar';
 import FluidCanvas from './components/FluidCanvas';
 import Starfield from './components/Starfield';
+import SmoothScroll from './components/SmoothScroll';
+import ScrollProgress from './components/ScrollProgress';
 import Providers from './providers';
 import { Analytics } from "@vercel/analytics/next"
 
@@ -61,6 +63,11 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden transition-colors duration-500">
         <Providers>
+          {/* Site-wide smooth scroll (Lenis, ~3KB, respects prefers-reduced-motion) */}
+          <SmoothScroll />
+          {/* Scroll progress bar pinned to top of viewport */}
+          <ScrollProgress />
+
           {/* Starry space layer */}
           <Starfield />
 

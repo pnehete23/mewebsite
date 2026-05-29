@@ -110,14 +110,14 @@ const Starfield: React.FC = () => {
         // In light mode, beef up the ink so stars read as solid pitch-black
         // dots instead of washed-out gray pixels (sub-pixel cores blend with
         // white bg). Bigger size + higher alpha + pure-black halo.
-        const sz = s.size * (isLight ? 1.6 : 1.0) * (0.55 + depthK * 1.0);
+        const sz = s.size * (isLight ? 2.8 : 1.0) * (0.6 + depthK * 1.1);
 
         const haloR = Math.max(1.4, sz * 8);
         const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR);
         if (isLight) {
           // Pitch-black ink — full alpha at the core, soft fade to transparent
-          halo.addColorStop(0, `rgba(0, 0, 0, ${Math.min(1, baseAlpha * 1.4).toFixed(3)})`);
-          halo.addColorStop(0.4, `rgba(0, 0, 0, ${(baseAlpha * 0.55).toFixed(3)})`);
+          halo.addColorStop(0, `rgba(0, 0, 0, ${Math.min(1, baseAlpha * 1.9).toFixed(3)})`);
+          halo.addColorStop(0.4, `rgba(0, 0, 0, ${(baseAlpha * 0.8).toFixed(3)})`);
           halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
         } else {
           halo.addColorStop(0, `rgba(255, 255, 255, ${(baseAlpha * 0.95).toFixed(3)})`);
@@ -134,7 +134,7 @@ const Starfield: React.FC = () => {
           ? `rgba(0, 0, 0, 1)`
           : `rgba(255, 255, 255, ${Math.min(1, baseAlpha * 1.7).toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(x, y, sz, 0, Math.PI * 2);
+        ctx.arc(x, y, isLight ? Math.max(0.9, sz) : sz, 0, Math.PI * 2);
         ctx.fill();
       }
 

@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# local scratch / saved-page junk (not part of the site)
+/470 dancer/
+/public/aniumation.html
+/public/aniumation_files/
+/public/971a3b15-42a0-4ff3-84e6-e57b1f1d1167.png

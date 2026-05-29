@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "lenis/dist/lenis.css";
 
 /* Override Tailwind v4 default dark variant from media query → class-based.
    Lets next-themes drive `dark:` utilities via the `.dark` class on <html>. */
@@ -6,6 +7,13 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Lenis: when smooth-scroll is active, the native CSS scroll-behavior
+   must be off (Lenis drives scroll itself). The lenis.css import above
+   already adds the rule, but we hard-confirm in case of CSS load order. */
+html.lenis-smooth {
+  scroll-behavior: auto !important;
 }
 
 /* ============================================================

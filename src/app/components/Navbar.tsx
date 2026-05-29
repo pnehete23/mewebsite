@@ -132,11 +132,11 @@ const Navbar: React.FC = () => {
             href="#contact"
             onClick={(e) => handleClick(e, "#contact")}
             aria-label="Open to internships and full-time roles — go to contact"
-            className="group inline-flex items-center gap-2 rounded-full border border-yellow-500/30 dark:border-emerald-300/25 bg-yellow-500/[0.08] dark:bg-emerald-500/[0.08] hover:bg-yellow-500/[0.16] dark:hover:bg-emerald-500/[0.16] hover:border-yellow-500/55 dark:hover:border-emerald-500/55 dark:bg-emerald-400/[0.06] dark:hover:bg-emerald-400/[0.12] dark:hover:border-emerald-300/50 transition-colors duration-300 px-2.5 py-1"
+            className="group inline-flex items-center gap-2 rounded-full border border-emerald-600/30 dark:border-emerald-300/25 bg-emerald-500/[0.08] dark:bg-emerald-500/[0.08] hover:bg-emerald-500/[0.16] dark:hover:bg-emerald-500/[0.16] hover:border-emerald-600/55 dark:hover:border-emerald-500/55 dark:bg-emerald-400/[0.06] dark:hover:bg-emerald-400/[0.12] dark:hover:border-emerald-300/50 transition-colors duration-300 px-2.5 py-1"
           >
             <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-500/80 dark:bg-emerald-400/70 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500/80 dark:bg-emerald-400/70 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.85)]" />
             </span>
             <span className="hidden sm:inline font-mono text-[10px] tracking-widest uppercase text-black dark:text-emerald-200/90 group-hover:text-black dark:group-hover:text-emerald-100">
               Open to roles
@@ -173,10 +173,10 @@ const Navbar: React.FC = () => {
               </a>
             );
           })}
-          <div className="mt-2 px-3 py-2 inline-flex items-center gap-2 rounded-lg border border-yellow-500/30 dark:border-emerald-300/25 bg-yellow-500/[0.08] dark:bg-emerald-400/[0.06]">
+          <div className="mt-2 px-3 py-2 inline-flex items-center gap-2 rounded-lg border border-emerald-600/30 dark:border-emerald-300/25 bg-emerald-500/[0.08] dark:bg-emerald-400/[0.06]">
             <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-yellow-500/80 dark:bg-emerald-400/70 animate-ping" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow-500 dark:bg-emerald-400" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500/80 dark:bg-emerald-400/70 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
             </span>
             <span className="font-mono text-[10px] tracking-widest uppercase text-black dark:text-emerald-200/90">
               Open to internships &amp; full-time

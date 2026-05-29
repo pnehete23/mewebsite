@@ -8,6 +8,7 @@ import {
   useTransform,
 } from "framer-motion";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import {
   FaLinkedin,
@@ -78,9 +79,21 @@ import {
   Award,
   BookMarked,
 } from "lucide-react";
-import SkillRadar from "./components/SkillRadar";
 import SkillChip, { SkillChipVariant } from "./components/SkillChip";
 import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
+import CountUp from "./components/CountUp";
+import TiltSpotlight from "./components/TiltSpotlight";
+
+const SkillSphere3D = dynamic(() => import("./components/SkillSphere3D"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-xl bg-black/[0.025] dark:bg-white/[0.025] border border-blue-700/30 dark:border-purple-400/15 backdrop-blur-sm aspect-square sm:aspect-[4/3] flex items-center justify-center">
+      <span className="font-mono text-[10px] text-black/60 dark:text-purple-300/60 tracking-widest uppercase">
+        Loading 3D skills…
+      </span>
+    </div>
+  ),
+});
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -578,6 +591,25 @@ export default function Home() {
     return () => clearInterval(id);
   }, []);
 
+  // Hero parallax — text drifts up + fades as user scrolls past hero.
+  // Pure transform/opacity → GPU compositor, zero layout cost.
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(heroProgress, [0, 1], [0, -120]);
+  const heroOpacity = useTransform(heroProgress, [0, 0.7, 1], [1, 0.6, 0]);
+  const heroBgY = useTransform(heroProgress, [0, 1], [0, 80]);
+
+  // Skill sphere section — derives a scroll-progress signal that the sphere
+  // component can subtly tie its rotation to (see SkillSphere3D `scrollSpin`).
+  const skillsRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: skillsProgress } = useScroll({
+    target: skillsRef,
+    offset: ["start end", "end start"],
+  });
+
   // Wildcat Willy hanging — drops down when Projects section enters viewport
   // and retracts back up when it exits. Driven by section scroll progress so
   // the descent ties cleanly to the section's lifecycle.
@@ -688,10 +720,19 @@ export default function Home() {
     <div className="scroll-smooth">
       {/* HERO */}
       <section
+        ref={heroRef}
         id="hero"
         className="min-h-screen pt-24 pb-12 px-4 relative flex flex-col justify-center overflow-hidden"
       >
-        <div className="max-w-7xl mx-auto w-full space-y-10 md:space-y-14">
+        <motion.div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-[1]"
+          style={{ y: heroBgY, willChange: "transform" }}
+        />
+        <motion.div
+          className="max-w-7xl mx-auto w-full space-y-10 md:space-y-14"
+          style={{ y: heroY, opacity: heroOpacity, willChange: "transform, opacity" }}
+        >
           <div className="grid lg:grid-cols-12 gap-10 lg:gap-12 items-center">
             {/* LEFT — identity + quote */}
             <div className="lg:col-span-8 space-y-6 md:space-y-7 relative z-[1] order-2 lg:order-1">
@@ -702,10 +743,10 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.92] tracking-tight dark:text-gray-300"
               >
-                <span className="block bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent dark:text-gray-300">
+                <span className="block bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 to-slate-900 dark:to-purple-500 bg-clip-text text-transparent dark:text-gray-300">
                   Prathamesh
                 </span>
-                <span className="block bg-gradient-to-r from-blue-800 dark:from-purple-500 via-white to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
+                <span className="block bg-gradient-to-r from-slate-900 dark:from-purple-500 via-blue-700 to-slate-900 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
                   Nehete
                 </span>
               </motion.h1>
@@ -930,7 +971,7 @@ export default function Home() {
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       {/* ABOUT */}
@@ -943,9 +984,16 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center dark:text-gray-300"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300">
+            <motion.h2
+              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
+              whileInView={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              viewport={{ once: true, margin: "-15%" }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 to-slate-900 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300 inline-block"
+              style={{ willChange: "clip-path, opacity" }}
+            >
               About Me
-            </h2>
+            </motion.h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
               I&apos;m Prathamesh Nehete, a data scientist and machine learning engineer with a strong
               foundation in computer science, statistics, and AI. I build models and systems that
@@ -1046,7 +1094,9 @@ export default function Home() {
                 </span>
               </div>
 
-              <SkillRadar data={skillRadar} />
+              <div ref={skillsRef}>
+                <SkillSphere3D data={skillRadar} scrollProgress={skillsProgress} />
+              </div>
 
               {/* Live GitHub KPI strip */}
               <div className="space-y-2">
@@ -1091,8 +1141,8 @@ export default function Home() {
                       rel="noreferrer noopener"
                       className="block rounded-lg bg-blue-800/10 dark:bg-purple-500/10 border border-blue-700/25 dark:border-purple-400/25 px-3 py-2 text-center hover:bg-blue-800/15 dark:hover:bg-purple-500/15 hover:border-blue-700/50 dark:hover:border-purple-400/50 transition-colors dark:text-gray-300"
                     >
-                      <div className="text-xl font-bold bg-gradient-to-r from-blue-200 via-blue-200 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
-                        {k.value !== null ? k.value : k.fallback}
+                      <div className="text-xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-200 via-blue-700 dark:via-purple-300 to-slate-900 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300">
+                        <CountUp value={k.value} fallback={k.fallback} />
                       </div>
                       <div className="font-mono text-[9px] text-black dark:text-purple-300/80 tracking-wider uppercase mt-0.5">
                         {k.label}
@@ -1162,7 +1212,7 @@ export default function Home() {
             transition={{ duration: 0.7 }}
             className="text-center space-y-3 dark:text-gray-300"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-yellow-500 dark:text-yellow-300">
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-yellow-300">
               Coursework
             </h2>
             <p className="font-mono text-[10px] md:text-[11px] text-black dark:text-purple-300/70 tracking-[0.4em] uppercase inline-flex items-center gap-2 justify-center">
@@ -1189,7 +1239,7 @@ export default function Home() {
                       {c.term}
                       {inProgress && (
                         <span className="ml-2 inline-flex items-center gap-1 text-black dark:text-gray-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                           in progress
                         </span>
                       )}
@@ -1347,9 +1397,16 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center dark:text-gray-300"
           >
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block dark:text-gray-300">
+            <motion.h2
+              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
+              whileInView={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              viewport={{ once: true, margin: "-15%" }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 to-slate-900 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block dark:text-gray-300"
+              style={{ willChange: "clip-path, opacity" }}
+            >
               My Projects
-            </h2>
+            </motion.h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
               Recent work spanning research prototypes, AI products, ML pipelines, and full-stack apps.
             </p>
@@ -1357,10 +1414,10 @@ export default function Home() {
 
           {/* RESEARCH PROTOTYPE — featured showcase */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex items-center gap-3 mb-6">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-purple-400/60" />
@@ -1370,6 +1427,7 @@ export default function Home() {
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-purple-400/60" />
             </div>
 
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(168,85,247,0.18)">
             <a
               href="https://stealth-nu-research.vercel.app/"
               target="_blank"
@@ -1455,11 +1513,11 @@ export default function Home() {
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
                         Live
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/20 dark:bg-pink-500/20 border border-yellow-400/40 dark:border-pink-400/40 text-black dark:text-pink-200 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-slate-900/[0.06] dark:bg-pink-500/20 border border-slate-900/25 dark:border-pink-400/40 text-black dark:text-pink-200 font-mono">
                         Northwestern
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-yellow-300 dark:via-pink-300 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 dark:via-pink-300 to-slate-900 dark:to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       RA Flare Risk Predictor
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -1501,6 +1559,7 @@ export default function Home() {
                 </div>
               </div>
             </a>
+            </TiltSpotlight>
 
           {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
           <div className="md:hidden mt-3 rounded-2xl border border-blue-700/25 dark:border-purple-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
@@ -1510,10 +1569,10 @@ export default function Home() {
 
           {/* PATIENT360 NU — featured clinical-genomic governance prototype */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex items-center gap-3 mb-6">
               <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-400/60 dark:to-cyan-400/60" />
@@ -1523,6 +1582,7 @@ export default function Home() {
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-400/60 dark:to-cyan-400/60" />
             </div>
 
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(34,211,238,0.18)">
             <a
               href="https://patient360nu-production.up.railway.app/"
               target="_blank"
@@ -1560,7 +1620,7 @@ export default function Home() {
                         </span>
                       </div>
                       <div className="px-3 flex items-center gap-1.5 border-l border-blue-500/25 dark:border-cyan-500/25">
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                         <span className="font-mono text-[10px] text-black dark:text-emerald-300 tracking-widest">
                           LIVE
                         </span>
@@ -1588,7 +1648,7 @@ export default function Home() {
                           className="absolute top-2 right-3 z-[1] px-2 py-1.5 rounded bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 backdrop-blur-sm font-mono text-[9px] max-w-[180px] dark:text-gray-300"
                         >
                           <div className="flex items-center gap-1.5 text-black dark:text-rose-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-rose-400 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 dark:bg-rose-400 animate-pulse" />
                             <span className="font-semibold tracking-wider">HIGH RISK</span>
                           </div>
                           <div className="text-black text-[9px] mt-0.5 leading-snug dark:text-gray-300">
@@ -1735,7 +1795,7 @@ export default function Home() {
                     <div className="absolute bottom-9 left-0 right-0 h-7 border-y border-blue-500/25 dark:border-cyan-500/25 bg-white/70 dark:bg-black/55 backdrop-blur-sm flex items-stretch overflow-hidden z-[2]">
                       <div className="px-3 flex items-center border-r border-blue-500/25 dark:border-cyan-500/25 bg-blue-500/10 dark:bg-cyan-500/10 shrink-0">
                         <span className="font-mono text-[8px] tracking-[0.25em] uppercase text-black dark:text-cyan-200 inline-flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                           Audit
                         </span>
                       </div>
@@ -1747,10 +1807,10 @@ export default function Home() {
                         >
                           {(() => {
                             const events = [
-                              { t: "12:34", e: "consent:granted", c: "bg-yellow-400 dark:bg-emerald-400" },
-                              { t: "12:33", e: "reveal:dx_code", c: "bg-yellow-400 dark:bg-amber-400" },
+                              { t: "12:34", e: "consent:granted", c: "bg-emerald-500 dark:bg-emerald-400" },
+                              { t: "12:33", e: "reveal:dx_code", c: "bg-slate-900 dark:bg-amber-400" },
                               { t: "12:33", e: "cpic:CYP2D6", c: "bg-blue-400 dark:bg-cyan-400" },
-                              { t: "12:32", e: "alert:hi-risk", c: "bg-yellow-400 dark:bg-rose-400" },
+                              { t: "12:32", e: "alert:hi-risk", c: "bg-red-500 dark:bg-rose-400" },
                               { t: "12:32", e: "vault:lookup", c: "bg-blue-700 dark:bg-violet-400" },
                               { t: "12:31", e: "fda:adverse", c: "bg-blue-400 dark:bg-cyan-400" },
                               { t: "12:30", e: "lineage:view", c: "bg-blue-400 dark:bg-indigo-400" },
@@ -1787,7 +1847,7 @@ export default function Home() {
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-black dark:text-emerald-300">
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                         <span>0 LEAKS</span>
                       </div>
                     </div>
@@ -1806,18 +1866,18 @@ export default function Home() {
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/20 dark:bg-emerald-500/20 border border-yellow-400/40 dark:border-emerald-400/40 text-black dark:text-emerald-100 font-mono inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-emerald-500/15 dark:bg-emerald-500/20 border border-emerald-600/45 dark:border-emerald-400/40 text-black dark:text-emerald-100 font-mono inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
                         Live
                       </span>
-                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-yellow-500/15 dark:bg-rose-500/15 border border-yellow-400/40 dark:border-rose-400/40 text-black dark:text-rose-100 font-mono">
+                      <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-slate-900/[0.06] dark:bg-rose-500/15 border border-slate-900/25 dark:border-rose-400/40 text-black dark:text-rose-100 font-mono">
                         HIPAA
                       </span>
                       <span className="px-3 py-1 text-[10px] uppercase tracking-widest rounded-full bg-blue-500/15 dark:bg-cyan-500/15 border border-blue-400/35 dark:border-cyan-400/35 text-black dark:text-cyan-100 font-mono">
                         Synthetic Data
                       </span>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-200 dark:from-cyan-200 via-blue-100 dark:via-sky-100 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 dark:from-cyan-200 via-blue-800 dark:via-sky-100 to-slate-900 dark:to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       Patient360 NU
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -1878,6 +1938,7 @@ export default function Home() {
                 </div>
               </div>
             </a>
+            </TiltSpotlight>
 
           {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
           <div className="md:hidden mt-3 rounded-2xl border border-blue-400/25 dark:border-cyan-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
@@ -1887,19 +1948,20 @@ export default function Home() {
 
           {/* QUANT TRADING DASHBOARD — featured */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.8 }}
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-yellow-400/60 dark:to-emerald-400/60" />
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-emerald-400/60" />
               <span className="text-black dark:text-emerald-300 text-xs font-mono uppercase tracking-[0.3em]">
                 Quant Trading Dashboard
               </span>
-              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-yellow-400/60 dark:to-emerald-400/60" />
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-emerald-400/60" />
             </div>
 
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(16,185,129,0.18)">
             <a
               href="https://web-production-404cc.up.railway.app/"
               target="_blank"
@@ -1984,7 +2046,7 @@ export default function Home() {
 
                   {/* Info panel */}
                   <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
-                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-yellow-300 dark:from-emerald-300 via-blue-300 dark:via-cyan-300 to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 dark:from-emerald-300 via-blue-800 dark:via-cyan-300 to-slate-900 dark:to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
                       Quant Trading Dashboard
                     </h3>
                     <p className="text-black dark:text-gray-300 leading-relaxed">
@@ -2025,9 +2087,10 @@ export default function Home() {
                 </div>
               </div>
             </a>
+            </TiltSpotlight>
 
           {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
-          <div className="md:hidden mt-3 rounded-2xl border border-yellow-400/25 dark:border-emerald-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+          <div className="md:hidden mt-3 rounded-2xl border border-emerald-600/25 dark:border-emerald-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
             <ConceptStack groups={quantDashboardGroups} accentColor="text-black dark:text-emerald-300" mode="static" />
           </div>
           </motion.div>
@@ -2052,6 +2115,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: (index % 4) * 0.08 }}
                   className={`group ${project.featured ? "md:col-span-2" : ""}`}
                 >
+                  <TiltSpotlight className="relative h-full" max={6} lift={8} glare="rgba(99,102,241,0.20)">
                   <div className="relative h-full bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-2xl overflow-hidden hover:border-black/20 dark:hover:border-white/30 transition-all duration-500 hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.45)]">
                     <div className="relative h-64 md:h-80 overflow-hidden">
                       {project.title === "CareerCraft AI" ? (
@@ -2256,7 +2320,7 @@ export default function Home() {
 
                           {/* Meta chip */}
                           <div className="absolute top-4 left-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-800/15 dark:bg-purple-500/15 border border-blue-700/35 dark:border-purple-300/35 font-mono text-[10px] tracking-widest uppercase text-black dark:text-purple-100/90 backdrop-blur-sm">
-                            <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                             AI Resume Engine
                           </div>
                         </div>
@@ -2322,6 +2386,7 @@ export default function Home() {
                       </div>
                     </div>
                   </div>
+                  </TiltSpotlight>
                 </motion.div>
               ))}
             </div>
@@ -2347,7 +2412,7 @@ export default function Home() {
               <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/50 dark:to-purple-400/50" />
             </div>
             <h3
-              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-blue-200 via-blue-100 dark:via-violet-100 to-blue-700 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300"
+              className="text-3xl md:text-4xl font-bold italic tracking-tight bg-gradient-to-r from-slate-900 dark:from-violet-200 via-blue-800 dark:via-violet-100 to-slate-900 dark:to-purple-300 bg-clip-text text-transparent dark:text-gray-300"
               style={{
                 fontFamily:
                   'var(--font-fraunces), "Fraunces", "Cormorant Garamond", Georgia, serif',
@@ -2364,7 +2429,7 @@ export default function Home() {
 
           {/* Card hand — fanned, slight overlap, distinct rotations */}
           <div
-            className="relative flex items-end justify-center pb-6"
+            className="relative flex items-end justify-center pt-16 pb-10"
             style={{ perspective: "1200px" }}
           >
             {(() => {
@@ -2377,9 +2442,9 @@ export default function Home() {
                     "Top-tier GPA distinction for academic excellence in computer science coursework.",
                   href: "/Dean_List_for_Fall%20(1)%20(1).pdf",
                   Icon: Award,
-                  rotate: -10,
+                  rotate: -12,
+                  dip: 20,
                   z: 1,
-                  margin: "mr-[-8px] sm:mr-[-32px]",
                 },
                 {
                   title: "IJERT Publication",
@@ -2390,8 +2455,8 @@ export default function Home() {
                   href: "/IJERTV14IS080131_Certi_A6.pdf",
                   Icon: BookMarked,
                   rotate: 0,
+                  dip: 0,
                   z: 3,
-                  margin: "",
                 },
                 {
                   title: "Dean's List",
@@ -2401,9 +2466,9 @@ export default function Home() {
                     "Earned a second consecutive semester on the Dean's List for sustained academic performance.",
                   href: "/Dean_List_for_Spring%20(1)%20(1).pdf",
                   Icon: Award,
-                  rotate: 10,
+                  rotate: 12,
+                  dip: 20,
                   z: 1,
-                  margin: "ml-[-8px] sm:ml-[-32px]",
                 },
               ];
               return cards.map((card, i) => (
@@ -2412,17 +2477,17 @@ export default function Home() {
                   href={card.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 50, rotate: card.rotate }}
-                  whileInView={{ opacity: 1, y: 0, rotate: card.rotate }}
+                  initial={{ opacity: 0, y: 60, rotate: card.rotate }}
+                  whileInView={{ opacity: 1, y: card.dip, rotate: card.rotate }}
                   viewport={{ once: true, margin: "-50px" }}
-                  whileHover={{ rotate: 0, y: -22, scale: 1.06 }}
+                  whileHover={{ rotate: 0, y: card.dip - 30, scale: 1.07, zIndex: 20 }}
                   transition={{
                     type: "spring",
                     stiffness: 110,
                     damping: 15,
                     delay: i * 0.12,
                   }}
-                  className={`group relative w-28 sm:w-48 md:w-52 aspect-[3/4] cursor-pointer ${card.margin}`}
+                  className="group relative w-32 sm:w-48 md:w-52 aspect-[3/4] cursor-pointer -mx-3 sm:-mx-4"
                   style={{
                     transformOrigin: "bottom center",
                     zIndex: card.z,
@@ -2561,9 +2626,16 @@ export default function Home() {
               </motion.div>
             </motion.div>
 
-            <h2 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-blue-700 dark:from-purple-300 via-blue-200 to-blue-800 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300">
+            <motion.h2
+              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
+              whileInView={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              viewport={{ once: true, margin: "-15%" }}
+              transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+              className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 to-slate-900 dark:to-purple-500 bg-clip-text text-transparent mb-6 dark:text-gray-300 inline-block"
+              style={{ willChange: "clip-path, opacity" }}
+            >
               Get In Touch
-            </h2>
+            </motion.h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-2xl mx-auto">
               Let&apos;s work together to bring your ideas to life. I typically respond within 24 hours.
             </p>
@@ -2589,7 +2661,7 @@ export default function Home() {
             </p>
             <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-2">
               <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-black dark:text-emerald-200 tracking-widest uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 dark:bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                 Replying within 24h
               </span>
               <span className="text-black dark:text-purple-300/40">/</span>
@@ -2685,7 +2757,7 @@ export default function Home() {
 
                 <div className="flex items-center justify-between gap-4 p-3 rounded-lg bg-black/[0.04] dark:bg-white/5 border border-black/10 dark:border-white/10">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-yellow-500/20 dark:bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-slate-900/[0.06] dark:bg-green-500/20 rounded-lg flex items-center justify-center">
                       <FaPhone className="text-black dark:text-gray-300" />
                     </div>
                     <div>
@@ -2786,8 +2858,8 @@ export default function Home() {
                     role="status"
                     className={`mt-2 rounded-md px-4 py-3 border ${
                       status.type === "success"
-                        ? "border-yellow-400/40 dark:border-green-400/40 bg-yellow-500/10 dark:bg-green-500/10 text-black"
-                        : "border-yellow-400/40 dark:border-red-400/40 bg-yellow-500/10 dark:bg-red-500/10 text-black"
+                        ? "border-emerald-600/45 dark:border-green-400/40 bg-emerald-500/10 dark:bg-green-500/10 text-black"
+                        : "border-red-500/50 dark:border-red-400/40 bg-red-500/10 dark:bg-red-500/10 text-black"
                     } dark:text-gray-300`}
                   >
                     {status.message}
