@@ -452,7 +452,7 @@ export default function SkillSphere3D({
               dpr={isMobile ? [1, 1.5] : [1, 2]}
               camera={{ position: [0, 0, 5.2], fov: 50 }}
               gl={{ antialias: !isMobile, alpha: true, powerPreference: "high-performance" }}
-              raycaster={{ params: { Points: { threshold: isMobile ? 0.16 : 0.12 } } }}
+              raycaster={{ params: { Points: { threshold: isMobile ? 0.16 : 0.12 } } as THREE.RaycasterParameters }}
               frameloop={reducedMotion ? "demand" : "always"}
               onPointerDown={() => setUserInteracting(true)}
               onPointerUp={() => setUserInteracting(false)}
