@@ -86,7 +86,7 @@ import SkillChip, { SkillChipVariant } from "./components/SkillChip";
 import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
 import CountUp from "./components/CountUp";
 import TiltSpotlight from "./components/TiltSpotlight";
-import SkillNova from "./components/SkillNova";
+import SkillDeck from "./components/SkillDeck";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -1132,7 +1132,7 @@ export default function Home() {
               </div>
 
               <div>
-                <SkillNova data={skillRadar} />
+                <SkillDeck data={skillRadar} />
               </div>
 
               {/* Live GitHub KPI strip */}
