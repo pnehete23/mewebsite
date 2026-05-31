@@ -65,6 +65,9 @@ import {
   SiFastapi,
   SiMlflow,
   SiApachekafka,
+  SiApachespark,
+  SiApacheairflow,
+  SiApachesuperset,
   SiDocker,
   SiPydantic,
   SiDuckdb,
@@ -77,12 +80,13 @@ import {
   CandlestickChart,
   Award,
   BookMarked,
+  Plane,
 } from "lucide-react";
 import SkillChip, { SkillChipVariant } from "./components/SkillChip";
 import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
 import CountUp from "./components/CountUp";
 import TiltSpotlight from "./components/TiltSpotlight";
-import SkillMatrix from "./components/SkillMatrix";
+import SkillNova from "./components/SkillNova";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -113,6 +117,9 @@ function getTechIcon(name: string): IconType | null {
   if (n.includes("fastapi")) return SiFastapi;
   if (n.includes("mlflow")) return SiMlflow;
   if (n.includes("kafka")) return SiApachekafka;
+  if (n.includes("spark")) return SiApachespark;
+  if (n.includes("airflow")) return SiApacheairflow;
+  if (n.includes("superset")) return SiApachesuperset;
   if (n.includes("docker")) return SiDocker;
   if (n.includes("pydantic")) return SiPydantic;
   if (n.includes("duckdb")) return SiDuckdb;
@@ -179,7 +186,7 @@ const skillRadar: { axis: string; value: number; tools: string[] }[] = [
   {
     axis: "LLM / NLP",
     value: 84,
-    tools: ["Claude API", "OpenAI API", "Transformers", "Word2Vec", "LDA Topic Modeling", "RAG"],
+    tools: ["Transformers", "RAG", "Prompt Engineering", "Fine-tuning", "Word2Vec", "LDA Topic Modeling"],
   },
   {
     axis: "Data Engineering",
@@ -335,29 +342,31 @@ const courseworkKpis: CourseworkKpi[] = [
 
 const experiences = [
   {
-    title: "Software Development Engineering Intern",
-    company: "Electro-Active Technologies, Knoxville, TN",
-    period: "May 2024 - Jan 2025",
+    title: "Machine Learning Engineer",
+    company: "MSEDCL (Maharashtra State Electricity Distribution Co.), India (Hybrid)",
+    period: "May 2024 - Present",
     description: [
-      "Analyzed real-time IoT sensor data from hydrogen conversion systems using Python, identifying process inefficiencies that informed a 15% improvement in conversion cycle optimization.",
-      "Built automated data monitoring pipelines with REST APIs and AWS, reducing manual data quality checks by 40% and enabling stakeholders to make faster operational decisions.",
-      "Translated cross-functional business requirements into data-driven dashboards and technical specs, presenting actionable insights to engineering leadership on system performance trends.",
+      "Wrote reproducible data analysis and built Python data pipelines in Spark, Kafka, and AWS S3 over petabyte-scale telemetry from ~1,000 substations, cutting data landing time from ~6 hours to under 10 minutes so grid operators can watch load in near real time.",
+      "Wrote ETL workflows on AWS using S3, Glue, and Trino that turn 8–12M daily smart-meter and billing records into clean dimensional tables, and promoted ad-hoc analyses into production Superset and Jupyter dashboards that cut manual reporting by ~60%.",
+      "Applied statistics and an XGBoost energy-loss model in Python and SQL to flag high-loss zones and likely theft, pointing field teams to ~120 priority feeders, while scoping vague problems with engineering and ops stakeholders into self-serve tools and data visualizations.",
     ],
   },
   {
-    title: "Security Systems Engineer",
-    company: "Arizona State University, Gammage, Tempe, AZ",
-    period: "Aug 2024 - May 2025",
-    description:
-      "Developed scalable security database with object-oriented design, optimizing staff allocation by 25% through data-driven scheduling analysis.",
+    title: "Software Development Engineering Intern",
+    company: "Electro-Active Technologies, Knoxville, TN",
+    period: "Apr 2025 - June 2025",
+    description: [
+      "Wrote reproducible data analysis in Python over live IoT sensor data from hydrogen energy systems, surfacing inefficiencies that helped improve the conversion cycle by 15%.",
+      "Built automated data pipelines on AWS using Lambda and S3 with REST APIs and quality checks that cut manual validation by 40% and promoted ad-hoc analyses into steady operational reporting for the engineering team.",
+    ],
   },
   {
     title: "Data Analyst",
     company: "YYC Beeswax, Tempe, AZ",
-    period: "Aug 2024 - Mar 2025",
+    period: "May 2024 - Aug 2024",
     description: [
-      "Analyzed sales and inventory data across 50+ SKUs to identify top-performing product lines and seasonal demand patterns, delivering insights that informed a 20% reduction in overstock carrying costs.",
-      "Built interactive dashboards tracking revenue, customer acquisition, and order trends, enabling leadership to pinpoint high-margin craft categories and reallocate marketing spend accordingly.",
+      "Ran statistical analysis on sales and inventory across 50+ SKUs in Python and SQL and surfaced demand patterns that cut overstock carrying costs by 20%.",
+      "Built dashboards and data visualizations on revenue and order trends so leadership could self-serve their own numbers and reallocate marketing spend.",
     ],
   },
 ];
@@ -527,6 +536,53 @@ const quantDashboardGroups: ReadonlyArray<ConceptGroup> = [
   },
 ];
 
+const airlineWarehouseGroups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaProjectDiagram,
+    title: "Dimensional Modeling",
+    iconColor: "text-black dark:text-sky-300",
+    titleColor: "text-black dark:text-sky-200",
+    variant: "blue",
+    chips: [
+      { label: "Star schema (fact + dimensions)", tooltip: "A central flight-fact table surrounded by conformed dimensions (date, carrier, airport, aircraft) — denormalized so analytical joins stay cheap." },
+      { label: "20M+ flight records", tooltip: "Warehouse loaded with 20M+ historical flight legs; partitioned by date so time-bounded queries prune untouched partitions." },
+      { label: "Conformed dimensions", tooltip: "Shared dimension tables (airport, carrier, calendar) reused across facts so metrics roll up consistently everywhere." },
+      { label: "Slowly changing dimensions", tooltip: "Type-2 SCDs preserve history so a route's metrics reflect the carrier/airport attributes as they were at flight time." },
+      { label: "Grain + surrogate keys", tooltip: "One row per flight leg; integer surrogate keys decouple the warehouse from volatile source natural keys." },
+      { label: "Sub-second analytical queries", tooltip: "Pre-aggregated rollups plus columnar scans keep dashboard queries under a second on 20M rows." },
+    ],
+  },
+  {
+    Icon: FaCogs,
+    title: "Pipelines & Orchestration",
+    iconColor: "text-black dark:text-amber-300",
+    titleColor: "text-black dark:text-amber-200",
+    variant: "amber",
+    chips: [
+      { label: "Apache Spark ETL", tooltip: "Distributed Spark jobs clean, conform, and load raw flight feeds into dimensional tables in parallel." },
+      { label: "Airflow orchestration", tooltip: "DAGs schedule and monitor every load; retries and SLAs catch late or failed source files before they break downstream tables." },
+      { label: "ETL / ELT hybrid", tooltip: "Heavy transforms run in Spark (ETL); light reshaping is pushed down into Trino SQL (ELT) where it's cheaper." },
+      { label: "Trino federated SQL", tooltip: "Trino queries the warehouse and external sources through one SQL engine — no copying data around to analyze it." },
+      { label: "Idempotent loads", tooltip: "Partition-overwrite plus dedupe keys mean re-running a DAG never double-counts a flight." },
+      { label: "Data-quality checks", tooltip: "Row-count, null, and referential-integrity assertions gate each load before it's published to analysts." },
+    ],
+  },
+  {
+    Icon: FaChartLine,
+    title: "Analytics & Serving",
+    iconColor: "text-black dark:text-cyan-300",
+    titleColor: "text-black dark:text-cyan-200",
+    variant: "cyan",
+    chips: [
+      { label: "Superset dashboards", tooltip: "Interactive ops dashboards on delays, load factors, and route performance built straight on the warehouse." },
+      { label: "Jupyter exploration", tooltip: "Ad-hoc analysis notebooks answer one-off questions before they graduate into governed dashboards." },
+      { label: "Pre-aggregated marts", tooltip: "Materialized summary tables for the heaviest dashboard tiles keep refreshes instant." },
+      { label: "Self-serve metrics", tooltip: "Defined, reusable metric definitions so analysts query consistent KPIs without re-deriving them." },
+      { label: "Ops decision support", tooltip: "Surfaces on-time performance and bottleneck routes so ops teams act on one shared source of truth." },
+    ],
+  },
+];
+
 type Project = {
   id: number;
   title: string;
@@ -564,7 +620,7 @@ export default function Home() {
     stars: number | null;
   }>({ repos: null, followers: null, stars: null });
 
-  // Live local time for the location chip — Evanston / Chicago Central Time.
+  // Live local time for the location chip — California / Pacific Time.
   // Updates every 30s so it stays accurate without burning RAF.
   const [localTime, setLocalTime] = useState<string>("");
   useEffect(() => {
@@ -573,7 +629,7 @@ export default function Home() {
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-        timeZone: "America/Chicago",
+        timeZone: "America/Los_Angeles",
       });
     setLocalTime(fmt());
     const id = setInterval(() => setLocalTime(fmt()), 30 * 1000);
@@ -822,9 +878,9 @@ export default function Home() {
                   aria-label="Location and current local time"
                 >
                   <FaMapMarkerAlt className="text-black dark:text-purple-300/90 text-[11px]" />
-                  Evanston, IL
+                  United States
                   <span className="text-black dark:text-purple-400/45">·</span>
-                  <span className="text-black dark:text-gray-300">CT</span>
+                  <span className="text-black dark:text-gray-300">PT</span>
                   {localTime && (
                     <span className="text-black dark:text-gray-300 tabular-nums" suppressHydrationWarning>
                       {localTime}
@@ -1076,7 +1132,7 @@ export default function Home() {
               </div>
 
               <div>
-                <SkillMatrix data={skillRadar} />
+                <SkillNova data={skillRadar} />
               </div>
 
               {/* Live GitHub KPI strip */}
@@ -2073,6 +2129,163 @@ export default function Home() {
           {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
           <div className="md:hidden mt-3 rounded-2xl border border-emerald-600/25 dark:border-emerald-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
             <ConceptStack groups={quantDashboardGroups} accentColor="text-black dark:text-emerald-300" mode="static" />
+          </div>
+          </motion.div>
+
+          {/* AIRLINE DATA WAREHOUSE & ANALYTICS — featured */}
+          <motion.div
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-sky-400/60" />
+              <span className="text-black dark:text-sky-300 text-xs font-mono uppercase tracking-[0.3em]">
+                Data Warehouse &amp; Analytics
+              </span>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-sky-400/60" />
+            </div>
+
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(56,189,248,0.18)">
+            <div className="group block">
+              <div className="relative rounded-2xl overflow-hidden border border-sky-500/30 dark:border-sky-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-sky-500/70 dark:group-hover:border-sky-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(56,189,248,0.55)]">
+                <div className="grid md:grid-cols-5">
+                  {/* Star-schema warehouse visual */}
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-b from-sky-50 via-sky-100 to-sky-50 dark:from-slate-950 dark:via-sky-950/30 dark:to-slate-950" />
+                    <div
+                      className="absolute inset-0 opacity-30"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(rgba(56,189,248,0.45) 1px, transparent 1.5px)",
+                        backgroundSize: "18px 18px",
+                      }}
+                    />
+
+                    {/* Clean hero illustration — star-schema motif */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
+                      <Plane
+                        strokeWidth={1.6}
+                        className="text-black w-14 h-14 md:w-16 md:h-16 drop-shadow-[0_0_28px_rgba(56,189,248,0.55)] dark:text-gray-300"
+                      />
+
+                      <svg
+                        viewBox="0 0 400 200"
+                        className="w-full max-w-md"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden="true"
+                      >
+                        {/* fact → dimension connectors */}
+                        <g
+                          stroke="rgba(56,189,248,0.85)"
+                          strokeWidth="1.6"
+                          strokeDasharray="3 4"
+                          strokeLinecap="round"
+                          fill="none"
+                        >
+                          <path d="M200,100 L68,43">
+                            <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.5s" repeatCount="indefinite" />
+                          </path>
+                          <path d="M200,100 L332,43">
+                            <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.7s" repeatCount="indefinite" />
+                          </path>
+                          <path d="M200,100 L68,157">
+                            <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.9s" repeatCount="indefinite" />
+                          </path>
+                          <path d="M200,100 L332,157">
+                            <animate attributeName="stroke-dashoffset" values="0;-14" dur="1.6s" repeatCount="indefinite" />
+                          </path>
+                        </g>
+
+                        {/* dimension tables */}
+                        {[
+                          { x: 40, y: 28 },
+                          { x: 304, y: 28 },
+                          { x: 40, y: 142 },
+                          { x: 304, y: 142 },
+                        ].map((d, i) => (
+                          <g key={i} transform={`translate(${d.x}, ${d.y})`}>
+                            <rect width="56" height="30" rx="4" fill="rgba(56,189,248,0.12)" stroke="rgba(56,189,248,0.7)" strokeWidth="1.2" />
+                            <rect x="8" y="7" width="40" height="3" rx="1.5" fill="rgba(56,189,248,0.85)" />
+                            <rect x="8" y="15" width="32" height="2.5" rx="1.25" fill="rgba(255,255,255,0.55)" />
+                            <rect x="8" y="21" width="36" height="2.5" rx="1.25" fill="rgba(255,255,255,0.4)" />
+                          </g>
+                        ))}
+
+                        {/* central fact table */}
+                        <g transform="translate(162, 80)">
+                          <rect width="76" height="40" rx="6" fill="rgba(34,211,238,0.18)" stroke="rgba(34,211,238,0.95)" strokeWidth="1.8">
+                            <animate attributeName="opacity" values="0.75;1;0.75" dur="2.6s" repeatCount="indefinite" />
+                          </rect>
+                          <rect x="12" y="8" width="52" height="4" rx="2" fill="rgba(34,211,238,0.95)" />
+                          <rect x="12" y="18" width="44" height="2.5" rx="1.25" fill="rgba(255,255,255,0.6)" />
+                          <rect x="12" y="25" width="50" height="2.5" rx="1.25" fill="rgba(255,255,255,0.45)" />
+                          <rect x="12" y="32" width="38" height="2.5" rx="1.25" fill="rgba(255,255,255,0.35)" />
+                        </g>
+                      </svg>
+
+                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase dark:text-gray-300">
+                        Airline Star Schema
+                      </div>
+                    </div>
+
+                    {/* Hover hint */}
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none dark:text-gray-300">
+                      hover &rarr; stack
+                    </div>
+
+                    {/* Concept stack hover overlay (desktop, single source of truth) */}
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={airlineWarehouseGroups} accentColor="text-black dark:text-sky-300" mode="overlay" />
+                    </div>
+                  </div>
+
+                  {/* Info panel */}
+                  <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 dark:from-sky-300 via-blue-800 dark:via-cyan-300 to-slate-900 dark:to-blue-300 bg-clip-text text-transparent dark:text-gray-300">
+                      Airline Data Warehouse &amp; Analytics
+                    </h3>
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
+                      A <span className="text-black dark:text-sky-200">star-schema warehouse</span> over{" "}
+                      <span className="text-black dark:text-sky-200">20M+ flight records</span> with automated{" "}
+                      <span className="text-black dark:text-sky-200">Apache Spark ETL</span> and Airflow
+                      orchestration. Trino-backed analytical queries return in{" "}
+                      <span className="text-black dark:text-sky-200">under a second</span> and feed
+                      interactive Superset and Jupyter dashboards for ops decisions.
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {["PostgreSQL", "Python", "Apache Spark", "Trino", "Airflow", "Superset"].map(
+                        (tech) => {
+                          const Icon = getTechIcon(tech);
+                          return (
+                            <span
+                              key={tech}
+                              className="px-3 py-1 bg-sky-500/15 border border-sky-400/30 text-black dark:text-sky-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                            >
+                              {Icon && <Icon className="shrink-0" />}
+                              {tech}
+                            </span>
+                          );
+                        }
+                      )}
+                    </div>
+
+                    <div className="pt-2">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-sky-300 font-medium font-mono text-xs uppercase tracking-widest">
+                        Star schema &middot; 20M+ records &middot; sub-second queries
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </TiltSpotlight>
+
+          {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
+          <div className="md:hidden mt-3 rounded-2xl border border-sky-500/25 dark:border-sky-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={airlineWarehouseGroups} accentColor="text-black dark:text-sky-300" mode="static" />
           </div>
           </motion.div>
 
