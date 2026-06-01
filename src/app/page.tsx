@@ -343,7 +343,7 @@ const courseworkKpis: CourseworkKpi[] = [
 const experiences = [
   {
     title: "Machine Learning Engineer",
-    company: "MSEDCL (Maharashtra State Electricity Distribution Co.), India (Hybrid)",
+    company: "MSEDCL, India (Hybrid)",
     period: "May 2024 - Present",
     description: [
       "Wrote reproducible data analysis and built Python data pipelines in Spark, Kafka, and AWS S3 over petabyte-scale telemetry from ~1,000 substations, cutting data landing time from ~6 hours to under 10 minutes so grid operators can watch load in near real time.",
