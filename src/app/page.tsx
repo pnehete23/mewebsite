@@ -1052,16 +1052,6 @@ export default function Home() {
                   'var(--font-fraunces), "Fraunces", "Cormorant Garamond", Georgia, serif',
               }}
             >
-              <h3
-                className="text-4xl md:text-5xl font-bold text-black dark:text-white text-center md:text-left tracking-tight italic"
-                style={{
-                  fontVariationSettings: '"opsz" 144, "SOFT" 30',
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                My Story.
-              </h3>
-
               {/* Northwestern image + opening paragraph wrap */}
               <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
                 <motion.div
