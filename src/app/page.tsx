@@ -12,6 +12,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   FaLinkedin,
   FaGithub,
+  FaMapMarkedAlt,
+  FaMoneyBillWave,
   FaEnvelope,
   FaPhone,
   FaCopy,
@@ -239,7 +241,7 @@ const courseworkKpis: CourseworkKpi[] = [
   {
     code: "MSDS 401",
     title: "Applied Statistics with R",
-    term: "Fall 2025 · Tsapara",
+    term: "Fall 2025",
     status: "Taken",
     grade: "C",
     syllabus: "/Tsapara%20-Syllabus_ADS_401_Fall%202024.pdf",
@@ -324,7 +326,7 @@ const courseworkKpis: CourseworkKpi[] = [
   {
     code: "MSDS 453",
     title: "AI & Natural Language Processing",
-    term: "Spring 2026 · Maren",
+    term: "Spring 2026",
     status: "In Progress",
     syllabus: "/MSDS%20453-Syllabus-Maren-Winter-2026.docx",
     skills: [
@@ -342,32 +344,14 @@ const courseworkKpis: CourseworkKpi[] = [
 
 const experiences = [
   {
-    title: "Machine Learning Engineer",
-    company: "MSEDCL, India (Hybrid)",
-    period: "May 2024 - Present",
-    description: [
-      "Wrote reproducible data analysis and built Python data pipelines in Spark, Kafka, and AWS S3 over petabyte-scale telemetry from ~1,000 substations, cutting data landing time from ~6 hours to under 10 minutes so grid operators can watch load in near real time.",
-      "Wrote ETL workflows on AWS using S3, Glue, and Trino that turn 8–12M daily smart-meter and billing records into clean dimensional tables, and promoted ad-hoc analyses into production Superset and Jupyter dashboards that cut manual reporting by ~60%.",
-      "Applied statistics and an XGBoost energy-loss model in Python and SQL to flag high-loss zones and likely theft, pointing field teams to ~120 priority feeders, while scoping vague problems with engineering and ops stakeholders into self-serve tools and data visualizations.",
-    ],
-  },
-  {
     title: "Software Development Engineering Intern",
     company: "Electro-Active Technologies, Knoxville, TN",
-    period: "Apr 2025 - June 2025",
-    description: [
-      "Wrote reproducible data analysis in Python over live IoT sensor data from hydrogen energy systems, surfacing inefficiencies that helped improve the conversion cycle by 15%.",
-      "Built automated data pipelines on AWS using Lambda and S3 with REST APIs and quality checks that cut manual validation by 40% and promoted ad-hoc analyses into steady operational reporting for the engineering team.",
-    ],
+    period: "Apr 2025 – Jun 2025",
   },
   {
     title: "Data Analyst",
     company: "YYC Beeswax, Tempe, AZ",
-    period: "May 2024 - Aug 2024",
-    description: [
-      "Ran statistical analysis on sales and inventory across 50+ SKUs in Python and SQL and surfaced demand patterns that cut overstock carrying costs by 20%.",
-      "Built dashboards and data visualizations on revenue and order trends so leadership could self-serve their own numbers and reallocate marketing spend.",
-    ],
+    period: "May 2024 – Aug 2024",
   },
 ];
 
@@ -481,8 +465,8 @@ const patient360Groups: ReadonlyArray<ConceptGroup> = [
       { label: "React 18 + Vite 5 (319KB / 92KB gzip)", tooltip: "Code-split routes, treeshaken icons, and a precomputed dataset bundle keep the production gzip under 100 KB." },
       { label: "Python synthetic data generator", tooltip: "Reproducible cohort generator: 200 patients, 22 genes, realistic prevalence/comorbidity priors — seeded RNG for parity in tests." },
       { label: "Live: CPIC · openFDA · CT.gov · RxNav", tooltip: "Four public APIs wired in: CPIC (gene-drug rules), openFDA (adverse events), ClinicalTrials.gov (matching), RxNav (DDI)." },
-      { label: "Custom Node static server", tooltip: "Tiny Node server adds the security headers and SPA fallback routing that vanilla static hosting on Railway lacks." },
-      { label: "Railway + Nixpacks deployment", tooltip: "Nixpacks autodetects the build; Railway provides the proxy, TLS, and zero-config HTTPS." },
+      { label: "Security headers + SPA fallback", tooltip: "Explicit security headers and SPA rewrite rules so deep links resolve instead of 404ing on a static host." },
+      { label: "Vercel deployment", tooltip: "Git-push deploys with preview builds per branch; Vercel’s edge network provides the proxy, TLS, and zero-config HTTPS." },
       { label: "Memoized derived datasets", tooltip: "Heavy joins computed once and memoized by hash of inputs — UI tab switches stay instant on a 200-patient cohort." },
     ],
   },
@@ -531,7 +515,103 @@ const quantDashboardGroups: ReadonlyArray<ConceptGroup> = [
       { label: "Plotly interactive charts", tooltip: "Candlestick + indicator overlays with brush zoom, crosshair tooltips, and entry/exit markers." },
       { label: "Reactive Streamlit UI (4-page)", tooltip: "Backtest · Watchlist · Compare · Optimize. Sidebar inputs trigger memoized recomputation per tab." },
       { label: "Cached compute layer", tooltip: "@st.cache_data on data fetches and @st.cache_resource on engine instances — sub-second tab switches." },
-      { label: "Containerized on Railway", tooltip: "Procfile + railway.json define the start command; XSRF disabled behind Railway's proxy." },
+      { label: "Streamlit Community Cloud", tooltip: "requirements.txt pins the runtime; the app redeploys straight from the GitHub repo on every push." },
+    ],
+  },
+];
+
+const curbsideGroups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaBrain,
+    title: "Modeling & Validation",
+    iconColor: "text-black dark:text-amber-300",
+    titleColor: "text-black dark:text-amber-200",
+    variant: "amber",
+    chips: [
+      { label: "Grouped spatial holdout (143 cells)", tooltip: "20% of grid cells are held out entirely, so the score measures generalization to unseen locations rather than memorized geography." },
+      { label: "ROC AUC 85.7% · balanced acc 81.5%", tooltip: "Spatial-holdout scorecard: 86.4% accuracy, 99.3% precision, 63.2% recall, F1 77.3%, Brier 0.116." },
+      { label: "XGBoost high-signal classifier", tooltip: "Predicts whether a grid/hour/weekday/month cell lands in a high 311-signal state (at least 2 curbside requests)." },
+      { label: "Local contribution explanations", tooltip: "Global gain importance plus per-cell XGBoost contributions, so every scored cell ships with the why." },
+      { label: "Weather + holiday features", tooltip: "Hour, weekday, rush-hour timing, month, grid cell, temperature, precipitation, holidays, and month boundaries." },
+      { label: "Responsible-use boundary", tooltip: "Framed as a comparative operating signal — not a physical congestion count, and not a claim that 311 reporting is uniform across neighborhoods." },
+    ],
+  },
+  {
+    Icon: FaCogs,
+    title: "Data Engineering",
+    iconColor: "text-black dark:text-blue-300",
+    titleColor: "text-black dark:text-blue-200",
+    variant: "blue",
+    chips: [
+      { label: "496K validated 311 records", tooltip: "Chicago 311 service requests normalized and validated, then aggregated into spatial/time cells as the model's training grain." },
+      { label: "58.8M traffic-speed observations", tooltip: "Chicago Traffic Tracker historical congestion estimates aggregated into an independent evidence layer." },
+      { label: "282,857 model rows · 713 grid cells", tooltip: "The training panel: one row per grid/hour/weekday/month cell across 713 Chicago grid cells." },
+      { label: "Governed star schema export", tooltip: "8 dimensions + 6 fact tables with explicit grains, conformed dimensions, surrogate keys, and documented BI relationship rules." },
+      { label: "Source triangulation", tooltip: "Modeled 311 pressure checked against independent traffic speeds and active street-closure permits instead of one blended heatmap." },
+      { label: "Reproducible scripted pipeline", tooltip: "Dataset build, weather fetch, traffic fetch, training, and BI export are scripted end-to-end with a unittest suite." },
+    ],
+  },
+  {
+    Icon: FaChartLine,
+    title: "Decision Product & BI",
+    iconColor: "text-black dark:text-emerald-300",
+    titleColor: "text-black dark:text-emerald-200",
+    variant: "emerald",
+    chips: [
+      { label: "Tableau Public decision lab", tooltip: "Published workbook plus an operations control room: executive snapshot, peak-hour callout, neighborhood priority, and driver attribution." },
+      { label: "Decision Map (3 separate layers)", tooltip: "Predicted pressure, observed arterial speed, and historical 311 coverage kept as distinct questions rather than merged into one ambiguous heatmap." },
+      { label: "Evidence view", tooltip: "311 vs traffic weekday/hour patterns, monthly signal trends, category mix, and cross-source correlation." },
+      { label: "Model Lab", tooltip: "Spatial-holdout performance, confusion matrix, global importance, scenario contributions, and score distribution surfaced in-product." },
+      { label: "Planner + window export", tooltip: "Compares 24-hour risk profiles and exports recommended operating windows for field teams." },
+      { label: "Streamlit delivery", tooltip: "The whole decision product ships as a multi-page Streamlit app on top of the scored panel." },
+    ],
+  },
+];
+
+const fundingGroups: ReadonlyArray<ConceptGroup> = [
+  {
+    Icon: FaCogs,
+    title: "Pipeline & Warehouse",
+    iconColor: "text-black dark:text-blue-300",
+    titleColor: "text-black dark:text-blue-200",
+    variant: "blue",
+    chips: [
+      { label: "SEC Form D bulk ingestion", tooltip: "Quarterly SEC EDGAR Form D archives pulled from 2012Q1 forward with a declared contact User-Agent, as the SEC asks of scripted clients." },
+      { label: "Raw → master → clean staging", tooltip: "Layered CSV staging so every transform is inspectable and re-runnable instead of one opaque step." },
+      { label: "PostgreSQL load + schema DDL", tooltip: "Versioned schema SQL plus a loader that lands the cleaned tables in Postgres over an SSL connection." },
+      { label: "FRED + Nasdaq enrichment", tooltip: "Federal Funds Effective Rate and Nasdaq Composite aggregated annually and joined to the SEC funding panel by filing year." },
+      { label: "Validation gate", tooltip: "A scoped validator checks the pipeline and the published dashboard CSVs before anything is republished." },
+      { label: "Reproducible full refresh", tooltip: "Download, setup, clean, load, export, prepare, and validate run as an ordered, documented command sequence." },
+    ],
+  },
+  {
+    Icon: FaProjectDiagram,
+    title: "Analytics Engineering",
+    iconColor: "text-black dark:text-violet-300",
+    titleColor: "text-black dark:text-violet-200",
+    variant: "purple",
+    chips: [
+      { label: "CTEs + window functions", tooltip: "Multi-table SQL models built on joins, CTEs, and window functions rather than app-side loops." },
+      { label: "Percentiles · deciles · rolling averages", tooltip: "Distributional SQL — percentile and decile cuts plus rolling averages — to describe deal size and market cycle." },
+      { label: "Capital concentration (top decile)", tooltip: "Measures what share of total capital raised lands in the top decile of deals — the market's concentration story." },
+      { label: "Industry resilience matrix", tooltip: "Post-2021 capital retention and median deal-size change by industry, so the contraction is read per sector." },
+      { label: "Equity vs debt mix", tooltip: "Capital-structure trend across filings: how the equity/debt financing split moved through the cycle." },
+      { label: "State growth + trajectories", tooltip: "State-level growth ranking plus year-by-year trajectories feeding a selectable US choropleth." },
+    ],
+  },
+  {
+    Icon: FaChartLine,
+    title: "Delivery & Storytelling",
+    iconColor: "text-black dark:text-emerald-300",
+    titleColor: "text-black dark:text-emerald-200",
+    variant: "emerald",
+    chips: [
+      { label: "Tableau Public workbook", tooltip: "Private Capital Intelligence: funding cycle, state opportunity map, industry resilience matrix, capital concentration, and debt-share trend." },
+      { label: "Streamlit interactive app", tooltip: "app.py deploys to Streamlit Community Cloud and redeploys on every push to GitHub." },
+      { label: "Static GitHub Pages build", tooltip: "A docs/ dashboard reads CSVs from docs/data/, so regenerating and pushing the exports updates the public page." },
+      { label: "Five framed business questions", tooltip: "Each export answers one stated question — annual volume, boom vs contraction, deal size, geography, concentration, capital mix." },
+      { label: "Macro context join", tooltip: "Funding activity presented against rates and Nasdaq returns so the cycle is explained, not just plotted." },
+      { label: "Documented attribution", tooltip: "README records that the work was initialized from a public upstream repo and extended with downloader, validation, export, and showcase tooling." },
     ],
   },
 ];
@@ -1352,20 +1432,15 @@ export default function Home() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="bg-black/[0.04] dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl p-6"
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                  <h3 className="text-xl font-semibold text-black dark:text-white">{exp.title}</h3>
-                  <span className="text-black font-medium dark:text-gray-300">{exp.period}</span>
+                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between md:gap-6">
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-semibold text-black dark:text-white">{exp.title}</h3>
+                    <h4 className="text-lg text-black dark:text-gray-300 mt-1">{exp.company}</h4>
+                  </div>
+                  <span className="mt-2 md:mt-0 shrink-0 whitespace-nowrap tabular-nums md:text-right text-sm md:text-base text-black font-medium dark:text-gray-300">
+                    {exp.period}
+                  </span>
                 </div>
-                <h4 className="text-lg text-black dark:text-gray-300 mb-2">{exp.company}</h4>
-                {Array.isArray(exp.description) ? (
-                  <ul className="text-black dark:text-gray-400 space-y-1.5 list-disc pl-5 marker:text-black dark:marker:text-gray-500">
-                    {exp.description.map((line, i) => (
-                      <li key={i}>{line}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-black dark:text-gray-400">{exp.description}</p>
-                )}
               </motion.div>
             ))}
           </div>
@@ -1611,7 +1686,7 @@ export default function Home() {
 
             <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(34,211,238,0.18)">
             <a
-              href="https://patient360nu-production.up.railway.app/"
+              href="https://patient360nu.vercel.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="group block"
@@ -1940,7 +2015,7 @@ export default function Home() {
                       stack.
                     </p>
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {["React", "Vite", "Python", "CPIC", "openFDA", "Railway"].map((tech) => {
+                      {["React", "Vite", "Python", "CPIC", "openFDA", "Vercel"].map((tech) => {
                         const Icon = getTechIcon(tech);
                         return (
                           <span
@@ -1990,7 +2065,7 @@ export default function Home() {
 
             <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(16,185,129,0.18)">
             <a
-              href="https://web-production-404cc.up.railway.app/"
+              href="https://quant-trade-analysis-dashboard-pjupxete8her6apucjwzso.streamlit.app/"
               target="_blank"
               rel="noopener noreferrer"
               className="group block"
@@ -2082,11 +2157,11 @@ export default function Home() {
                       a <span className="text-black dark:text-emerald-200">parameter heatmap</span>, a{" "}
                       <span className="text-black dark:text-emerald-200">cost-sensitivity sweep</span>, watchlist
                       compare, and entry/exit markers on real prices. Vectorized pandas core with a
-                      TTL-cached compute layer; deployed on Railway.
+                      TTL-cached compute layer; deployed on Streamlit Community Cloud.
                     </p>
 
                     <div className="flex flex-wrap gap-2 pt-1">
-                      {["Python", "Streamlit", "pandas", "NumPy", "Plotly", "Railway"].map(
+                      {["Python", "Streamlit", "pandas", "NumPy", "Plotly", "Streamlit Cloud"].map(
                         (tech) => {
                           const Icon = getTechIcon(tech);
                           return (
@@ -2276,6 +2351,338 @@ export default function Home() {
           {/* Mobile concept stack (md:hidden) — same data as desktop hover overlay */}
           <div className="md:hidden mt-3 rounded-2xl border border-sky-500/25 dark:border-sky-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
             <ConceptStack groups={airlineWarehouseGroups} accentColor="text-black dark:text-sky-300" mode="static" />
+          </div>
+          </motion.div>
+
+          {/* CHICAGO CURBSIDE DECISION LAB — featured */}
+          <motion.div
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-amber-400/60" />
+              <span className="text-black dark:text-amber-300 text-xs font-mono uppercase tracking-[0.3em]">
+                Chicago Curbside Decision Lab
+              </span>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-amber-400/60" />
+            </div>
+
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(245,158,11,0.18)">
+            <div className="group block">
+              <div className="relative rounded-2xl overflow-hidden border border-amber-500/30 dark:border-amber-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-amber-500/70 dark:group-hover:border-amber-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(245,158,11,0.55)]">
+                <div className="grid md:grid-cols-5">
+                  {/* Risk-grid visual */}
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-b from-amber-50 via-orange-100 to-amber-50 dark:from-slate-950 dark:via-amber-950/30 dark:to-slate-950" />
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(rgba(245,158,11,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(245,158,11,0.35) 1px, transparent 1px)",
+                        backgroundSize: "26px 26px",
+                      }}
+                    />
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
+                      <FaMapMarkedAlt className="text-black dark:text-amber-300 text-5xl md:text-6xl drop-shadow-[0_0_28px_rgba(245,158,11,0.55)]" />
+
+                      {/* City grid heat cells — a coarse stand-in for the scored map */}
+                      <svg
+                        viewBox="0 0 400 180"
+                        className="w-full max-w-md"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden="true"
+                      >
+                        {Array.from({ length: 6 }).map((_, row) =>
+                          Array.from({ length: 12 }).map((__, col) => {
+                            const seed = (row * 12 + col * 5) % 11;
+                            const heat = seed / 10;
+                            return (
+                              <rect
+                                key={`${row}-${col}`}
+                                x={8 + col * 32}
+                                y={8 + row * 28}
+                                width={26}
+                                height={22}
+                                rx={3}
+                                fill={`rgba(245,158,11,${0.12 + heat * 0.6})`}
+                                stroke="rgba(245,158,11,0.5)"
+                                strokeWidth="0.8"
+                              >
+                                <animate
+                                  attributeName="opacity"
+                                  values="0.65;1;0.65"
+                                  dur={`${2.2 + ((row + col) % 5) * 0.35}s`}
+                                  repeatCount="indefinite"
+                                />
+                              </rect>
+                            );
+                          })
+                        )}
+                      </svg>
+
+                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase dark:text-gray-300">
+                        713 Grid Cells &middot; Hourly Risk
+                      </div>
+                    </div>
+
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none dark:text-gray-300">
+                      hover &rarr; stack
+                    </div>
+
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={curbsideGroups} accentColor="text-black dark:text-amber-300" mode="overlay" />
+                    </div>
+                  </div>
+
+                  {/* Info panel */}
+                  <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-amber-300 dark:via-orange-300 dark:to-amber-200 bg-clip-text text-transparent">
+                      Chicago Curbside Decision Lab
+                    </h3>
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
+                      Turns <span className="text-black dark:text-amber-200">496K Chicago 311 requests</span> and{" "}
+                      <span className="text-black dark:text-amber-200">58.8M traffic-speed observations</span> into an
+                      hourly curbside-pressure signal. An XGBoost model scored on a{" "}
+                      <span className="text-black dark:text-amber-200">grouped spatial holdout</span> reaches{" "}
+                      <span className="text-black dark:text-amber-200">85.7% ROC AUC</span> on unseen grid cells, and
+                      the result ships as a Streamlit decision product plus a governed Tableau handoff.
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {["Python", "XGBoost", "pandas", "Streamlit", "Tableau", "Plotly"].map((tech) => {
+                        const Icon = getTechIcon(tech);
+                        return (
+                          <span
+                            key={tech}
+                            className="px-3 py-1 bg-amber-500/15 border border-amber-400/30 text-black dark:text-amber-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                          >
+                            {Icon && <Icon className="shrink-0" />}
+                            {tech}
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    {/* Highlighted links — dashboard + Tableau + source */}
+                    <div className="flex flex-wrap gap-2.5 pt-2">
+                      <a
+                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/ChicagoCurbsideDecisionLab/CurbsideOperationsControlRoom"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/25 border border-amber-500/60 text-black dark:text-amber-100 font-semibold text-xs font-mono uppercase tracking-widest hover:bg-amber-500/40 hover:border-amber-400 transition-colors duration-300"
+                      >
+                        <SiTableau className="shrink-0" />
+                        Tableau Dashboard
+                        <span aria-hidden="true">&rarr;</span>
+                      </a>
+                      <a
+                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/ChicagoCurbsideDecisionLab/Dashboard1"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.05] dark:bg-white/5 border border-amber-500/35 text-black dark:text-amber-200 font-medium text-xs font-mono uppercase tracking-widest hover:border-amber-400/70 hover:bg-amber-500/15 transition-colors duration-300"
+                      >
+                        <FaChartLine className="shrink-0" />
+                        Decision Lab View
+                      </a>
+                      <a
+                        href="https://github.com/pnehete23/chicago-curbside-congestion"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.05] dark:bg-white/5 border border-black/15 dark:border-white/20 text-black dark:text-gray-200 font-medium text-xs font-mono uppercase tracking-widest hover:border-black/30 dark:hover:border-white/40 transition-colors duration-300"
+                      >
+                        <FaGithub className="shrink-0" />
+                        Source
+                      </a>
+                    </div>
+
+                    <div className="pt-1">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-amber-300 font-medium font-mono text-xs uppercase tracking-widest">
+                        85.7% ROC AUC &middot; 143 held-out cells &middot; star-schema export
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </TiltSpotlight>
+
+          <div className="md:hidden mt-3 rounded-2xl border border-amber-500/25 dark:border-amber-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={curbsideGroups} accentColor="text-black dark:text-amber-300" mode="static" />
+          </div>
+          </motion.div>
+
+          {/* STARTUP FUNDING ANALYTICS — featured */}
+          <motion.div
+            initial={{ opacity: 0, y: 90, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <span className="h-px flex-1 bg-gradient-to-r from-transparent to-blue-700/60 dark:to-violet-400/60" />
+              <span className="text-black dark:text-violet-300 text-xs font-mono uppercase tracking-[0.3em]">
+                US Private Capital Intelligence
+              </span>
+              <span className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-700/60 dark:to-violet-400/60" />
+            </div>
+
+            <TiltSpotlight className="relative block" max={5} lift={6} glare="rgba(139,92,246,0.18)">
+            <div className="group block">
+              <div className="relative rounded-2xl overflow-hidden border border-violet-500/30 dark:border-violet-400/30 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md transition-all duration-500 group-hover:border-violet-500/70 dark:group-hover:border-violet-400/70 group-hover:shadow-[0_0_60px_-15px_rgba(139,92,246,0.55)]">
+                <div className="grid md:grid-cols-5">
+                  {/* Funding-cycle visual */}
+                  <div className="md:col-span-3 relative h-80 md:h-auto md:min-h-[480px] md:self-stretch overflow-hidden border-b md:border-b-0 md:border-r border-black/10 dark:border-white/10">
+                    <div className="absolute inset-0 bg-gradient-to-b from-violet-50 via-indigo-100 to-violet-50 dark:from-slate-950 dark:via-violet-950/30 dark:to-slate-950" />
+                    <div
+                      className="absolute inset-0 opacity-25"
+                      style={{
+                        backgroundImage:
+                          "radial-gradient(rgba(139,92,246,0.45) 1px, transparent 1.5px)",
+                        backgroundSize: "20px 20px",
+                      }}
+                    />
+
+                    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 md:px-10 gap-6">
+                      <FaMoneyBillWave className="text-black dark:text-violet-300 text-5xl md:text-6xl drop-shadow-[0_0_28px_rgba(139,92,246,0.55)]" />
+
+                      {/* Boom-and-contraction bars: 2021 peak, then the drawdown */}
+                      <svg
+                        viewBox="0 0 400 160"
+                        className="w-full max-w-md"
+                        preserveAspectRatio="xMidYMid meet"
+                        aria-hidden="true"
+                      >
+                        <defs>
+                          <linearGradient id="fund-bar" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(167,139,250,0.95)" />
+                            <stop offset="100%" stopColor="rgba(139,92,246,0.35)" />
+                          </linearGradient>
+                        </defs>
+                        {[46, 58, 70, 88, 132, 96, 78, 84].map((h, i) => (
+                          <g key={i}>
+                            <rect
+                              x={18 + i * 47}
+                              y={140 - h}
+                              width={30}
+                              height={h}
+                              rx={4}
+                              fill="url(#fund-bar)"
+                              stroke="rgba(167,139,250,0.7)"
+                              strokeWidth="1"
+                            >
+                              <animate
+                                attributeName="opacity"
+                                values="0.7;1;0.7"
+                                dur={`${2.4 + (i % 4) * 0.3}s`}
+                                repeatCount="indefinite"
+                              />
+                            </rect>
+                          </g>
+                        ))}
+                        {/* Policy-rate overlay line */}
+                        <path
+                          d="M33,132 L80,130 L127,128 L174,126 L221,124 L268,86 L315,58 L362,54"
+                          fill="none"
+                          stroke="rgba(34,211,238,0.9)"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeDasharray="4 5"
+                        >
+                          <animate attributeName="stroke-dashoffset" values="0;-18" dur="1.8s" repeatCount="indefinite" />
+                        </path>
+                      </svg>
+
+                      <div className="font-mono text-[11px] text-black tracking-[0.4em] uppercase dark:text-gray-300">
+                        Form D Volume &middot; Fed Funds Overlay
+                      </div>
+                    </div>
+
+                    <div className="hidden md:block absolute top-12 right-3 font-mono text-[9px] text-black tracking-[0.35em] uppercase opacity-100 group-hover:opacity-0 transition-opacity duration-300 pointer-events-none dark:text-gray-300">
+                      hover &rarr; stack
+                    </div>
+
+                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                      <ConceptStack groups={fundingGroups} accentColor="text-black dark:text-violet-300" mode="overlay" />
+                    </div>
+                  </div>
+
+                  {/* Info panel */}
+                  <div className="md:col-span-2 p-8 md:p-10 flex flex-col justify-center space-y-5 bg-gradient-to-br from-white/5 to-transparent">
+                    <h3 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-slate-900 dark:from-violet-300 dark:via-indigo-300 dark:to-violet-200 bg-clip-text text-transparent">
+                      Startup Funding Analytics
+                    </h3>
+                    <p className="text-black dark:text-gray-300 leading-relaxed">
+                      An end-to-end read on US private capital: quarterly{" "}
+                      <span className="text-black dark:text-violet-200">SEC Form D filings</span> ingested into{" "}
+                      <span className="text-black dark:text-violet-200">PostgreSQL</span>, modeled with window-function
+                      SQL, and enriched with{" "}
+                      <span className="text-black dark:text-violet-200">FRED rates and Nasdaq returns</span> so the
+                      2021 boom and the 2022&ndash;2024 contraction are explained, not just plotted.
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {["Python", "PostgreSQL", "SQL", "pandas", "Tableau", "Streamlit"].map((tech) => {
+                        const Icon = getTechIcon(tech);
+                        return (
+                          <span
+                            key={tech}
+                            className="px-3 py-1 bg-violet-500/15 border border-violet-400/30 text-black dark:text-violet-200 text-xs rounded-full font-mono inline-flex items-center gap-1.5"
+                          >
+                            {Icon && <Icon className="shrink-0" />}
+                            {tech}
+                          </span>
+                        );
+                      })}
+                    </div>
+
+                    {/* Highlighted links — dashboard + Tableau + source */}
+                    <div className="flex flex-wrap gap-2.5 pt-2">
+                      <a
+                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/USPrivateCapitalIntelligence-SECFormDandFRED/PrivateCapitalIntelligence"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/25 border border-violet-500/60 text-black dark:text-violet-100 font-semibold text-xs font-mono uppercase tracking-widest hover:bg-violet-500/40 hover:border-violet-400 transition-colors duration-300"
+                      >
+                        <SiTableau className="shrink-0" />
+                        Tableau Dashboard
+                        <span aria-hidden="true">&rarr;</span>
+                      </a>
+                      <a
+                        href="https://startup-funding-monitor-2026.soft-swift-1715.chatgpt.site"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.05] dark:bg-white/5 border border-violet-500/35 text-black dark:text-violet-200 font-medium text-xs font-mono uppercase tracking-widest hover:border-violet-400/70 hover:bg-violet-500/15 transition-colors duration-300"
+                      >
+                        <FaChartLine className="shrink-0" />
+                        Live Dashboard
+                      </a>
+                      <a
+                        href="https://github.com/pnehete23/startup-funding-analytics"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.05] dark:bg-white/5 border border-black/15 dark:border-white/20 text-black dark:text-gray-200 font-medium text-xs font-mono uppercase tracking-widest hover:border-black/30 dark:hover:border-white/40 transition-colors duration-300"
+                      >
+                        <FaGithub className="shrink-0" />
+                        Source
+                      </a>
+                    </div>
+
+                    <div className="pt-1">
+                      <span className="inline-flex items-center gap-2 text-black dark:text-violet-300 font-medium font-mono text-xs uppercase tracking-widest">
+                        SEC Form D &middot; Postgres &middot; FRED + Nasdaq context
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </TiltSpotlight>
+
+          <div className="md:hidden mt-3 rounded-2xl border border-violet-500/25 dark:border-violet-400/25 bg-black/[0.05] dark:bg-black/40 backdrop-blur-md p-5 space-y-4">
+            <ConceptStack groups={fundingGroups} accentColor="text-black dark:text-violet-300" mode="static" />
           </div>
           </motion.div>
 
@@ -2821,42 +3228,8 @@ export default function Home() {
               Get In Touch
             </motion.h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-2xl mx-auto">
-              Let&apos;s work together to bring your ideas to life. I typically respond within 24 hours.
+              Let&apos;s work together to bring your ideas to life.
             </p>
-          </motion.div>
-
-          {/* Open to Roles — graduation + role-seeking callout */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.7 }}
-            className="relative max-w-3xl mx-auto rounded-xl bg-gradient-to-br from-blue-800/15 dark:from-purple-500/15 via-blue-800/10 dark:via-violet-500/10 to-blue-800/15 dark:to-purple-500/15 border border-blue-700/30 dark:border-purple-300/30 px-5 py-5 backdrop-blur-sm"
-          >
-            <span className="absolute -top-2 left-5 px-2 py-0.5 rounded-full bg-blue-800/40 dark:bg-purple-500/40 border border-blue-700/50 dark:border-purple-300/50 font-mono text-[10px] text-black dark:text-purple-50 tracking-[0.3em] uppercase backdrop-blur-md">
-              Open to Roles
-            </span>
-            <p className="text-black dark:text-purple-50 leading-relaxed text-[15px] md:text-base mt-1 text-center md:text-left">
-              Graduating <span className="font-semibold text-black dark:text-white">August 2026</span> and actively
-              interviewing for{" "}
-              <span className="font-semibold text-black dark:text-white">data science internship</span> and{" "}
-              <span className="font-semibold text-black dark:text-white">full-time roles</span>. Available to start
-              immediately.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-2">
-              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-black dark:text-emerald-200 tracking-widest uppercase">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-                Replying within 24h
-              </span>
-              <span className="text-black dark:text-purple-300/40">/</span>
-              <a
-                href="mailto:prathameshnehete2026@u.northwestern.edu"
-                className="font-mono text-[10px] text-black dark:text-purple-200 tracking-widest uppercase hover:text-black dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
-              >
-                <FaEnvelope className="text-[10px] dark:text-gray-300" />
-                Reach out
-              </a>
-            </div>
           </motion.div>
 
           <div className="grid md:grid-cols-2 gap-12">
@@ -2870,8 +3243,8 @@ export default function Home() {
               <div>
                 <h3 className="text-3xl font-bold text-black dark:text-white mb-6">Let&apos;s Connect</h3>
                 <p className="text-black dark:text-gray-300 leading-relaxed">
-                  I&apos;m open to roles and collaborations in data science, analytics, and machine
-                  learning. Reach out directly using the options below or the form.
+                  I work across full-stack engineering, data engineering, data science, and business
+                  analytics. Reach out directly using the options below or the form.
                 </p>
               </div>
 
