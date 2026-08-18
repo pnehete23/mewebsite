@@ -2481,7 +2481,7 @@ export default function Home() {
                     {/* Highlighted links — dashboard + Tableau + source */}
                     <div className="flex flex-wrap gap-2.5 pt-2">
                       <a
-                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/ChicagoCurbsideDecisionLab/CurbsideOperationsControlRoom"
+                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/ChicagoCurbsideDecisionLab/AllChartsChicagoCurbside"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/25 border border-amber-500/60 text-black dark:text-amber-100 font-semibold text-xs font-mono uppercase tracking-widest hover:bg-amber-500/40 hover:border-amber-400 transition-colors duration-300"
@@ -2489,15 +2489,6 @@ export default function Home() {
                         <SiTableau className="shrink-0" />
                         Tableau Dashboard
                         <span aria-hidden="true">&rarr;</span>
-                      </a>
-                      <a
-                        href="https://public.tableau.com/app/profile/prathamesh.nehete/viz/ChicagoCurbsideDecisionLab/Dashboard1"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.05] dark:bg-white/5 border border-amber-500/35 text-black dark:text-amber-200 font-medium text-xs font-mono uppercase tracking-widest hover:border-amber-400/70 hover:bg-amber-500/15 transition-colors duration-300"
-                      >
-                        <FaChartLine className="shrink-0" />
-                        Decision Lab View
                       </a>
                       <a
                         href="https://github.com/pnehete23/chicago-curbside-congestion"
