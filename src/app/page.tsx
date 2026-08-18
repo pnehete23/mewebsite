@@ -344,14 +344,23 @@ const courseworkKpis: CourseworkKpi[] = [
 
 const experiences = [
   {
+    title: "Data Science Analyst",
+    company: "Kauffman Hall",
+    period: "Jun 2026 \u2013 Present",
+  },
+  {
     title: "Software Development Engineering Intern",
     company: "Electro-Active Technologies, Knoxville, TN",
-    period: "Apr 2025 – Jun 2025",
+    period: "Apr 2025 \u2013 Jun 2025",
+    description:
+      "Built serverless AWS ingestion on Lambda and S3 behind REST APIs, with schema and quality checks that cut manual validation by 40%. Instrumented live IoT telemetry from hydrogen energy systems and shipped the analysis that improved conversion-cycle efficiency by 15%.",
   },
   {
     title: "Data Analyst",
     company: "YYC Beeswax, Tempe, AZ",
-    period: "May 2024 – Aug 2024",
+    period: "May 2024 \u2013 Aug 2024",
+    description:
+      "Modeled demand across 50+ SKUs in Python and SQL, surfacing patterns that cut overstock carrying costs by 20%. Replaced recurring manual reporting with self-serve revenue and order dashboards leadership used to reallocate spend.",
   },
 ];
 
@@ -611,7 +620,7 @@ const fundingGroups: ReadonlyArray<ConceptGroup> = [
       { label: "Static GitHub Pages build", tooltip: "A docs/ dashboard reads CSVs from docs/data/, so regenerating and pushing the exports updates the public page." },
       { label: "Five framed business questions", tooltip: "Each export answers one stated question — annual volume, boom vs contraction, deal size, geography, concentration, capital mix." },
       { label: "Macro context join", tooltip: "Funding activity presented against rates and Nasdaq returns so the cycle is explained, not just plotted." },
-      { label: "Documented attribution", tooltip: "README records that the work was initialized from a public upstream repo and extended with downloader, validation, export, and showcase tooling." },
+      { label: "Selectable US choropleth", tooltip: "State-level capital flows rendered as an interactive choropleth so geography is explorable rather than a static ranking table." },
     ],
   },
 ];
@@ -1441,6 +1450,9 @@ export default function Home() {
                     {exp.period}
                   </span>
                 </div>
+                {exp.description && (
+                  <p className="mt-3 text-black dark:text-gray-400 leading-relaxed">{exp.description}</p>
+                )}
               </motion.div>
             ))}
           </div>
