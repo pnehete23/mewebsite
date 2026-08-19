@@ -89,6 +89,8 @@ import ConceptStack, { type ConceptGroup } from "./components/ConceptStack";
 import CountUp from "./components/CountUp";
 import TiltSpotlight from "./components/TiltSpotlight";
 import SkillNebula from "./components/SkillNebula";
+import SectionReveal from "./components/SectionReveal";
+import HeroGate from "./components/HeroGate";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -866,6 +868,7 @@ export default function Home() {
           className="pointer-events-none absolute inset-0 -z-[1]"
           style={{ y: heroBgY, willChange: "transform" }}
         />
+        <HeroGate>
         <motion.div
           className="max-w-7xl mx-auto w-full space-y-10 md:space-y-14"
           style={{ y: heroY, opacity: heroOpacity, willChange: "transform, opacity" }}
@@ -1109,6 +1112,7 @@ export default function Home() {
             </div>
           </motion.div>
         </motion.div>
+        </HeroGate>
       </section>
 
       {/* ABOUT */}
@@ -1432,27 +1436,22 @@ export default function Home() {
 
       {/* EXPERIENCE */}
       <section id="experience" className="pt-16 pb-20 px-4">
-        <div className="max-w-4xl mx-auto space-y-8">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-5xl font-bold text-black dark:text-white text-center"
-          >
+        <SectionReveal className="max-w-4xl mx-auto space-y-8">
+          {/* Heading rides the section's scrubbed reveal — no second trigger
+              animation on top of it. */}
+          <h2 className="text-4xl md:text-5xl font-bold text-black dark:text-white text-center">
             Experience
-          </motion.h2>
+          </h2>
           {/* One continuous rail of hairline-divided rows — tighter rhythm than
               the old stack of padded cards. Each row lights a left accent bar
               and slides a touch on hover; motion-reduce keeps it flat. */}
           <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-sm divide-y divide-black/[0.07] dark:divide-white/[0.07] overflow-hidden">
             {experiences.map((exp, index) => (
-              <motion.div
+              // Rows carry no entrance animation of their own — the section's
+              // scrubbed reveal brings the whole rail in as one piece, so
+              // there is never a second fade running over the first.
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.45, delay: index * 0.06 }}
                 className="group relative px-5 py-3.5 sm:px-6 transition-colors duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] motion-reduce:transition-none"
               >
                 <span
@@ -1472,10 +1471,10 @@ export default function Home() {
                     {exp.period}
                   </span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </div>
+        </SectionReveal>
       </section>
 
       {/* PROJECTS */}
@@ -1523,27 +1522,24 @@ export default function Home() {
         </div>
 
         <div className="max-w-7xl mx-auto space-y-16 relative">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8 }}
-            className="text-center dark:text-gray-300"
-          >
+          {/* Section rides the shared scrubbed reveal; the heading keeps its
+              clip-path wipe, which animates a different property so the two
+              never fight over the same value. */}
+          <SectionReveal className="text-center dark:text-gray-300">
             <motion.h2
-              initial={{ opacity: 0, clipPath: "inset(0 100% 0 0)" }}
-              whileInView={{ opacity: 1, clipPath: "inset(0 0% 0 0)" }}
+              initial={{ clipPath: "inset(0 100% 0 0)" }}
+              whileInView={{ clipPath: "inset(0 0% 0 0)" }}
               viewport={{ once: true, margin: "-15%" }}
               transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
               className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-slate-900 dark:from-purple-300 via-blue-800 to-slate-900 dark:to-purple-500 bg-clip-text text-transparent mb-6 leading-[1.18] pb-2 inline-block dark:text-gray-300"
-              style={{ willChange: "clip-path, opacity" }}
+              style={{ willChange: "clip-path" }}
             >
               My Projects
             </motion.h2>
             <p className="text-xl text-black dark:text-gray-300 max-w-3xl mx-auto">
               Recent work spanning research prototypes, AI products, ML pipelines, and full-stack apps.
             </p>
-          </motion.div>
+          </SectionReveal>
 
           {/* RESEARCH PROTOTYPE — featured showcase */}
           <motion.div
