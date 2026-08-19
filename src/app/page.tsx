@@ -344,23 +344,39 @@ const courseworkKpis: CourseworkKpi[] = [
 
 const experiences = [
   {
-    title: "Data Science Analyst",
-    company: "Kauffman Hall",
+    title: "Data Science Analyst, Graduate Capstone",
+    company: "Kauffman Hall, Miami, FL",
     period: "Jun 2026 \u2013 Present",
   },
   {
-    title: "Software Development Engineering Intern",
-    company: "Electro-Active Technologies, Knoxville, TN",
-    period: "Apr 2025 \u2013 Jun 2025",
-    description:
-      "Built serverless AWS ingestion on Lambda and S3 behind REST APIs, with schema and quality checks that cut manual validation by 40%. Instrumented live IoT telemetry from hydrogen energy systems and shipped the analysis that improved conversion-cycle efficiency by 15%.",
+    title: "Machine Learning Engineer Intern",
+    company: "6sense, Remote",
+    period: "Aug 2025 \u2013 May 2026",
   },
   {
     title: "Data Analyst",
     company: "YYC Beeswax, Tempe, AZ",
     period: "May 2024 \u2013 Aug 2024",
-    description:
-      "Modeled demand across 50+ SKUs in Python and SQL, surfacing patterns that cut overstock carrying costs by 20%. Replaced recurring manual reporting with self-serve revenue and order dashboards leadership used to reallocate spend.",
+  },
+  {
+    title: "Senior Capstone, B.S. Computer Science",
+    company: "Arizona State University, Tempe, AZ",
+    period: "Aug 2024 \u2013 May 2025",
+  },
+  {
+    title: "Undergraduate Teaching Assistant, CSE 310 & CSE 355",
+    company: "Arizona State University, Tempe, AZ",
+    period: "Aug 2023 \u2013 2025",
+  },
+  {
+    title: "Founder",
+    company: "Stealth",
+    period: "Jan 2023 \u2013 Present",
+  },
+  {
+    title: "Software Engineer Intern",
+    company: "Electro-Active Technologies, Knoxville, TN",
+    period: "May 2022 \u2013 Aug 2022",
   },
 ];
 
