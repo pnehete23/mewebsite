@@ -14,6 +14,7 @@ export type Formation =
   | "wave"
   | "spiral"
   | "cone"
+  | "knot"
   | "cloud";
 
 /** Morph duration in seconds. */
@@ -98,6 +99,22 @@ export function build(kind: Formation, count: number, out: Float32Array) {
         x = Math.cos(u) * d * 2.05 + jitter * 0.18;
         z = Math.sin(u) * d * 2.05 - jitter * 0.18;
         y = (jitter - 0.5) * 0.5 * (1 - d);
+        break;
+      }
+      case "knot": {
+        // Trefoil torus knot (p=2, q=3), swept into a tube. It self-
+        // intersects as it turns, which reads as "interlocking systems" and is
+        // unmistakable next to the helix and the lattice.
+        const u = t * Math.PI * 2;
+        const cx = Math.sin(u) + 2 * Math.sin(2 * u);
+        const cy = Math.cos(u) - 2 * Math.cos(2 * u);
+        const cz = -Math.sin(3 * u);
+        // Give the curve thickness so it reads as a rope, not a wire.
+        const v = GOLDEN * i;
+        const tube = 0.26;
+        x = cx * 0.6 + Math.cos(v) * tube;
+        y = cy * 0.6 + Math.sin(v) * tube;
+        z = cz * 0.6 + Math.cos(v * 1.7) * tube * 0.7;
         break;
       }
       case "cone": {

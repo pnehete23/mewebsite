@@ -24,7 +24,10 @@ type SceneState = {
 
 const state: SceneState = {
   skillsRect: null,
-  skillsFormation: "sphere",
+  // Idle shape is the Data Science track's double helix, not a plain sphere —
+  // the field should land on real content, not a generic circle. It still
+  // drifts: the shader's curl noise and the group rotation run regardless.
+  skillsFormation: "helix",
   skillsColor: "hsl(266, 82%, 62%)",
   skillsVisible: false,
 };

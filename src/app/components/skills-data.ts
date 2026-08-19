@@ -92,7 +92,10 @@ export const TRACKS: Track[] = [
     clusters: [
       {
         name: "Backend & APIs",
-        formation: "sphere",
+        // Trefoil knot — the SWE track's signature shape. It used to resolve to
+        // the same plain sphere the field idled on, so the track had no
+        // identity of its own.
+        formation: "knot",
         tools: ["Python", "FastAPI", "REST APIs", "PostgreSQL", "Kafka", "Redis", "API Testing"],
       },
       {

@@ -89,8 +89,13 @@ export default function SkillNebula() {
   // drawn by Scene over the [data-skills-slot] element below — one canvas for
   // the whole site, because separate contexts crashed mobile.
   useEffect(() => {
-    setScene({ skillsColor: accent(hue, themeTuning(isLight).lightness) });
-  }, [hue, isLight]);
+    setScene({
+      skillsColor: accent(hue, themeTuning(isLight).lightness),
+      // Keep the field on the active track's signature formation, so the
+      // shape and the selected tab can never disagree.
+      skillsFormation: track.clusters[0].formation,
+    });
+  }, [hue, isLight, track]);
 
   const pickTrack = (i: number) => {
     setActive(i);
