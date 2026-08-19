@@ -345,7 +345,7 @@ const courseworkKpis: CourseworkKpi[] = [
 const experiences = [
   {
     title: "Data Science Analyst, Graduate Capstone",
-    company: "Kauffman Hall, Miami, FL",
+    company: "Kaufman Hall, Miami, FL",
     period: "Jun 2026 \u2013 Present",
   },
   {
@@ -1466,9 +1466,6 @@ export default function Home() {
                     {exp.period}
                   </span>
                 </div>
-                {exp.description && (
-                  <p className="mt-3 text-black dark:text-gray-400 leading-relaxed">{exp.description}</p>
-                )}
               </motion.div>
             ))}
           </div>
