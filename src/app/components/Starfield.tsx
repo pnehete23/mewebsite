@@ -107,18 +107,20 @@ const Starfield: React.FC = () => {
         const depthK = s.radius;
         const tw = 0.55 + 0.45 * Math.sin(s.twinklePhase);
         const baseAlpha = (0.22 + depthK * 0.78) * tw * s.born;
-        // In light mode, beef up the ink so stars read as solid pitch-black
-        // dots instead of washed-out gray pixels (sub-pixel cores blend with
-        // white bg). Bigger size + higher alpha + pure-black halo.
-        const sz = s.size * (isLight ? 2.8 : 1.0) * (0.6 + depthK * 1.1);
+        // Light mode used to draw pitch-black cores at 2.8× size, which read as
+        // heavy soot specks on a white page. Light stars are now barely larger
+        // than dark ones and inked in soft slate at low alpha — fine grain, not
+        // dots. Dark mode keeps its bright pinpricks.
+        const sz = s.size * (isLight ? 1.15 : 1.0) * (0.6 + depthK * 1.1);
 
-        const haloR = Math.max(1.4, sz * 8);
+        const haloR = Math.max(1.4, sz * (isLight ? 5.5 : 8));
         const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR);
         if (isLight) {
-          // Pitch-black ink — full alpha at the core, soft fade to transparent
-          halo.addColorStop(0, `rgba(0, 0, 0, ${Math.min(1, baseAlpha * 1.9).toFixed(3)})`);
-          halo.addColorStop(0.4, `rgba(0, 0, 0, ${(baseAlpha * 0.8).toFixed(3)})`);
-          halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          // Slate ink, never black, and capped well under full opacity so the
+          // field sits behind the type instead of competing with it.
+          halo.addColorStop(0, `rgba(51, 65, 85, ${Math.min(0.34, baseAlpha * 0.42).toFixed(3)})`);
+          halo.addColorStop(0.45, `rgba(71, 85, 105, ${(baseAlpha * 0.16).toFixed(3)})`);
+          halo.addColorStop(1, 'rgba(71, 85, 105, 0)');
         } else {
           halo.addColorStop(0, `rgba(255, 255, 255, ${(baseAlpha * 0.95).toFixed(3)})`);
           halo.addColorStop(0.4, `rgba(225, 230, 255, ${(baseAlpha * 0.35).toFixed(3)})`);
@@ -129,12 +131,11 @@ const Starfield: React.FC = () => {
         ctx.arc(x, y, haloR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Solid core — white in dark mode, pitch-black (alpha 1) in light mode
         ctx.fillStyle = isLight
-          ? `rgba(0, 0, 0, 1)`
+          ? `rgba(30, 41, 59, ${Math.min(0.5, baseAlpha * 0.6).toFixed(3)})`
           : `rgba(255, 255, 255, ${Math.min(1, baseAlpha * 1.7).toFixed(3)})`;
         ctx.beginPath();
-        ctx.arc(x, y, isLight ? Math.max(0.9, sz) : sz, 0, Math.PI * 2);
+        ctx.arc(x, y, isLight ? Math.max(0.42, sz * 0.85) : sz, 0, Math.PI * 2);
         ctx.fill();
       }
 

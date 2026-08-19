@@ -1,15 +1,14 @@
 // Intro decision, resolved once and shared.
 //
 // Both the intro overlay and the hero gate need the same answer to "is there
-// an intro to wait for?". They cannot each read sessionStorage on mount: the
-// overlay's effect runs first, so by the time the hero asked, the flag would
-// already be set and the hero would un-gate instantly — losing the overlap
-// that makes the hand-off continuous.
+// an intro to wait for?", and they must agree regardless of which effect runs
+// first — so the decision is computed lazily on first call and cached for the
+// page's lifetime.
 //
-// So the decision is computed lazily on first call and cached for the page's
-// lifetime, and the "seen" flag is only written when the intro *finishes*.
+// Deliberately NOT gated on a session flag: the intro plays on every load.
+// Suppressing it on a return visit made navigating back feel like a different
+// site, which is exactly the break in flow we're avoiding.
 
-const FLAG = "intro_seen_v1";
 export const HANDOFF_EVENT = "intro:handoff";
 
 let decision: boolean | null = null;
@@ -20,7 +19,6 @@ export function willIntroRun() {
   if (typeof window === "undefined") return false;
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const seen = sessionStorage.getItem(FLAG) === "1";
   let webgl = false;
   try {
     const c = document.createElement("canvas");
@@ -29,17 +27,8 @@ export function willIntroRun() {
     webgl = false;
   }
 
-  decision = !reduce && !seen && webgl;
+  decision = !reduce && webgl;
   return decision;
-}
-
-/** Written only once the intro has actually played, so a reload mid-intro replays it. */
-export function markIntroSeen() {
-  try {
-    sessionStorage.setItem(FLAG, "1");
-  } catch {
-    /* private mode — worst case the intro plays again */
-  }
 }
 
 export function fireHandoff() {

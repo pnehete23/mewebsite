@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { useTheme } from 'next-themes';
 
 interface FluidCanvasProps {
@@ -70,6 +70,11 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
   useEffect(() => {
     isLightRef.current = resolvedTheme === 'light';
   }, [resolvedTheme]);
+  // Mounted guard: the server has no theme, so render the dark variant first
+  // and swap after hydration rather than risking a mismatch.
+  const [themeReady, setThemeReady] = useState(false);
+  useEffect(() => setThemeReady(true), []);
+  const isLight = themeReady && resolvedTheme === 'light';
   const pointersRef = useRef<Pointer[]>([
     {
       id: -1,
@@ -1178,12 +1183,17 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     width: '8px',
     height: '8px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    // A white dot with a white glow was invisible on a white page. Light mode
+    // gets an indigo core and a tighter, cooler halo; dark keeps the original.
+    backgroundColor: isLight
+      ? 'rgba(49, 46, 129, 0.9)'
+      : 'rgba(255, 255, 255, 0.95)',
     pointerEvents: 'none',
     willChange: 'transform',
     transform: 'translate3d(-100px, -100px, 0) translate(-50%, -50%)',
-    boxShadow:
-      '0 0 8px 2px rgba(255,255,255,0.85), 0 0 18px 6px rgba(236,72,153,0.55), 0 0 32px 12px rgba(168,85,247,0.35), 0 0 60px 22px rgba(59,130,246,0.18)',
+    boxShadow: isLight
+      ? '0 0 6px 1px rgba(49,46,129,0.35), 0 0 14px 5px rgba(147,51,234,0.22), 0 0 26px 10px rgba(37,99,235,0.12)'
+      : '0 0 8px 2px rgba(255,255,255,0.85), 0 0 18px 6px rgba(236,72,153,0.55), 0 0 32px 12px rgba(168,85,247,0.35), 0 0 60px 22px rgba(59,130,246,0.18)',
     zIndex: 9999,
   }}
 />
@@ -1201,37 +1211,11 @@ const FluidCanvas: React.FC<FluidCanvasProps> = ({
     }
   }
 
-  body {
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #000;
-    cursor: none;
-  }
-
-  body h1 {
-    color: #fff;
-    font-family: 'Arial', sans-serif;
-    font-size: 3rem;
-    text-align: center;
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8); // Match neon cyan
-    zIndex: 10;
-    pointerEvents: none;
-    animation: fadeIn 2s ease-in-out;
-  }
-
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    100% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
+  /* NOTE: a body rule forcing background-color #000 and cursor:none used to
+     live here. styled-jsx scopes selectors to this component, so it never
+     applied — dead weight that also read as "the page is forced black". Body
+     background is owned by the Tailwind utilities in layout.tsx, which are
+     already theme-aware. Removed rather than left to mislead. */
 `}</style>
     </>
   );

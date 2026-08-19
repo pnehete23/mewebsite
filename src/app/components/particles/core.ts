@@ -211,6 +211,8 @@ export const VERT = /* glsl */ `
 export const FRAG = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uHot;
+  uniform float uAlpha;
+  uniform float uLight;
   varying float vAlpha;
   varying float vPush;
 
@@ -218,9 +220,25 @@ export const FRAG = /* glsl */ `
     // Soft radial sprite — no texture needed.
     float d = distance(gl_PointCoord, vec2(0.5));
     float a = smoothstep(0.5, 0.0, d);
-    a = pow(a, 2.0);
+    // On white, additive blending is unavailable and a wide soft halo turns to
+    // haze, so light mode tightens the falloff into a crisper core.
+    a = pow(a, mix(2.0, 3.2, uLight));
     vec3 c = mix(uColor, uHot, clamp(vPush * 1.4, 0.0, 1.0));
-    gl_FragColor = vec4(c, a * vAlpha);
+    gl_FragColor = vec4(c, a * vAlpha * uAlpha);
     #include <colorspace_fragment>
   }
 `;
+
+/** Per-theme render settings for any field using the shared shader. */
+export function themeTuning(light: boolean) {
+  return {
+    // Additive is what makes the dark field glow; on white it only washes out,
+    // so light mode composites normally with darker, more saturated ink.
+    additive: !light,
+    alpha: light ? 0.85 : 1,
+    size: light ? 22 : 26,
+    hot: light ? "#1e1b4b" : "#ffffff",
+    /** Lightness for the hsl accent driving the field. */
+    lightness: light ? 42 : 62,
+  };
+}

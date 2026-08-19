@@ -14,7 +14,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EASE } from "../lib/scroll";
-import { fireHandoff, HANDOFF_EVENT, markIntroSeen, willIntroRun } from "../lib/intro";
+import { fireHandoff, HANDOFF_EVENT, willIntroRun } from "../lib/intro";
 
 const IntroField = dynamic(() => import("./IntroField"), { ssr: false });
 
@@ -78,7 +78,6 @@ export default function Intro() {
   const done = useCallback(() => {
     if (fired.current.done) return;
     fired.current.done = true;
-    markIntroSeen();
     setRun(false);
   }, []);
 

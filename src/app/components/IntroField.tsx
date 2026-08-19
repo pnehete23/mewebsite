@@ -17,7 +17,8 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { build, seeds, FRAG, VERT } from "./particles/core";
+import { useTheme } from "next-themes";
+import { build, seeds, themeTuning, FRAG, VERT } from "./particles/core";
 
 const T_GATHER = 0.95;
 const T_HOLD = 1.55;
@@ -27,14 +28,17 @@ const T_END = 2.6;
 function IntroSwarm({
   count,
   span,
+  light,
   onHandoff,
   onDone,
 }: {
   count: number;
   span: number;
+  light: boolean;
   onHandoff: () => void;
   onDone: () => void;
 }) {
+  const tune = themeTuning(light);
   const group = useRef<THREE.Group>(null);
   const clock = useRef(0);
   const firedHandoff = useRef(false);
@@ -54,15 +58,20 @@ function IntroSwarm({
     () => ({
       uTime: { value: 0 },
       uProgress: { value: 0 },
-      uSize: { value: 30 },
+      uSize: { value: light ? 26 : 30 },
       uDpr: { value: 1 },
       uRadius: { value: 1.3 },
       uStrength: { value: 0.5 },
       uDissipate: { value: 0 },
+      uAlpha: { value: tune.alpha },
+      uLight: { value: light ? 1 : 0 },
       uPointer: { value: new THREE.Vector3(999, 999, 0) },
-      uColor: { value: new THREE.Color("hsla(266, 82%, 64%, 1)") },
-      uHot: { value: new THREE.Color("#ffe9a8") },
+      // Deep indigo on white, luminous violet on black.
+      uColor: { value: new THREE.Color(light ? "hsl(258, 68%, 42%)" : "hsl(266, 82%, 64%)") },
+      uHot: { value: new THREE.Color(light ? "#b8860b" : "#ffe9a8") },
     }),
+    // Theme is fixed for the ~2.6s the intro lives; no need to re-tune mid-run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -120,7 +129,7 @@ function IntroSwarm({
           fragmentShader={FRAG}
           transparent
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={tune.additive ? THREE.AdditiveBlending : THREE.NormalBlending}
         />
       </points>
     </group>
@@ -138,6 +147,7 @@ export default function IntroField({
   onHandoff: () => void;
   onDone: () => void;
 }) {
+  const { resolvedTheme } = useTheme();
   return (
     <Canvas
       dpr={[1, 1.6]}
@@ -145,7 +155,13 @@ export default function IntroField({
       gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
       style={{ pointerEvents: "none" }}
     >
-      <IntroSwarm count={count} span={span} onHandoff={onHandoff} onDone={onDone} />
+      <IntroSwarm
+        count={count}
+        span={span}
+        light={resolvedTheme === "light"}
+        onHandoff={onHandoff}
+        onDone={onDone}
+      />
     </Canvas>
   );
 }

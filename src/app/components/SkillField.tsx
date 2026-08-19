@@ -7,7 +7,17 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { build, easeFor, seeds, FRAG, MORPH_S, VERT, type Formation } from "./particles/core";
+import { useTheme } from "next-themes";
+import {
+  build,
+  easeFor,
+  seeds,
+  themeTuning,
+  FRAG,
+  MORPH_S,
+  VERT,
+  type Formation,
+} from "./particles/core";
 
 export type { Formation };
 
@@ -15,11 +25,14 @@ function Swarm({
   count,
   formation,
   color,
+  light,
 }: {
   count: number;
   formation: Formation;
   color: string;
+  light: boolean;
 }) {
+  const tune = themeTuning(light);
   const geom = useRef<THREE.BufferGeometry>(null);
   const group = useRef<THREE.Group>(null);
   const progress = useRef(1);
@@ -38,14 +51,16 @@ function Swarm({
     () => ({
       uTime: { value: 0 },
       uProgress: { value: 1 },
-      uSize: { value: 26 },
+      uSize: { value: tune.size },
       uDpr: { value: 1 },
       uRadius: { value: 1.1 },
       uStrength: { value: 0.42 },
       uDissipate: { value: 0 },
+      uAlpha: { value: tune.alpha },
+      uLight: { value: light ? 1 : 0 },
       uPointer: { value: new THREE.Vector3(999, 999, 0) },
       uColor: { value: new THREE.Color(color) },
-      uHot: { value: new THREE.Color("#ffffff") },
+      uHot: { value: new THREE.Color(tune.hot) },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -78,6 +93,12 @@ function Swarm({
     target.set(color);
   }, [color, target]);
 
+  // Theme flips are eased, not cut: uAlpha/uSize/uLight are lerped in the frame
+  // loop below and uColor already eases, so toggling light/dark cross-fades.
+  const themeTargets = useRef(tune);
+  themeTargets.current = tune;
+  const hotTarget = useMemo(() => new THREE.Color(tune.hot), [tune.hot]);
+
   useFrame((state, dt) => {
     const d = Math.min(dt, 0.05);
     if (progress.current < 1) progress.current = Math.min(1, progress.current + d / MORPH_S);
@@ -86,6 +107,14 @@ function Swarm({
     u.uProgress.value = progress.current;
     u.uDpr.value = state.gl.getPixelRatio();
     (u.uColor.value as THREE.Color).lerp(target, 1 - Math.pow(0.002, d));
+
+    // Ease every theme-dependent uniform toward its target.
+    const k = 1 - Math.pow(0.01, d);
+    const tt = themeTargets.current;
+    u.uAlpha.value += (tt.alpha - u.uAlpha.value) * k;
+    u.uSize.value += (tt.size - u.uSize.value) * k;
+    u.uLight.value += ((tt.additive ? 0 : 1) - u.uLight.value) * k;
+    (u.uHot.value as THREE.Color).lerp(hotTarget, k);
     (u.uPointer.value as THREE.Vector3).set(
       (pointer.x * viewport.width) / 2,
       (pointer.y * viewport.height) / 2,
@@ -107,13 +136,16 @@ function Swarm({
           <bufferAttribute attach="attributes-aDelay" args={[delays, 1]} />
           <bufferAttribute attach="attributes-aScale" args={[scales, 1]} />
         </bufferGeometry>
+        {/* Blending cannot be tweened, so the material is rebuilt on theme
+            change — the eased uniforms cover the swap. */}
         <shaderMaterial
+          key={tune.additive ? "add" : "normal"}
           uniforms={uniforms}
           vertexShader={VERT}
           fragmentShader={FRAG}
           transparent
           depthWrite={false}
-          blending={THREE.AdditiveBlending}
+          blending={tune.additive ? THREE.AdditiveBlending : THREE.NormalBlending}
         />
       </points>
     </group>
@@ -132,6 +164,8 @@ export default function SkillField({
   active: boolean;
   count: number;
 }) {
+  const { resolvedTheme } = useTheme();
+  const light = resolvedTheme === "light";
   return (
     <Canvas
       frameloop={active ? "always" : "never"}
@@ -140,7 +174,7 @@ export default function SkillField({
       gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
       style={{ pointerEvents: "none" }}
     >
-      <Swarm count={count} formation={formation} color={color} />
+      <Swarm count={count} formation={formation} color={color} light={light} />
     </Canvas>
   );
 }

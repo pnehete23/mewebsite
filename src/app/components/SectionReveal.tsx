@@ -14,22 +14,17 @@
 import { motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { subscribeScroll } from "../lib/scroll";
-import { announceStars } from "../lib/stars";
 
 export default function SectionReveal({
   children,
   className,
-  /** Emit a golden-star arrival when this section's text lands. */
-  stars = true,
 }: {
   children: React.ReactNode;
   className?: string;
-  stars?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const p = useMotionValue(0);
   const reduce = useReducedMotion();
-  const fired = useRef(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => setReady(true), []);
@@ -50,16 +45,7 @@ export default function SectionReveal({
       const start = vh * 1.02;
       const end = vh * 0.62;
       const raw = (start - r.top) / (start - end);
-      const clamped = Math.min(1, Math.max(0, raw));
-      p.set(clamped);
-
-      if (stars && !fired.current && clamped > 0.55) {
-        fired.current = true;
-        announceStars(
-          (r.left + r.width / 2) / window.innerWidth,
-          (r.top + r.height * 0.3) / vh,
-        );
-      }
+      p.set(Math.min(1, Math.max(0, raw)));
     };
 
     measure();
@@ -69,7 +55,7 @@ export default function SectionReveal({
       unsub();
       window.removeEventListener("resize", measure);
     };
-  }, [p, reduce, stars]);
+  }, [p, reduce]);
 
   const opacity = useTransform(p, [0, 0.75], [0, 1]);
   const y = useTransform(p, [0, 1], [46, 0]);

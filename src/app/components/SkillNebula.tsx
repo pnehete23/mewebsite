@@ -12,8 +12,10 @@
 
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Formation } from "./SkillField";
+import { themeTuning } from "./particles/core";
 
 export type SkillCategory = {
   axis: string;
@@ -68,6 +70,8 @@ export default function SkillNebula({ data }: { data: SkillCategory[] }) {
   const host = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const webgl = useWebGL();
+  const { resolvedTheme } = useTheme();
+  const isLight = mounted && resolvedTheme === "light";
 
   useEffect(() => setMounted(true), []);
 
@@ -151,7 +155,8 @@ export default function SkillNebula({ data }: { data: SkillCategory[] }) {
           {heavyOk && inView && (
             <SkillField
               formation={FORMATIONS[active % FORMATIONS.length]}
-              color={accent(h, 62)}
+              // Darker, more saturated ink on white; luminous on black.
+              color={accent(h, themeTuning(isLight).lightness)}
               active={inView}
               count={count}
             />
