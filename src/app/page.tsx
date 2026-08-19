@@ -162,52 +162,6 @@ const skills = [
   { name: "C++ / Java", level: 88 },
 ];
 
-// Skill radar — 8-axis spider chart organized by tech-stack role. Tools listed
-// under each axis are the actual stack used across GitHub projects
-// (CareerCraft AI, trading dashboards, this Next.js portfolio, ML pipelines)
-// + Northwestern MSDS coursework (430, 401, 420, 422, 460, 453, 485).
-const skillRadar: { axis: string; value: number; tools: string[] }[] = [
-  {
-    axis: "Frontend",
-    value: 80,
-    tools: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Framer Motion", "HTML / CSS"],
-  },
-  {
-    axis: "Backend",
-    value: 85,
-    tools: ["Node.js", "FastAPI", "Flask", "REST APIs", "Razorpay / Stripe", "Auth & Webhooks"],
-  },
-  {
-    axis: "Database",
-    value: 92,
-    tools: ["PostgreSQL", "Supabase", "Elasticsearch", "Milvus (Vector)", "Neo4j (Graph)", "MongoDB"],
-  },
-  {
-    axis: "ML / Modeling",
-    value: 90,
-    tools: ["scikit-learn", "XGBoost", "Random Forest", "PyTorch", "TensorFlow / Keras", "Cross-Validation"],
-  },
-  {
-    axis: "LLM / NLP",
-    value: 84,
-    tools: ["Transformers", "RAG", "Prompt Engineering", "Fine-tuning", "Word2Vec", "LDA Topic Modeling"],
-  },
-  {
-    axis: "Data Engineering",
-    value: 88,
-    tools: ["pandas", "NumPy", "DuckDB", "ETL Pipelines", "SQL", "Jupyter"],
-  },
-  {
-    axis: "Cloud / DevOps",
-    value: 82,
-    tools: ["AWS (S3, SageMaker)", "Docker", "Vercel", "Railway", "GitHub Actions", "Git"],
-  },
-  {
-    axis: "Visualization",
-    value: 84,
-    tools: ["Plotly", "matplotlib", "seaborn", "Tableau", "ggplot2", "Streamlit"],
-  },
-];
 
 type CourseworkKpi = {
   code: string;
@@ -346,14 +300,19 @@ const courseworkKpis: CourseworkKpi[] = [
 
 const experiences = [
   {
-    title: "Data Science Analyst, Graduate Capstone",
-    company: "Kaufman Hall, Miami, FL",
-    period: "Jun 2026 \u2013 Present",
+    title: "Machine Learning Engineer",
+    company: "Kaufman Hall, Miami, FL (Remote)",
+    period: "Jun 2026 \u2013 Aug 2026",
+  },
+  {
+    title: "ML Engineer, Part-time",
+    company: "6sense, Remote / Bengaluru, India",
+    period: "Aug 2025 \u2013 May 2026",
   },
   {
     title: "Machine Learning Engineer Intern",
-    company: "6sense, Remote",
-    period: "Aug 2025 \u2013 May 2026",
+    company: "6sense, Remote / Bengaluru, India",
+    period: "Jul 2024 \u2013 Jul 2025",
   },
   {
     title: "ASU Senior Capstone — Data Analyst",
@@ -363,7 +322,7 @@ const experiences = [
   {
     title: "Undergraduate Teaching Assistant, CSE 310 & CSE 355",
     company: "Arizona State University, Tempe, AZ",
-    period: "Aug 2023 \u2013 2025",
+    period: "Aug 2023 \u2013 Aug 2024",
   },
   {
     title: "Founder",
@@ -372,7 +331,7 @@ const experiences = [
   },
   {
     title: "Software Engineer Intern",
-    company: "Electro-Active Technologies, Knoxville, TN",
+    company: "Electro-Active Technologies Inc., Tennessee, United States",
     period: "May 2022 \u2013 Aug 2022",
   },
 ];
@@ -1226,7 +1185,7 @@ export default function Home() {
               </div>
 
               <div>
-                <SkillNebula data={skillRadar} />
+                <SkillNebula />
               </div>
 
               {/* Live GitHub KPI strip */}
