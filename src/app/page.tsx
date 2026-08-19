@@ -90,7 +90,6 @@ import CountUp from "./components/CountUp";
 import TiltSpotlight from "./components/TiltSpotlight";
 import SkillNebula from "./components/SkillNebula";
 import SectionReveal from "./components/SectionReveal";
-import HeroGate from "./components/HeroGate";
 
 function getTechIcon(name: string): IconType | null {
   const n = name.toLowerCase();
@@ -827,7 +826,6 @@ export default function Home() {
           className="pointer-events-none absolute inset-0 -z-[1]"
           style={{ y: heroBgY, willChange: "transform" }}
         />
-        <HeroGate>
         <motion.div
           className="max-w-7xl mx-auto w-full space-y-10 md:space-y-14"
           style={{ y: heroY, opacity: heroOpacity, willChange: "transform, opacity" }}
@@ -959,9 +957,7 @@ export default function Home() {
               transition={{ duration: 1, delay: 0.2 }}
               className="lg:col-span-4 relative flex items-center justify-center order-1 lg:order-2"
             >
-              {/* data-star-anchor: the shared WebGL scene measures this box
-                  each frame and orbits the golden stars around it. */}
-              <div data-star-anchor className="relative w-48 md:w-64 aspect-square">
+              <div className="relative w-48 md:w-64">
                 {/* Outer NU purple radiant glow */}
                 <motion.div
                   className="absolute inset-0 -m-14 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.55),rgba(126,34,206,0.3)_55%,transparent_75%)] rounded-full blur-3xl"
@@ -1073,7 +1069,6 @@ export default function Home() {
             </div>
           </motion.div>
         </motion.div>
-        </HeroGate>
       </section>
 
       {/* ABOUT */}

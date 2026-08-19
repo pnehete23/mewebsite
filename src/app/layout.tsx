@@ -9,7 +9,6 @@ import Starfield from './components/Starfield';
 import SmoothScroll from './components/SmoothScroll';
 import ScrollProgress from './components/ScrollProgress';
 import Providers from './providers';
-import Intro from './components/Intro';
 import SceneLayer from './components/SceneLayer';
 import { Analytics } from "@vercel/analytics/next"
 
@@ -76,13 +75,10 @@ export default function RootLayout({
           {/* Fluid Background Canvas - transparent, sits over starfield */}
           <FluidCanvas />
 
-          {/* The site's ONE WebGL canvas: golden stars, intro swarm, skills
-              field. Separate contexts per effect exhausted the browser's
+          {/* The site's ONE WebGL canvas (skills particle field). Keep it
+              single — separate contexts per effect exhausted the browser's
               budget and crashed mobile. */}
           <SceneLayer />
-
-          {/* Intro backdrop + scroll lock; the swarm is drawn by SceneLayer */}
-          <Intro />
 
           {/* Main App Container */}
           <div className="relative z-10 min-h-screen flex flex-col">

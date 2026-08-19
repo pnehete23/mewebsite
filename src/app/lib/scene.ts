@@ -15,23 +15,18 @@ import type { Formation } from "../components/particles/core";
 export type Rect = { x: number; y: number; w: number; h: number } | null;
 
 type SceneState = {
-  /** Viewport rect of the hero portrait — stars orbit this. */
-  anchor: Rect;
   /** Viewport rect of the skills canvas slot. */
   skillsRect: Rect;
   skillsFormation: Formation;
   skillsColor: string;
   skillsVisible: boolean;
-  introRunning: boolean;
 };
 
 const state: SceneState = {
-  anchor: null,
   skillsRect: null,
   skillsFormation: "sphere",
   skillsColor: "hsl(266, 82%, 62%)",
   skillsVisible: false,
-  introRunning: false,
 };
 
 const subs = new Set<() => void>();
