@@ -895,9 +895,10 @@ export default function Home() {
                   </span>
                 </a>
                 <a
-                  href="/pnu04%20(1).pdf"
+                  href="/Prathamesh-Nehete-Resume.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
+                  download="Prathamesh-Nehete-Resume.pdf"
                   className="group px-7 py-3 bg-black/[0.04] dark:bg-white/5 border border-black/15 dark:border-white/15 backdrop-blur-sm rounded-full text-black dark:text-white font-medium hover:bg-black/[0.07] dark:hover:bg-white/10 hover:border-black/20 dark:hover:border-white/30 transition-all duration-300 inline-flex items-center gap-2"
                 >
                   Resume
