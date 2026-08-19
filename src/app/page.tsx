@@ -359,11 +359,6 @@ const experiences = [
     period: "May 2024 \u2013 Aug 2024",
   },
   {
-    title: "Senior Capstone, B.S. Computer Science",
-    company: "Arizona State University, Tempe, AZ",
-    period: "Aug 2024 \u2013 May 2025",
-  },
-  {
     title: "Undergraduate Teaching Assistant, CSE 310 & CSE 355",
     company: "Arizona State University, Tempe, AZ",
     period: "Aug 2023 \u2013 2025",
@@ -1437,7 +1432,7 @@ export default function Home() {
 
       {/* EXPERIENCE */}
       <section id="experience" className="pt-16 pb-20 px-4">
-        <div className="max-w-5xl mx-auto space-y-10">
+        <div className="max-w-4xl mx-auto space-y-8">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1447,22 +1442,33 @@ export default function Home() {
           >
             Experience
           </motion.h2>
-          <div className="space-y-6">
+          {/* One continuous rail of hairline-divided rows — tighter rhythm than
+              the old stack of padded cards. Each row lights a left accent bar
+              and slides a touch on hover; motion-reduce keeps it flat. */}
+          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-black/[0.03] dark:bg-white/[0.04] backdrop-blur-sm divide-y divide-black/[0.07] dark:divide-white/[0.07] overflow-hidden">
             {experiences.map((exp, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-black/[0.04] dark:bg-white/5 backdrop-blur-sm border border-black/10 dark:border-white/10 rounded-xl p-6"
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.45, delay: index * 0.06 }}
+                className="group relative px-5 py-3.5 sm:px-6 transition-colors duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.05] motion-reduce:transition-none"
               >
-                <div className="flex flex-col md:flex-row md:items-baseline md:justify-between md:gap-6">
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute left-0 top-0 h-full w-[2px] origin-top scale-y-0 bg-gradient-to-b from-blue-600 to-purple-500 transition-transform duration-300 group-hover:scale-y-100 dark:from-purple-400 dark:to-cyan-300 motion-reduce:transition-none motion-reduce:group-hover:scale-y-100"
+                />
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 transition-transform duration-300 group-hover:translate-x-1.5 motion-reduce:transform-none motion-reduce:transition-none">
                   <div className="min-w-0">
-                    <h3 className="text-xl font-semibold text-black dark:text-white">{exp.title}</h3>
-                    <h4 className="text-lg text-black dark:text-gray-300 mt-1">{exp.company}</h4>
+                    <h3 className="text-base sm:text-lg font-semibold leading-snug text-black dark:text-white">
+                      {exp.title}
+                    </h3>
+                    <h4 className="text-sm text-black/70 dark:text-gray-400 leading-snug">
+                      {exp.company}
+                    </h4>
                   </div>
-                  <span className="mt-2 md:mt-0 shrink-0 whitespace-nowrap tabular-nums md:text-right text-sm md:text-base text-black font-medium dark:text-gray-300">
+                  <span className="shrink-0 whitespace-nowrap tabular-nums font-mono text-xs sm:text-[13px] text-black/60 dark:text-gray-400 sm:text-right">
                     {exp.period}
                   </span>
                 </div>
