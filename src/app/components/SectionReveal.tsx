@@ -49,13 +49,51 @@ export default function SectionReveal({
     };
 
     measure();
+
+    // Measured on rAF while the section is anywhere near the viewport, rather
+    // than only on Lenis's scroll event. Subscribing to Lenis alone left
+    // sections frozen at opacity 0 whenever the scroll came from anywhere else
+    // — anchor links, scrollTo, keyboard, restored positions — which is why
+    // reveals appeared broken on the live site. The observer keeps the loop
+    // off for every section that is not close to view.
+    let raf = 0;
+    let running = false;
+    const loop = () => {
+      measure();
+      raf = requestAnimationFrame(loop);
+    };
+    const start = () => {
+      if (running) return;
+      running = true;
+      raf = requestAnimationFrame(loop);
+    };
+    const stop = () => {
+      if (!running) return;
+      running = false;
+      cancelAnimationFrame(raf);
+      measure();
+    };
+
+    const io = new IntersectionObserver(
+      ([e]) => (e.isIntersecting ? start() : stop()),
+      { rootMargin: "300px 0px" },
+    );
+    io.observe(el);
+
     const unsub = subscribeScroll(measure);
     window.addEventListener("resize", measure);
     return () => {
+      io.disconnect();
+      stop();
       unsub();
       window.removeEventListener("resize", measure);
     };
-  }, [p, reduce]);
+    // `ready` MUST be here: before hydration this renders a plain div with no
+    // ref, so the first run finds host.current === null and bails. Without
+    // `ready` in the deps the effect never re-ran once the real element
+    // existed, the observer was never attached, and every wrapped section sat
+    // at opacity 0 forever — the reveals looked dead on the live site.
+  }, [p, reduce, ready]);
 
   const opacity = useTransform(p, [0, 0.75], [0, 1]);
   const y = useTransform(p, [0, 1], [46, 0]);

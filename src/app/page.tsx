@@ -959,7 +959,9 @@ export default function Home() {
               transition={{ duration: 1, delay: 0.2 }}
               className="lg:col-span-4 relative flex items-center justify-center order-1 lg:order-2"
             >
-              <div className="relative w-48 md:w-64">
+              {/* data-star-anchor: the shared WebGL scene measures this box
+                  each frame and orbits the golden stars around it. */}
+              <div data-star-anchor className="relative w-48 md:w-64 aspect-square">
                 {/* Outer NU purple radiant glow */}
                 <motion.div
                   className="absolute inset-0 -m-14 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.55),rgba(126,34,206,0.3)_55%,transparent_75%)] rounded-full blur-3xl"
@@ -2943,7 +2945,7 @@ export default function Home() {
                               {tooltip && (
                                 <span
                                   role="tooltip"
-                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[15rem] rounded-md bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-500/45 dark:border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.22)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
+                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[min(15rem,calc(100vw-2.5rem))] rounded-md bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-500/45 dark:border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.22)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
                                 >
                                   {tooltip}
                                 </span>

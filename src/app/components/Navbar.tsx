@@ -112,7 +112,7 @@ const Navbar: React.FC = () => {
             onClick={toggleTheme}
             aria-label={`Switch to ${isLight ? "dark" : "light"} mode`}
             title={`Switch to ${isLight ? "dark" : "light"} mode`}
-            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-black/[0.04] hover:bg-black/[0.08] hover:border-black/30 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/30 transition-colors duration-300 text-black dark:text-purple-100"
+            className="relative flex h-11 w-11 items-center justify-center rounded-full border border-black/15 bg-black/[0.04] hover:bg-black/[0.08] hover:border-black/30 dark:border-white/15 dark:bg-white/5 dark:hover:bg-white/10 dark:hover:border-white/30 transition-colors duration-300 text-black dark:text-purple-100"
           >
             {/* Sun (visible in light mode) */}
             <FaSun
@@ -130,7 +130,7 @@ const Navbar: React.FC = () => {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden text-black dark:text-white text-lg leading-none"
+            className="md:hidden flex h-11 w-11 items-center justify-center text-black dark:text-white text-xl leading-none"
             aria-label="Toggle menu"
             aria-expanded={isOpen}
           >

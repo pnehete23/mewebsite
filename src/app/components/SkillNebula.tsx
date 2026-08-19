@@ -14,30 +14,15 @@
 // viewport; reduced motion / no WebGL renders the identical content with no
 // canvas at all, so the keywords and proof points are never motion-dependent.
 
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 import { themeTuning } from "./particles/core";
+import { setScene } from "../lib/scene";
 import { TRACKS, type Cluster } from "./skills-data";
 import { TOOL_LOGOS } from "./ToolLogos";
 
-const SkillField = dynamic(() => import("./SkillField"), { ssr: false });
-
 const accent = (h: number, l = 58, a = 1, s = 82) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
-
-function useWebGL() {
-  const [ok, setOk] = useState<boolean | null>(null);
-  useEffect(() => {
-    try {
-      const c = document.createElement("canvas");
-      setOk(!!(window.WebGLRenderingContext && (c.getContext("webgl2") || c.getContext("webgl"))));
-    } catch {
-      setOk(false);
-    }
-  }, []);
-  return ok;
-}
 
 function ToolChip({ tool, hue, light }: { tool: string; hue: number; light: boolean }) {
   const Logo = TOOL_LOGOS[tool];
@@ -90,47 +75,36 @@ function ClusterBlock({
 
 export default function SkillNebula() {
   const [active, setActive] = useState(0);
-  const [cluster, setCluster] = useState(0);
-  const [inView, setInView] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [count, setCount] = useState(9000);
   const host = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotion();
-  const webgl = useWebGL();
   const { resolvedTheme } = useTheme();
   const isLight = mounted && resolvedTheme === "light";
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    const narrow = window.matchMedia("(max-width: 767px)").matches;
-    const cores = navigator.hardwareConcurrency ?? 8;
-    setCount(narrow ? 3000 : cores <= 4 ? 5000 : 9000);
-  }, []);
-
-  useEffect(() => {
-    const el = host.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), {
-      rootMargin: "200px 0px",
-    });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
   const track = TRACKS[active];
   const hue = track.hue;
-  const heavyOk = mounted && !reduce && webgl === true;
+
+  // Publish the active track's colour to the shared scene. The field itself is
+  // drawn by Scene over the [data-skills-slot] element below — one canvas for
+  // the whole site, because separate contexts crashed mobile.
+  useEffect(() => {
+    setScene({ skillsColor: accent(hue, themeTuning(isLight).lightness) });
+  }, [hue, isLight]);
 
   const pickTrack = (i: number) => {
     setActive(i);
-    setCluster(0);
+    setScene({ skillsFormation: TRACKS[i].clusters[0].formation });
   };
+
+  const focusCluster = (c: Cluster) => setScene({ skillsFormation: c.formation });
 
   return (
     <div ref={host} className="relative space-y-5">
-      {/* ── Role-family selector ─────────────────────────────────────────── */}
-      <div className="flex flex-wrap justify-center gap-2">
+      {/* ── Role-family selector ─────────────────────────────────────────
+          Mobile: full-width stacked buttons at 48px min height — three long
+          labels can't share a row at 360px without wrapping into mush. */}
+      <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:justify-center">
         {TRACKS.map((t, i) => {
           const on = i === active;
           return (
@@ -139,7 +113,7 @@ export default function SkillNebula() {
               type="button"
               onClick={() => pickTrack(i)}
               aria-pressed={on}
-              className="relative rounded-full px-4 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-purple-400/60"
+              className="relative min-h-[48px] w-full rounded-full px-4 py-2.5 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-purple-400/60 sm:w-auto"
               style={{ color: on ? accent(t.hue, isLight ? 38 : 68) : undefined }}
             >
               {on && (
@@ -164,52 +138,39 @@ export default function SkillNebula() {
         })}
       </div>
 
-      {/* ── Particle field, with the track framing laid over it ──────────── */}
-      {heavyOk && (
-        <div className="relative h-[260px] w-full sm:h-[320px]">
-          <div className="absolute inset-0">
-            {inView && (
-              <SkillField
-                formation={track.clusters[cluster]?.formation ?? "sphere"}
-                color={accent(hue, themeTuning(isLight).lightness)}
-                active={inView}
-                count={count}
-              />
-            )}
-          </div>
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4 pb-1 text-center">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={active}
-                initial={{ opacity: 0, y: 8, filter: "blur(5px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -6, filter: "blur(5px)" }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="mx-auto max-w-2xl text-sm leading-relaxed text-black/75 dark:text-white/70"
-              >
-                {track.blurb}
-              </motion.p>
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
+      {/* ── Particle field slot ──────────────────────────────────────────
+          Just a measured box: Scene parks the shared swarm over it. Shorter on
+          phones so the content below stays above the fold. If WebGL is
+          unavailable the box is simply empty and the blurb still reads. */}
+      <div
+        data-skills-slot
+        className="relative h-[170px] w-full sm:h-[260px] lg:h-[320px]"
+      />
 
-      {/* Reduced motion / no WebGL: keep the framing line, drop the canvas. */}
-      {mounted && !heavyOk && (
-        <p className="mx-auto max-w-2xl text-center text-sm leading-relaxed text-black/75 dark:text-white/70">
+      {/* Blurb sits BELOW the particle stage, not over it — overlaid on a
+          170px phone slot it landed on top of the swarm and neither read. */}
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={active}
+          initial={{ opacity: 0, y: 8, filter: "blur(5px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: -6, filter: "blur(5px)" }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mx-auto max-w-2xl text-center text-[13px] leading-relaxed text-black/75 dark:text-white/70 sm:text-sm"
+        >
           {track.blurb}
-        </p>
-      )}
+        </motion.p>
+      </AnimatePresence>
 
       {/* ── Clusters — every tool visible, no second click ───────────────── */}
       <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {track.clusters.map((c, i) => (
+        {track.clusters.map((c) => (
           <ClusterBlock
             key={c.name}
             cluster={c}
             hue={hue}
             light={isLight}
-            onFocus={() => setCluster(i)}
+            onFocus={() => focusCluster(c)}
           />
         ))}
       </div>

@@ -50,15 +50,15 @@ const sizeClasses: Record<
 > = {
   sm: {
     chip: "px-2.5 py-1 text-[11px]",
-    tooltip: "w-60 max-w-[15rem] px-3 py-2 text-[10.5px]",
+    tooltip: "w-60 max-w-[min(15rem,calc(100vw-2.5rem))] px-3 py-2 text-[10.5px]",
   },
   md: {
     chip: "px-3 py-1.5 text-[12.5px]",
-    tooltip: "w-64 max-w-[16rem] px-3.5 py-2.5 text-[11.5px]",
+    tooltip: "w-64 max-w-[min(16rem,calc(100vw-2.5rem))] px-3.5 py-2.5 text-[11.5px]",
   },
   lg: {
     chip: "px-3.5 py-2 text-[13.5px]",
-    tooltip: "w-72 max-w-[18rem] px-4 py-3 text-[12px]",
+    tooltip: "w-72 max-w-[min(18rem,calc(100vw-2.5rem))] px-4 py-3 text-[12px]",
   },
 };
 
