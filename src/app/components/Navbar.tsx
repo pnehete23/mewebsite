@@ -140,7 +140,7 @@ const Navbar: React.FC = () => {
       </div>
 
       {isOpen && (
-        <div className="md:hidden mt-2 bg-white/80 dark:bg-black/55 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-2xl p-3">
+        <div className="md:hidden mt-2 bg-[var(--surface-raised)]/85 dark:bg-black/55 backdrop-blur-md border border-black/10 dark:border-white/10 rounded-2xl p-3">
           {navItems.map((item) => {
             const isActive = active === item.href;
             return (

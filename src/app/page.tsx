@@ -1584,7 +1584,7 @@ export default function Home() {
                     </div>
 
                     {/* Concept stack hover overlay (desktop, single source of truth) */}
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={gradientRiskGroups} accentColor="text-black dark:text-purple-300" mode="overlay" />
                     </div>
                   </div>
@@ -1944,7 +1944,7 @@ export default function Home() {
                     </div>
 
                     {/* Concept stack hover overlay (desktop, single source of truth) */}
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={patient360Groups} accentColor="text-black dark:text-cyan-300" mode="overlay" />
                     </div>
                   </div>
@@ -2125,7 +2125,7 @@ export default function Home() {
                     </div>
 
                     {/* Concept stack hover overlay (desktop, single source of truth) */}
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={quantDashboardGroups} accentColor="text-black dark:text-emerald-300" mode="overlay" />
                     </div>
                   </div>
@@ -2285,7 +2285,7 @@ export default function Home() {
                     </div>
 
                     {/* Concept stack hover overlay (desktop, single source of truth) */}
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={airlineWarehouseGroups} accentColor="text-black dark:text-sky-300" mode="overlay" />
                     </div>
                   </div>
@@ -2416,7 +2416,7 @@ export default function Home() {
                       hover &rarr; stack
                     </div>
 
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={curbsideGroups} accentColor="text-black dark:text-amber-300" mode="overlay" />
                     </div>
                   </div>
@@ -2579,7 +2579,7 @@ export default function Home() {
                       hover &rarr; stack
                     </div>
 
-                    <div className="hidden md:flex absolute inset-0 bg-white/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
+                    <div className="hidden md:flex absolute inset-0 bg-[var(--surface-raised)]/95 dark:bg-black/85 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none group-hover:pointer-events-auto flex-col justify-center px-8 py-6 z-20 overflow-y-auto">
                       <ConceptStack groups={fundingGroups} accentColor="text-black dark:text-violet-300" mode="overlay" />
                     </div>
                   </div>
@@ -2941,7 +2941,7 @@ export default function Home() {
                               {tooltip && (
                                 <span
                                   role="tooltip"
-                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[min(15rem,calc(100vw-2.5rem))] rounded-md bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-500/45 dark:border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.22)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
+                                  className="pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 bottom-full mb-2 w-60 max-w-[min(15rem,calc(100vw-2.5rem))] rounded-md bg-[var(--surface-raised)]/95 dark:bg-slate-950/95 backdrop-blur-md border border-blue-500/45 dark:border-blue-400/40 px-3 py-2 text-[10.5px] leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.22)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 transition-[opacity,transform] duration-200"
                                 >
                                   {tooltip}
                                 </span>

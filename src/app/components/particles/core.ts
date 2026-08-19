@@ -174,10 +174,21 @@ export const VERT = /* glsl */ `
   attribute float aDelay;
   attribute float aScale;
 
+  uniform float uHiBucket;
+  uniform float uHiMix;
+  uniform float uBuckets;
+
   varying float vAlpha;
   varying float vPush;
+  varying float vHi;
 
   void main() {
+    // Sub-skill highlight: each particle belongs to a deterministic bucket, so
+    // selecting a chip lights the same slice of the shape every time. vHi eases
+    // in via uHiMix rather than snapping.
+    float bucket = floor(aDelay * uBuckets);
+    vHi = (uHiBucket >= 0.0 && abs(bucket - uHiBucket) < 0.5) ? uHiMix : 0.0;
+
     // Per-particle stagger: later particles start later, all land together.
     float span = 1.0 - aDelay * ${STAGGER.toFixed(2)};
     float p = clamp((uProgress - aDelay * ${STAGGER.toFixed(2)}) / span, 0.0, 1.0);
@@ -217,8 +228,12 @@ export const VERT = /* glsl */ `
       pos.xz += vec2(-dir.z, dir.x) * swirl;
     }
 
+    // Highlighted particles lift toward the viewer and swell slightly, so the
+    // selected slice separates from the shape instead of only recolouring.
+    pos += normalize(pos + 0.0001) * vHi * 0.28;
+
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
-    gl_PointSize = uSize * aScale * uDpr * (1.0 / max(-mv.z, 0.001));
+    gl_PointSize = uSize * aScale * uDpr * (1.0 + vHi * 0.9) * (1.0 / max(-mv.z, 0.001));
     gl_Position = projectionMatrix * mv;
 
     vAlpha = (0.30 + 0.55 * aScale + bulge * 0.25) * (1.0 - smoothstep(0.15, 0.95, dsp));
@@ -228,20 +243,27 @@ export const VERT = /* glsl */ `
 export const FRAG = /* glsl */ `
   uniform vec3 uColor;
   uniform vec3 uHot;
+  uniform vec3 uHiColor;
   uniform float uAlpha;
   uniform float uLight;
   varying float vAlpha;
   varying float vPush;
+  varying float vHi;
 
   void main() {
     // Soft radial sprite — no texture needed.
     float d = distance(gl_PointCoord, vec2(0.5));
     float a = smoothstep(0.5, 0.0, d);
-    // On white, additive blending is unavailable and a wide soft halo turns to
-    // haze, so light mode tightens the falloff into a crisper core.
-    a = pow(a, mix(2.0, 3.2, uLight));
+    // On cream, additive blending is unavailable and a wide soft halo turns to
+    // haze, so light mode tightens the falloff into a crisper, denser core.
+    a = pow(a, mix(2.0, 3.4, uLight));
     vec3 c = mix(uColor, uHot, clamp(vPush * 1.4, 0.0, 1.0));
-    gl_FragColor = vec4(c, a * vAlpha * uAlpha);
+    // Selected sub-skill: its slice of the shape takes the contrast colour.
+    c = mix(c, uHiColor, vHi);
+    // Light mode composites normally, so alpha has to carry the density that
+    // additive build-up gives us for free on dark.
+    float alpha = a * vAlpha * uAlpha * mix(1.0, 1.35, uLight);
+    gl_FragColor = vec4(c, clamp(alpha, 0.0, 1.0) * (1.0 + vHi * 0.4));
     #include <colorspace_fragment>
   }
 `;
@@ -249,13 +271,35 @@ export const FRAG = /* glsl */ `
 /** Per-theme render settings for any field using the shared shader. */
 export function themeTuning(light: boolean) {
   return {
-    // Additive is what makes the dark field glow; on white it only washes out,
-    // so light mode composites normally with darker, more saturated ink.
+    // Additive is what makes the dark field glow; on cream it only washes out,
+    // so light mode composites normally with denser, more saturated ink.
     additive: !light,
-    alpha: light ? 0.85 : 1,
-    size: light ? 22 : 26,
-    hot: light ? "#1e1b4b" : "#ffffff",
-    /** Lightness for the hsl accent driving the field. */
-    lightness: light ? 42 : 62,
+    alpha: light ? 1 : 1,
+    // Slightly larger points on light: without additive build-up, thin points
+    // read as grey dust on cream.
+    size: light ? 30 : 26,
+    hot: light ? "#2a0f4f" : "#ffffff",
   };
+}
+
+// ── Track palettes ───────────────────────────────────────────────────────────
+// Hand-authored per theme rather than derived from one hue by flipping
+// lightness. Inverting the dark palette is exactly what made light mode look
+// dull: the dark colours are tuned to GLOW additively against black, and the
+// same hues composited normally on cream go muddy. These light values are
+// deeper, more chromatic inks chosen to sit on #faf5ea.
+export const TRACK_COLORS: Record<string, { dark: string; light: string; hot: string }> = {
+  ds: { dark: "hsl(266, 82%, 62%)", light: "#7b1fd1", hot: "#e0119a" },
+  swe: { dark: "hsl(224, 82%, 62%)", light: "#1442c9", hot: "#00a6c4" },
+  analyst: { dark: "hsl(38, 82%, 62%)", light: "#b8480a", hot: "#d4008a" },
+};
+
+export function trackColor(key: string, light: boolean) {
+  const c = TRACK_COLORS[key] ?? TRACK_COLORS.ds;
+  return light ? c.light : c.dark;
+}
+
+/** High-contrast colour used when a sub-skill is selected. */
+export function trackHot(key: string) {
+  return (TRACK_COLORS[key] ?? TRACK_COLORS.ds).hot;
 }

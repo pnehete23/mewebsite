@@ -20,6 +20,12 @@ type SceneState = {
   skillsFormation: Formation;
   skillsColor: string;
   skillsVisible: boolean;
+  /** Contrast colour for the selected sub-skill. */
+  skillsHot: string;
+  /** Which deterministic particle bucket lights up; -1 = none. */
+  skillsHiBucket: number;
+  /** How many buckets the swarm is divided into (= tools in the cluster). */
+  skillsBuckets: number;
 };
 
 const state: SceneState = {
@@ -30,6 +36,9 @@ const state: SceneState = {
   skillsFormation: "helix",
   skillsColor: "hsl(266, 82%, 62%)",
   skillsVisible: false,
+  skillsHot: "#e0119a",
+  skillsHiBucket: -1,
+  skillsBuckets: 6,
 };
 
 const subs = new Set<() => void>();

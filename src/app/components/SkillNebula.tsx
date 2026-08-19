@@ -17,26 +17,52 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
-import { themeTuning } from "./particles/core";
+import { themeTuning, trackColor, trackHot } from "./particles/core";
 import { setScene } from "../lib/scene";
 import { TRACKS, type Cluster } from "./skills-data";
 import { TOOL_LOGOS } from "./ToolLogos";
 
 const accent = (h: number, l = 58, a = 1, s = 82) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
 
-function ToolChip({ tool, hue, light }: { tool: string; hue: number; light: boolean }) {
+function ToolChip({
+  tool,
+  hue,
+  light,
+  hot,
+  selected,
+  onSelect,
+}: {
+  tool: string;
+  hue: number;
+  light: boolean;
+  hot: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
   const Logo = TOOL_LOGOS[tool];
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11.5px] text-black dark:text-white/90"
-      style={{
-        borderColor: accent(hue, light ? 45 : 58, light ? 0.32 : 0.4),
-        background: accent(hue, light ? 50 : 58, light ? 0.07 : 0.1),
-      }}
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className="inline-flex min-h-[32px] items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11.5px] text-black outline-none transition-[background,border-color,color,box-shadow] duration-300 focus-visible:ring-2 focus-visible:ring-purple-400/60 dark:text-white/90"
+      style={
+        selected
+          ? {
+              borderColor: hot,
+              background: `color-mix(in srgb, ${hot} 16%, transparent)`,
+              color: light ? hot : undefined,
+              boxShadow: `0 0 18px -6px ${hot}`,
+            }
+          : {
+              borderColor: accent(hue, light ? 45 : 58, light ? 0.32 : 0.4),
+              background: accent(hue, light ? 50 : 58, light ? 0.07 : 0.1),
+            }
+      }
     >
       {Logo && <Logo aria-hidden className="shrink-0 text-[13px] opacity-80" />}
       {tool}
-    </span>
+    </button>
   );
 }
 
@@ -44,11 +70,17 @@ function ClusterBlock({
   cluster,
   hue,
   light,
+  hot,
+  selected,
+  onSelect,
   onFocus,
 }: {
   cluster: Cluster;
   hue: number;
   light: boolean;
+  hot: string;
+  selected: string | null;
+  onSelect: (tool: string, index: number, total: number) => void;
   onFocus: () => void;
 }) {
   return (
@@ -65,8 +97,16 @@ function ClusterBlock({
         {cluster.name}
       </h5>
       <div className="flex flex-wrap gap-1.5">
-        {cluster.tools.map((t) => (
-          <ToolChip key={t} tool={t} hue={hue} light={light} />
+        {cluster.tools.map((t, i) => (
+          <ToolChip
+            key={t}
+            tool={t}
+            hue={hue}
+            light={light}
+            hot={hot}
+            selected={selected === t}
+            onSelect={() => onSelect(t, i, cluster.tools.length)}
+          />
         ))}
       </div>
     </div>
@@ -76,6 +116,7 @@ function ClusterBlock({
 export default function SkillNebula() {
   const [active, setActive] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [picked, setPicked] = useState<string | null>(null);
   const host = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
   const isLight = mounted && resolvedTheme === "light";
@@ -84,18 +125,41 @@ export default function SkillNebula() {
 
   const track = TRACKS[active];
   const hue = track.hue;
+  const hot = trackHot(track.key);
 
   // Publish the active track's colour to the shared scene. The field itself is
   // drawn by Scene over the [data-skills-slot] element below — one canvas for
   // the whole site, because separate contexts crashed mobile.
+  //
+  // Colour comes from a hand-authored per-theme palette, not from flipping a
+  // single hue's lightness — the inverted version is what made light mode look
+  // dull, because hues tuned to glow additively on black go muddy on cream.
   useEffect(() => {
     setScene({
-      skillsColor: accent(hue, themeTuning(isLight).lightness),
+      skillsColor: trackColor(track.key, isLight),
+      skillsHot: hot,
       // Keep the field on the active track's signature formation, so the
       // shape and the selected tab can never disagree.
       skillsFormation: track.clusters[0].formation,
     });
-  }, [hue, isLight, track]);
+  }, [isLight, track, hot]);
+
+  // Changing track clears any sub-skill selection.
+  useEffect(() => {
+    setPicked(null);
+    setScene({ skillsHiBucket: -1 });
+  }, [active]);
+
+  // Clicking a sub-skill lights a deterministic slice of the swarm in the
+  // track's contrast colour — same chip always maps to the same particles.
+  const selectTool = (tool: string, index: number, total: number) => {
+    const next = picked === tool ? null : tool;
+    setPicked(next);
+    setScene({
+      skillsBuckets: total,
+      skillsHiBucket: next === null ? -1 : index,
+    });
+  };
 
   const pickTrack = (i: number) => {
     setActive(i);
@@ -175,6 +239,9 @@ export default function SkillNebula() {
             cluster={c}
             hue={hue}
             light={isLight}
+            hot={hot}
+            selected={picked}
+            onSelect={selectTool}
             onFocus={() => focusCluster(c)}
           />
         ))}

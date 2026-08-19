@@ -62,7 +62,9 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
         <script defer src="https://t.raah.dev/script.js" data-pid="proj_eewqwa3njk7g09r4" data-domain="mewebsite-delta.vercel.app"></script>
       </head>
-      <body className="font-sans antialiased bg-white dark:bg-black text-gray-900 dark:text-white overflow-x-hidden transition-colors duration-500">
+      {/* Base surface comes from --background (cream in light, black in dark)
+          rather than a hardcoded bg-white. */}
+      <body className="font-sans antialiased bg-[var(--background)] text-[var(--foreground)] dark:text-white overflow-x-hidden transition-colors duration-500">
         <Providers>
           {/* Site-wide smooth scroll (Lenis, ~3KB, respects prefers-reduced-motion) */}
           <SmoothScroll />

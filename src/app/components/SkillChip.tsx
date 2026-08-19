@@ -108,7 +108,7 @@ export default function SkillChip({
       {tooltip && (
         <span
           role="tooltip"
-          className={`pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 ${sideClasses} ${sz.tooltip} rounded-md bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border ${v.tooltipBorder} leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.18)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 group-focus/chip:opacity-100 group-focus/chip:translate-y-0 group-focus-within/chip:opacity-100 group-focus-within/chip:translate-y-0 transition-[opacity,transform] duration-200`}
+          className={`pointer-events-none absolute z-30 left-1/2 -translate-x-1/2 ${sideClasses} ${sz.tooltip} rounded-md bg-[var(--surface-raised)]/95 dark:bg-slate-950/95 backdrop-blur-md border ${v.tooltipBorder} leading-snug text-black dark:text-gray-100 shadow-[0_10px_30px_-10px_rgba(15,23,42,0.18)] dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.8)] opacity-0 translate-y-1 group-hover/chip:opacity-100 group-hover/chip:translate-y-0 group-focus/chip:opacity-100 group-focus/chip:translate-y-0 group-focus-within/chip:opacity-100 group-focus-within/chip:translate-y-0 transition-[opacity,transform] duration-200`}
         >
           {tooltip}
         </span>

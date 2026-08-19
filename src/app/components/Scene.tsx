@@ -71,6 +71,10 @@ function Swarm({ count, light }: { count: number; light: boolean }) {
       uPointer: { value: new THREE.Vector3(999, 999, 0) },
       uColor: { value: new THREE.Color(getScene().skillsColor) },
       uHot: { value: new THREE.Color(tune.hot) },
+      uHiColor: { value: new THREE.Color(getScene().skillsHot) },
+      uHiBucket: { value: -1 },
+      uHiMix: { value: 0 },
+      uBuckets: { value: getScene().skillsBuckets },
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -122,13 +126,29 @@ function Swarm({ count, light }: { count: number; light: boolean }) {
       } else {
         group.current.visible = false;
       }
-      group.current.rotation.y += d * 0.12;
+      // A touch more life than before, still calm. Multiplied by delta, so the
+      // speed is identical at 60/120/240Hz — a faster panel just renders it
+      // more smoothly rather than spinning it faster.
+      group.current.rotation.y += d * 0.26;
+      group.current.rotation.x += d * 0.05;
     }
 
+    // Every easing below is framerate-independent: pow(base, dt) converges at
+    // the same rate per SECOND regardless of how many frames arrive.
     const k = 1 - Math.pow(0.01, d);
     (u.uColor.value as THREE.Color).lerp(new THREE.Color(sc.skillsColor), k);
+    (u.uHiColor.value as THREE.Color).lerp(new THREE.Color(sc.skillsHot), k);
     u.uAlpha.value += (tune.alpha - u.uAlpha.value) * k;
     u.uLight.value += ((tune.additive ? 0 : 1) - u.uLight.value) * k;
+    u.uBuckets.value = sc.skillsBuckets;
+
+    // Selection: hold the bucket while fading the mix, so deselecting eases
+    // out instead of cutting.
+    const wantHi = sc.skillsHiBucket >= 0;
+    if (wantHi) u.uHiBucket.value = sc.skillsHiBucket;
+    const hiTarget = wantHi ? 1 : 0;
+    u.uHiMix.value += (hiTarget - u.uHiMix.value) * (1 - Math.pow(0.004, d));
+    if (!wantHi && u.uHiMix.value < 0.01) u.uHiBucket.value = -1;
   });
 
   return (

@@ -24,9 +24,23 @@ html.lenis-smooth {
    ============================================================ */
 
 :root {
-  /* Core surfaces */
-  --background: #ffffff;
-  --foreground: #000000;
+  /* Core surfaces — warm cream, not pure white. Pure #fff made every accent
+     look washed out; the cream base gives the neons something to bite against
+     and reads as a deliberate paper tone rather than a blank canvas. */
+  --background: #faf5ea;
+  --surface: #f4ecdb;
+  --surface-raised: #fffaf0;
+  --hairline: rgba(61, 46, 20, 0.14);
+  --foreground: #14110a;
+
+  /* Light-mode neon accents. Saturated and pulled DARKER than their dark-mode
+     counterparts — a neon tuned for black disappears on cream. These all clear
+     AA on the cream base. */
+  --neon-violet: #6d28d9;
+  --neon-blue: #1d4ed8;
+  --neon-cyan: #0e7490;
+  --neon-amber: #b45309;
+  --neon-magenta: #be1a6b;
 
   /* Hero italic quote: pitch-black ink in light mode.
      Soft black halo so the italic still feels emphasized without color tint. */
@@ -61,7 +75,17 @@ html.lenis-smooth {
 
 .dark {
   --background: #000000;
+  --surface: #0b0b0f;
+  --surface-raised: #14141b;
+  --hairline: rgba(255, 255, 255, 0.10);
   --foreground: #ffffff;
+
+  /* Dark keeps its brighter neons — untouched, this theme already works. */
+  --neon-violet: #a78bfa;
+  --neon-blue: #60a5fa;
+  --neon-cyan: #22d3ee;
+  --neon-amber: #fbbf24;
+  --neon-magenta: #f472b6;
 
   --ink-hero-quote: #c4b5fd; /* violet-300 — bright on dark */
   --ink-hero-quote-shadow:
