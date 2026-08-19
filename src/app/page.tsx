@@ -354,7 +354,7 @@ const experiences = [
     period: "Aug 2025 \u2013 May 2026",
   },
   {
-    title: "Data Analyst",
+    title: "ASU Senior Capstone — Data Analyst",
     company: "YYC Beeswax, Tempe, AZ",
     period: "May 2024 \u2013 Aug 2024",
   },

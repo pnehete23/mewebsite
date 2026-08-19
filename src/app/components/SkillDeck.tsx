@@ -1,7 +1,15 @@
 "use client";
 
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useMotionValue,
+  useMotionTemplate,
+  useSpring,
+  useAnimationControls,
+} from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export type SkillCategory = {
   axis: string;
@@ -15,8 +23,24 @@ const HUES = [266, 224, 282, 198, 168, 142, 320, 38];
 const hueOf = (i: number) => HUES[i % HUES.length];
 const accent = (h: number, l = 58, a = 1, s = 82) => `hsla(${h}, ${s}%, ${l}%, ${a})`;
 
-// How long the diamond holds its mirrored back face before it dissipates.
-const FLIP_MS = 620;
+const COLS = 4;
+// The turn: windup → flip → hold on the mirrored back, then the facet fractures.
+const FLIP_MS = 780;
+const SHARD_MS = 900;
+// Six wedges struck from the centre — the fracture pattern for the dissipate.
+const SHARDS = 6;
+
+// Clip a pie wedge out of the tile box; radius overshoots the box so the cut
+// reaches every corner and the pieces read as glass, not as pizza slices.
+function wedge(k: number) {
+  const a0 = (k / SHARDS) * Math.PI * 2 - Math.PI / 2;
+  const a1 = ((k + 1) / SHARDS) * Math.PI * 2 - Math.PI / 2;
+  const am = (a0 + a1) / 2;
+  const p = (a: number, r: number) =>
+    `${(50 + r * Math.cos(a)).toFixed(1)}% ${(50 + r * Math.sin(a)).toFixed(1)}%`;
+  // Mid-point pushed further out gives each shard an uneven, chipped edge.
+  return `polygon(50% 50%, ${p(a0, 96)}, ${p(am, 118)}, ${p(a1, 96)})`;
+}
 
 // ── Circular proficiency ring — animates 0 → value when the detail panel opens ─
 function Ring({ value, h }: { value: number; h: number }) {
@@ -51,20 +75,283 @@ function Ring({ value, h }: { value: number; h: number }) {
   );
 }
 
+type Impulse = { from: number; n: number } | null;
+
+function Facet({
+  d,
+  i,
+  flipping,
+  gone,
+  impulse,
+  onPick,
+}: {
+  d: SkillCategory;
+  i: number;
+  flipping: boolean;
+  gone: boolean;
+  impulse: Impulse;
+  onPick: () => void;
+}) {
+  const h = hueOf(i);
+  const controls = useAnimationControls();
+  const [shattering, setShattering] = useState(false);
+  const wasGone = useRef(gone);
+
+  // Pointer-tracked specular: raw position drives the highlight, a softened
+  // spring copy drives the parallax tilt so the glass lags the cursor slightly.
+  const px = useMotionValue(50);
+  const py = useMotionValue(50);
+  const tiltX = useSpring(useMotionValue(0), { stiffness: 180, damping: 18 });
+  const tiltY = useSpring(useMotionValue(0), { stiffness: 180, damping: 18 });
+  const sheen = useMotionTemplate`radial-gradient(120px circle at ${px}% ${py}%, rgba(255,255,255,0.62), rgba(255,255,255,0.12) 38%, rgba(255,255,255,0) 70%)`;
+
+  const onMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const nx = ((e.clientX - r.left) / r.width) * 100;
+    const ny = ((e.clientY - r.top) / r.height) * 100;
+    px.set(nx);
+    py.set(ny);
+    tiltY.set((nx - 50) * 0.34);
+    tiltX.set((50 - ny) * 0.34);
+  };
+  const onLeave = () => {
+    px.set(50);
+    py.set(50);
+    tiltX.set(0);
+    tiltY.set(0);
+  };
+
+  // Entrance — `animate` is driven by controls, so the mount beat is explicit.
+  useEffect(() => {
+    controls.start({
+      opacity: 1,
+      scale: 1,
+      x: 0,
+      transition: { type: "spring", stiffness: 260, damping: 22, delay: i * 0.045 },
+    });
+  }, [controls, i]);
+
+  // Fire the shard burst exactly once, on the transition into `gone`.
+  useEffect(() => {
+    if (gone && !wasGone.current) {
+      setShattering(true);
+      const id = setTimeout(() => setShattering(false), SHARD_MS);
+      wasGone.current = gone;
+      return () => clearTimeout(id);
+    }
+    wasGone.current = gone;
+  }, [gone]);
+
+  // Shockwave: the struck facet's neighbours rock and dim, nearest first.
+  useEffect(() => {
+    if (!impulse || impulse.from === i || gone) return;
+    const dx = (i % COLS) - (impulse.from % COLS);
+    const dy = Math.floor(i / COLS) - Math.floor(impulse.from / COLS);
+    const dist = Math.hypot(dx, dy);
+    if (dist > 2.6) return;
+    const away = dx === 0 && dy === 0 ? 0 : Math.sign(dx || 1);
+    controls.start({
+      scale: [1, 0.93, 1.03, 1],
+      x: [0, away * 4, 0],
+      opacity: [1, 0.72, 1],
+      transition: {
+        duration: 0.62,
+        delay: dist * 0.055,
+        ease: [0.22, 1, 0.36, 1],
+        times: [0, 0.35, 0.7, 1],
+      },
+    });
+  }, [impulse, i, gone, controls]);
+
+  const face =
+    `linear-gradient(135deg, ${accent(h, 74, 0.34)} 0%, ${accent(h, 48, 0.1)} 40%, ` +
+    `${accent(h, 80, 0.28)} 56%, ${accent(h, 44, 0.14)} 100%)`;
+
+  return (
+    <div className="relative aspect-square [perspective:1000px]">
+      <div className="absolute inset-[13%] rotate-45 [transform-style:preserve-3d]">
+        <AnimatePresence>
+          {!gone && (
+            <motion.button
+              type="button"
+              onClick={onPick}
+              onPointerMove={onMove}
+              onPointerLeave={onLeave}
+              aria-label={`${d.axis}, ${d.value}% proficiency — reveal tools`}
+              className="absolute inset-0 rounded-[10px] outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-purple-400/70"
+              initial={{ opacity: 0, scale: 0.75 }}
+              animate={controls}
+              exit={{ opacity: 0, transition: { duration: 0.12 } }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {/* Depth carrier: holds the flip, the pointer tilt, and the body.
+                  Windup rocks back before the turn so the flip carries weight. */}
+              <motion.span
+                className="absolute inset-0 block rounded-[10px] [transform-style:preserve-3d]"
+                style={{ rotateX: tiltX, rotateY: tiltY }}
+                animate={
+                  flipping
+                    ? { rotateY: [0, -26, 180], scale: [1, 0.94, 1.1], z: [0, -14, 46] }
+                    : { rotateY: 0, scale: 1, z: 0 }
+                }
+                whileHover={flipping ? undefined : { scale: 1.08, z: 18 }}
+                whileTap={{ scale: 0.94 }}
+                transition={
+                  flipping
+                    ? { duration: FLIP_MS / 1000, times: [0, 0.26, 1], ease: [0.6, -0.32, 0.24, 1.32] }
+                    : { type: "spring", stiffness: 240, damping: 18, mass: 0.9 }
+                }
+              >
+                {/* body — a plate set behind the face, so the turn shows edge */}
+                <span
+                  aria-hidden
+                  className="absolute inset-0 rounded-[10px]"
+                  style={{
+                    transform: "translateZ(-7px)",
+                    background: accent(h, 34, 0.62),
+                    boxShadow: `0 0 0 1px ${accent(h, 40, 0.5)}`,
+                  }}
+                />
+
+                {/* front face */}
+                <span
+                  className="absolute inset-0 overflow-hidden rounded-[10px] [backface-visibility:hidden]"
+                  style={{
+                    background: face,
+                    border: `1px solid ${accent(h, 64, 0.55)}`,
+                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.6), inset 0 0 24px -12px ${accent(h, 72, 0.95)}, 0 14px 34px -22px ${accent(h, 58, 0.95)}`,
+                    backdropFilter: "blur(7px)",
+                  }}
+                >
+                  {/* caustic shimmer — a slow conic sweep, like light bending
+                      through a cut stone. Low opacity keeps it a hint. */}
+                  <motion.span
+                    aria-hidden
+                    className="absolute -inset-1/4 rounded-full opacity-40 mix-blend-overlay"
+                    style={{
+                      background: `conic-gradient(from 0deg, transparent 0deg, ${accent(h, 92, 0.55)} 40deg, transparent 96deg, ${accent(h, 88, 0.4)} 190deg, transparent 250deg, ${accent(h, 95, 0.5)} 320deg, transparent 360deg)`,
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 14 + (i % 4) * 2.5, repeat: Infinity, ease: "linear" }}
+                  />
+                  {/* pointer-tracked specular */}
+                  <motion.span
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{ background: sheen }}
+                  />
+                  {/* refraction edge — bright rim lifted toward the viewer */}
+                  <span
+                    aria-hidden
+                    className="absolute inset-[2px] rounded-[8px]"
+                    style={{
+                      boxShadow: `inset 1px 1px 0 rgba(255,255,255,0.5), inset -1px -1px 0 ${accent(h, 30, 0.35)}`,
+                    }}
+                  />
+                  <span className="absolute inset-0 grid -rotate-45 place-items-center px-1 text-center">
+                    <span className="text-[10.5px] font-semibold leading-tight text-black drop-shadow-sm dark:text-white sm:text-xs">
+                      {d.axis}
+                    </span>
+                  </span>
+                </span>
+
+                {/* back face — the mirror: score reflected, colours inverted */}
+                <span
+                  className="absolute inset-0 grid place-items-center overflow-hidden rounded-[10px] [backface-visibility:hidden] [transform:rotateY(180deg)]"
+                  style={{
+                    background: `linear-gradient(315deg, ${accent(h, 70, 0.4)}, ${accent(h, 30, 0.55)})`,
+                    border: `1px solid ${accent(h, 70, 0.6)}`,
+                    boxShadow: `inset 0 0 30px -8px ${accent(h, 88, 0.6)}`,
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(115deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 70%)",
+                    }}
+                  />
+                  <span
+                    className="-rotate-45 font-mono text-sm font-bold tabular-nums text-white"
+                    style={{ textShadow: `0 0 12px ${accent(h, 90, 0.9)}` }}
+                  >
+                    {d.value}
+                  </span>
+                </span>
+              </motion.span>
+            </motion.button>
+          )}
+        </AnimatePresence>
+
+        {/* ── Fracture: wedges fly off along their own bearing, tumbling and
+               blurring out. Plus a single expanding shock ring. ───────────── */}
+        <AnimatePresence>
+          {shattering && (
+            <>
+              {Array.from({ length: SHARDS }).map((_, k) => {
+                const a = ((k + 0.5) / SHARDS) * Math.PI * 2 - Math.PI / 2;
+                return (
+                  <motion.span
+                    key={`shard-${k}`}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 rounded-[10px]"
+                    style={{
+                      clipPath: wedge(k),
+                      background: face,
+                      border: `1px solid ${accent(h, 70, 0.5)}`,
+                    }}
+                    initial={{ opacity: 0.95, scale: 1, x: 0, y: 0, rotate: 0, filter: "blur(0px)" }}
+                    animate={{
+                      opacity: 0,
+                      scale: 1.5 + (k % 3) * 0.12,
+                      x: Math.cos(a) * (46 + (k % 3) * 12),
+                      y: Math.sin(a) * (46 + (k % 3) * 12),
+                      rotate: (k % 2 ? 1 : -1) * (28 + k * 7),
+                      filter: "blur(7px)",
+                    }}
+                    exit={{ opacity: 0 }}
+                    transition={{
+                      duration: SHARD_MS / 1000,
+                      ease: [0.16, 0.72, 0.3, 1],
+                      delay: k * 0.022,
+                    }}
+                  />
+                );
+              })}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ border: `1px solid ${accent(h, 72, 0.75)}` }}
+                initial={{ opacity: 0.8, scale: 0.35 }}
+                animate={{ opacity: 0, scale: 2.1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.62, ease: "easeOut" }}
+              />
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
 export default function SkillDeck({ data }: { data: SkillCategory[] }) {
   const [mounted, setMounted] = useState(false);
-  // Index mid-flip: showing its mirrored back face, about to dissipate.
+  // Index mid-flip: turning toward its mirrored back face, about to fracture.
   const [flipping, setFlipping] = useState<number | null>(null);
   // Diamonds the visitor has already turned over and cleared away.
   const [cleared, setCleared] = useState<number[]>([]);
   // Domain shown in the detail panel below the grid.
   const [detail, setDetail] = useState<number | null>(null);
+  // Bumped on each strike so neighbouring facets can rock in response.
+  const [impulse, setImpulse] = useState<Impulse>(null);
   const reduce = useReducedMotion();
 
   useEffect(() => setMounted(true), []);
 
-  // The flip is a two-beat move: turn to the mirror back, then dissipate. The
-  // timer owns the second beat so the exit animation and panel land together.
+  // The turn is a two-beat move: flip to the mirror, then fracture. The timer
+  // owns the second beat so the shard burst and the panel land together.
   useEffect(() => {
     if (flipping === null) return;
     const id = setTimeout(() => {
@@ -75,17 +362,21 @@ export default function SkillDeck({ data }: { data: SkillCategory[] }) {
     return () => clearTimeout(id);
   }, [flipping]);
 
+  const strike = (i: number) => {
+    if (flipping !== null) return;
+    setFlipping(i);
+    setImpulse((p) => ({ from: i, n: (p?.n ?? 0) + 1 }));
+  };
+
   const reset = () => {
     setCleared([]);
     setDetail(null);
     setFlipping(null);
+    setImpulse(null);
   };
 
   const cur = detail === null ? null : data[detail];
-  const remaining = useMemo(
-    () => data.length - cleared.length,
-    [data.length, cleared.length],
-  );
+  const remaining = useMemo(() => data.length - cleared.length, [data.length, cleared.length]);
 
   // ── SSR / reduced-motion fallback: a calm, fully static grid ───────────────
   if (!mounted || reduce) {
@@ -146,92 +437,18 @@ export default function SkillDeck({ data }: { data: SkillCategory[] }) {
         </AnimatePresence>
       </div>
 
-      {/* ── Diamond field ─────────────────────────────────────────────────────
-          Each cell is a square rotated 45°; the label counter-rotates so type
-          stays upright. The mirrored face is a stack of translucent gradient
-          plates — a specular sweep on hover, a cool ground tint, and a bright
-          top-left edge — which reads as polished glass rather than flat fill. */}
       <div className="grid grid-cols-4 gap-x-2 gap-y-2 py-2 sm:gap-x-3 sm:gap-y-3">
-        {data.map((d, i) => {
-          const dh = hueOf(i);
-          const isFlipping = flipping === i;
-          const isGone = cleared.includes(i);
-          return (
-            <div key={d.axis} className="relative aspect-square [perspective:900px]">
-              <AnimatePresence>
-                {!isGone && (
-                  <motion.button
-                    type="button"
-                    onClick={() => flipping === null && setFlipping(i)}
-                    aria-label={`${d.axis}, ${d.value}% proficiency — reveal tools`}
-                    className="absolute inset-[14%] rotate-45 rounded-[10px] outline-none [transform-style:preserve-3d] focus-visible:ring-2 focus-visible:ring-purple-400/70"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: 1,
-                      scale: 1,
-                      rotateY: isFlipping ? 180 : 0,
-                    }}
-                    whileHover={isFlipping ? undefined : { scale: 1.07 }}
-                    whileTap={{ scale: 0.95 }}
-                    exit={{
-                      opacity: 0,
-                      scale: 1.35,
-                      filter: "blur(10px)",
-                      transition: { duration: 0.5, ease: "easeOut" },
-                    }}
-                    transition={{ type: "spring", stiffness: 260, damping: 26 }}
-                    style={{
-                      border: `1px solid ${accent(dh, 62, 0.5)}`,
-                      background: [
-                        `linear-gradient(135deg, ${accent(dh, 72, 0.32)} 0%, ${accent(dh, 50, 0.1)} 42%, ${accent(dh, 78, 0.26)} 58%, ${accent(dh, 46, 0.14)} 100%)`,
-                        `linear-gradient(315deg, rgba(255,255,255,0.34), rgba(255,255,255,0) 55%)`,
-                      ].join(", "),
-                      boxShadow: `inset 0 1px 0 rgba(255,255,255,0.55), inset 0 0 22px -12px ${accent(dh, 70, 0.9)}, 0 12px 30px -20px ${accent(dh, 58, 0.9)}`,
-                      backdropFilter: "blur(6px)",
-                    }}
-                  >
-                    {/* travelling specular highlight — the "mirror" catch */}
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute inset-0 overflow-hidden rounded-[10px]"
-                    >
-                      <motion.span
-                        className="absolute -inset-y-8 w-1/2"
-                        style={{
-                          background:
-                            "linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%)",
-                        }}
-                        initial={{ x: "-140%" }}
-                        animate={{ x: isFlipping ? "160%" : "-140%" }}
-                        whileHover={{ x: "160%" }}
-                        transition={{ duration: 0.75, ease: "easeInOut" }}
-                      />
-                    </span>
-
-                    {/* front face — label, upright */}
-                    <span
-                      className="absolute inset-0 grid -rotate-45 place-items-center px-1 text-center [backface-visibility:hidden]"
-                    >
-                      <span className="text-[10.5px] font-semibold leading-tight text-black drop-shadow-sm dark:text-white sm:text-xs">
-                        {d.axis}
-                      </span>
-                    </span>
-
-                    {/* back face — the reflected score, seen after the turn */}
-                    <span
-                      className="absolute inset-0 grid place-items-center rounded-[10px] [backface-visibility:hidden] [transform:rotateY(180deg)]"
-                      style={{ background: accent(dh, 58, 0.22) }}
-                    >
-                      <span className="-rotate-45 font-mono text-sm font-bold tabular-nums text-black dark:text-white">
-                        {d.value}
-                      </span>
-                    </span>
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
+        {data.map((d, i) => (
+          <Facet
+            key={d.axis}
+            d={d}
+            i={i}
+            flipping={flipping === i}
+            gone={cleared.includes(i)}
+            impulse={impulse}
+            onPick={() => strike(i)}
+          />
+        ))}
       </div>
 
       {/* ── Detail panel — the tools behind the facet just turned ─────────── */}
